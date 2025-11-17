@@ -59,6 +59,9 @@ import 'package:jawaramobile_1/screens/ChannelTransfer/tambah_channel_screen.dar
 import 'package:jawaramobile_1/screens/penerimaan_warga_screen.dart';
 import 'package:jawaramobile_1/screens/dashboard_aspirasi.dart';
 
+// ====== Marketplace ======
+import 'package:jawaramobile_1/screens/Marketplace/menu_marketplace.dart';
+
 final appRouter = GoRouter(
   initialLocation: '/login',
   routes: <GoRoute>[
@@ -323,6 +326,12 @@ final appRouter = GoRouter(
       path: '/dashboard-aspirasi',
       name: 'dashboard-aspirasi',
       builder: (context, state) => const DashboardAspirasi(),
+    ),
+    // ====== Marketplace ======
+    GoRoute(
+      path: '/menu-marketplace',
+      name: 'menu-marketplace',
+      builder: (context, state) => const MarketplaceMenu(),
     ),
   ],
 );
