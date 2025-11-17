@@ -61,6 +61,16 @@ import 'package:jawaramobile_1/screens/dashboard_aspirasi.dart';
 
 // ====== Marketplace ======
 import 'package:jawaramobile_1/screens/Marketplace/menu_marketplace.dart';
+import 'package:jawaramobile_1/screens/Marketplace/daftar_barang_jual.dart';
+import 'package:jawaramobile_1/screens/Marketplace/detail_barang_jual.dart';
+import 'package:jawaramobile_1/screens/Marketplace/add_barang_jual.dart';
+import 'package:jawaramobile_1/screens/Marketplace/daftar_barang_beli.dart';
+import 'package:jawaramobile_1/screens/Marketplace/detail_barang_beli.dart';
+import 'package:jawaramobile_1/screens/Marketplace/checkout_barang.dart';
+import 'package:jawaramobile_1/screens/Marketplace/pesanan_masuk.dart';
+import 'package:jawaramobile_1/screens/Marketplace/detail_pesanan_masuk.dart';
+import 'package:jawaramobile_1/screens/Marketplace/riwayat_pesanan_page.dart';
+import 'package:jawaramobile_1/screens/Marketplace/detail_riwayat_pesanan_page.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/login',
@@ -332,6 +342,66 @@ final appRouter = GoRouter(
       path: '/menu-marketplace',
       name: 'menu-marketplace',
       builder: (context, state) => const MarketplaceMenu(),
+    ),
+    GoRoute(
+      path: '/daftar-barang-jual',
+      builder: (context, state) => const DaftarBarang(),
+    ),
+    GoRoute(
+      path: '/detail-barang-jual',
+      builder: (context, state) {
+        final item = state.extra as Map<String, String>;
+        return DetailBarang(barangData: item);
+      },
+    ),
+    GoRoute(
+      path: '/add-barang',
+      builder: (context, state) => const AddBarangScreen(),
+    ),
+    GoRoute(
+      path: '/daftar-pembelian',
+      builder: (context, state) => const DaftarPembelian(),
+    ),
+    GoRoute(
+      path: '/detail-barang-beli',
+      builder: (context, state) {
+        final item = state.extra as Map<String, String>;
+        return DetailBarangBeli(barangData: item);
+      },
+    ),
+    GoRoute(
+      path: '/checkout-barang',
+      builder: (context, state) {
+        final item = state.extra as Map<String, String>;
+        return CheckoutBarang(barangData: item);
+      },
+    ),
+    // Contoh penambahan rute di GoRouter
+    GoRoute(
+        path: '/pesanan-masuk',
+        builder: (context, state) => const PesananMasuk(),
+    ),
+    GoRoute(
+      path: '/detail-pesanan-masuk',
+      builder: (context, state) {
+        final item = state.extra as Map<String, String>;
+        return DetailPesananMasuk(pesananData: item);
+      },
+    ),
+    GoRoute(
+      path: '/daftar-pembelian',
+      builder: (context, state) => const DaftarPembelian(),
+    ),
+    GoRoute(
+      path: '/riwayat-pesanan',
+      builder: (context, state) => const RiwayatPesananPage(),
+    ),
+    GoRoute(
+      path: '/detail-riwayat-pesanan',
+      builder: (context, state) {
+        final pesanan = state.extra as Map<String, dynamic>; 
+        return DetailRiwayatPesananPage(pesanan: pesanan);
+      },
     ),
   ],
 );

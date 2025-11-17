@@ -124,12 +124,12 @@ class MarketplaceHeader extends StatelessWidget {
       {
         'label': 'Jual Batik',
         'icon': FontAwesomeIcons.shop,
-        'route': '/jual-batik',
+        'route': '/daftar-barang-jual',
       },
       {
         'label': 'Beli Batik',
         'icon': FontAwesomeIcons.cartShopping,
-        'route': '/beli-batik',
+        'route': '/daftar-pembelian',
       },
     ];
 
