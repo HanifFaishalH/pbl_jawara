@@ -30,4 +30,12 @@ class usersModel extends Model
     public function role() {
         return $this->belongsTo(roleModel::class, 'role_id', 'role_id');
     }
+
+    public function keranjang() {
+        return $this->hasMany(KeranjangModel::class, 'user_id', 'user_id');
+    }
+
+    public function transaksi() {
+        return $this->hasMany(TransaksiModel::class, 'user_id', 'user_id');
+    }
 }
