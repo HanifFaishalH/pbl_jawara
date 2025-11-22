@@ -39,56 +39,66 @@ Copy code
    cd backend
 Install dependency Laravel
 
-bash
+```bash
 Copy code
 composer install
 Copy file environment
+```
 
-bash
+```bash
 Copy code
 cp .env.example .env
 Jalankan key generator
+```
 
-bash
+```bash
 Copy code
 php artisan key:generate
 Jalankan migration & seeder
+```
 
-bash
+```bash
 Copy code
 php artisan migrate --seed
 Jalankan server Laravel
+```
 
-bash
+```bash
 Copy code
 php artisan serve
 Server akan berjalan di:
 👉 http://127.0.0.1:8000 atau http://10.0.2.2:8000 (untuk Android Emulator)
+```
 
 📱 Cara Menjalankan Flutter
 Masuk ke folder aplikasi Flutter:
 
-bash
+```bash
 Copy code
 cd flutter_app
+```
+
 Jalankan dependency Flutter:
 
-bash
+```bash
 Copy code
 flutter pub get
 Jalankan emulator Android.
+```
 
 Jalankan aplikasi Flutter:
 
-bash
+```bash
 Copy code
 flutter run
+```
+
 🔗 Menghubungkan Flutter ke Laravel API
 Pastikan Laravel sudah berjalan (php artisan serve).
 
 Di Flutter, buat file service (misal barang_service.dart):
 
-dart
+```dart
 Copy code
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -112,6 +122,8 @@ class BarangService {
     }
   }
 }
+```
+
 Pastikan URL menggunakan 10.0.2.2 untuk emulator Android.
 
 👩‍💻 Teknologi yang Digunakan
