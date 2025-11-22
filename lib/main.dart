@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Jawara Apps',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme, // Gunakan tema ungu kamu
+      theme: AppTheme.lightTheme,
       routerConfig: appRouter,
     );
   }
