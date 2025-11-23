@@ -13,21 +13,38 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    const Center(child: Text("Beranda")),
-    const Center(child: Text("Pencarian")),
-    const Center(child: Text("Profil")),
+    const Center(
+      child: Text(
+        "Beranda",
+        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      ),
+    ),
+    const Center(
+      child: Text(
+        "Pencarian",
+        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      ),
+    ),
+    const Center(
+      child: Text(
+        "Profil",
+        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      ),
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true, // biar bottom nav bisa “mengambang” di atas gradient
-      body: Container(
+      extendBody: true,
+      backgroundColor: AppTheme.background,
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 400),
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFF6A11CB), // ungu terang
-              Color(0xFF2575FC), // biru
+              AppTheme.primary, // biru tua
+              AppTheme.third,   // hijau toska lembut
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -35,14 +52,19 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: _pages[_selectedIndex],
       ),
+
+      // 🔘 Bottom Navigation Bar
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(12.0),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(30.0),
+          borderRadius: BorderRadius.circular(24),
           child: BottomNavigationBar(
             backgroundColor: Colors.white,
-            selectedItemColor: AppTheme.highlightYellow,
-            unselectedItemColor: Colors.grey,
+            selectedItemColor: AppTheme.primary,
+            unselectedItemColor: Colors.grey.shade500,
+            showUnselectedLabels: true,
+            type: BottomNavigationBarType.fixed,
+            elevation: 8,
             currentIndex: _selectedIndex,
             onTap: (index) => setState(() => _selectedIndex = index),
             items: const [
@@ -62,6 +84,21 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+
+      // 🆕 Floating Action Button (opsional)
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppTheme.secondary,
+        onPressed: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Aksi cepat diaktifkan'),
+              backgroundColor: AppTheme.secondary,
+            ),
+          );
+        },
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }

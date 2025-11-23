@@ -14,14 +14,34 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller =
+        AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero)
+            .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    _controller.forward();
+  }
+
   @override
   void dispose() {
+    _controller.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -29,9 +49,6 @@ class _LoginPageState extends State<LoginPage> {
 
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
-      String email = _emailController.text;
-      String password = _passwordController.text;
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Login berhasil!'),
@@ -39,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
 
-      Future.delayed(const Duration(milliseconds: 800), () {
+      Future.delayed(const Duration(milliseconds: 700), () {
         context.go('/dashboard');
       });
     }
@@ -52,12 +69,9 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _handleDaftar() {
-    Future.delayed(const Duration(milliseconds: 50), () {
+    Future.delayed(const Duration(milliseconds: 200), () {
       context.go('/register');
     });
-    // ScaffoldMessenger.of(context).showSnackBar(
-    //   const SnackBar(content: Text('Halaman pendaftaran dalam pengembangan')),
-    // );
   }
 
   @override
@@ -69,32 +83,41 @@ class _LoginPageState extends State<LoginPage> {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const LoginHeader(),
-                const SizedBox(height: 40),
-                const LoginWelcome(),
-                const SizedBox(height: 40),
-                LoginForm(
-                  formKey: _formKey,
-                  emailController: _emailController,
-                  passwordController: _passwordController,
-                  obscurePassword: _obscurePassword,
-                  onTogglePassword: () {
-                    setState(() {
-                      _obscurePassword = !_obscurePassword;
-                    });
-                  },
-                  onLogin: _handleLogin,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 500),
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const LoginHeader(),
+                      const SizedBox(height: 40),
+                      const LoginWelcome(),
+                      const SizedBox(height: 40),
+                      LoginForm(
+                        formKey: _formKey,
+                        emailController: _emailController,
+                        passwordController: _passwordController,
+                        obscurePassword: _obscurePassword,
+                        onTogglePassword: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                        onLogin: _handleLogin,
+                      ),
+                      const SizedBox(height: 32),
+                      const LoginDivider(),
+                      const SizedBox(height: 24),
+                      LoginGoogleButton(onTap: _handleGoogleLogin),
+                      const SizedBox(height: 24),
+                      LoginRegisterLink(onTap: _handleDaftar),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 32),
-                const LoginDivider(),
-                const SizedBox(height: 24),
-                LoginGoogleButton(onTap: _handleGoogleLogin),
-                const SizedBox(height: 24),
-                LoginRegisterLink(onTap: _handleDaftar),
-              ],
+              ),
             ),
           ),
         ),

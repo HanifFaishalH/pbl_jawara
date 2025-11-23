@@ -8,34 +8,57 @@ class StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Tentukan warna berdasarkan status
+    // 🎨 Warna chip sesuai status
     Color backgroundColor;
-    Color foregroundColor;
+    Color textColor;
 
-    if (status.toLowerCase() == 'diterima') {
-      backgroundColor = Colors.lightGreen.shade200;
-      foregroundColor = Colors.green.shade900;
-    } else if (status.toLowerCase() == 'pending') {
-      backgroundColor = Colors.yellow.shade200;
-      foregroundColor = Colors.orange.shade900;
-    } else {
-      backgroundColor = AppTheme.warmCream.withOpacity(0.5);
-      foregroundColor = AppTheme.primaryOrange;
+    switch (status.toLowerCase()) {
+      case 'diterima':
+        backgroundColor = AppTheme.third.withOpacity(0.2); // hijau lembut
+        textColor = AppTheme.third;
+        break;
+      case 'pending':
+        backgroundColor = AppTheme.fourth.withOpacity(0.3); // kuning lembut
+        textColor = AppTheme.primary; // teks biru tua agar kontras
+        break;
+      case 'ditolak':
+        backgroundColor = AppTheme.secondary.withOpacity(0.2); // merah muda lembut
+        textColor = AppTheme.secondary;
+        break;
+      default:
+        backgroundColor = Colors.grey.shade200;
+        textColor = Colors.grey.shade700;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: textColor.withOpacity(0.6), width: 1),
       ),
-      child: Text(
-        status,
-        style: TextStyle(
-          color: foregroundColor,
-          fontWeight: FontWeight.bold,
-          fontSize: 12,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            status.toLowerCase() == 'diterima'
+                ? Icons.check_circle
+                : status.toLowerCase() == 'pending'
+                ? Icons.hourglass_bottom
+                : Icons.cancel,
+            color: textColor,
+            size: 14,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            status,
+            style: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -3,7 +3,6 @@ import '../theme/AppTheme.dart';
 import '../widgets/status_chip.dart';
 import 'edit_pesan_screen.dart';
 
-// Model data untuk simulasi
 class PesanWarga {
   final int no;
   final String pengirim;
@@ -28,44 +27,16 @@ class DashboardAspirasi extends StatefulWidget {
 }
 
 class _DashboardAspirasiState extends State<DashboardAspirasi> {
-  // Data simulasi
   final List<PesanWarga> _pesanList = [
-    PesanWarga(
-      no: 1,
-      pengirim: 'Varizky Naldiba Rimra',
-      judul: 'titootit',
-      status: 'Diterima',
-      tanggalDibuat: '16 Oktober 2025',
-    ),
-    PesanWarga(
-      no: 2,
-      pengirim: 'Habibie Ed Dien',
-      judul: 'tes',
-      status: 'Pending',
-      tanggalDibuat: '28 September 2025',
-    ),
-    PesanWarga(
-      no: 3,
-      pengirim: 'Ahmad Fulan',
-      judul: 'Aspirasi RT 05',
-      status: 'Pending',
-      tanggalDibuat: '01 Oktober 2025',
-    ),
-    PesanWarga(
-      no: 4,
-      pengirim: 'Siti Aminah',
-      judul: 'Usul Perbaikan Jalan',
-      status: 'Diterima',
-      tanggalDibuat: '10 September 2025',
-    ),
+    PesanWarga(no: 1, pengirim: 'Varizky Naldiba Rimra', judul: 'Titootit', status: 'Diterima', tanggalDibuat: '16 Oktober 2025'),
+    PesanWarga(no: 2, pengirim: 'Habibie Ed Dien', judul: 'Tes', status: 'Pending', tanggalDibuat: '28 September 2025'),
+    PesanWarga(no: 3, pengirim: 'Ahmad Fulan', judul: 'Aspirasi RT 05', status: 'Pending', tanggalDibuat: '01 Oktober 2025'),
+    PesanWarga(no: 4, pengirim: 'Siti Aminah', judul: 'Usul Perbaikan Jalan', status: 'Diterima', tanggalDibuat: '10 September 2025'),
   ];
 
   String? _filterJudul;
   String? _filterStatus;
 
-  // =========================================================================
-  // MODAL FILTER
-  // =========================================================================
   void _showFilterModal(BuildContext context) {
     showDialog(
       context: context,
@@ -76,135 +47,71 @@ class _DashboardAspirasiState extends State<DashboardAspirasi> {
         return StatefulBuilder(
           builder: (context, setStateModal) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              titlePadding: const EdgeInsets.all(24),
-              contentPadding: const EdgeInsets.only(
-                left: 24,
-                right: 24,
-                bottom: 24,
-              ),
+              backgroundColor: AppTheme.background,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Filter Pesan Warga',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
+                  Text('Filter Pesan Warga', style: Theme.of(context).textTheme.titleLarge),
+                  IconButton(icon: const Icon(Icons.close, color: AppTheme.primary), onPressed: () => Navigator.pop(context)),
                 ],
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Judul Filter
-                  Text(
-                    'Judul',
-                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text('Judul', style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   TextFormField(
                     initialValue: currentJudul,
                     decoration: InputDecoration(
                       hintText: 'Cari judul...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                     ),
-                    onChanged: (value) {
-                      currentJudul = value.isEmpty ? null : value;
-                    },
+                    onChanged: (v) => currentJudul = v.isEmpty ? null : v,
                   ),
                   const SizedBox(height: 20),
-
-                  // Status Filter
-                  Text(
-                    'Status',
-                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text('Status', style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
                     value: currentStatus,
                     hint: const Text('-- Pilih Status --'),
-                    items: ['Diterima', 'Pending', 'Ditolak'].map((
-                      String status,
-                    ) {
-                      return DropdownMenuItem<String>(
-                        value: status,
-                        child: Text(status),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setStateModal(() {
-                        currentStatus = newValue;
-                      });
-                    },
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 4,
-                      ),
-                    ),
+                    items: ['Diterima', 'Pending', 'Ditolak'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                    onChanged: (v) => setStateModal(() => currentStatus = v),
+                    decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
                   ),
                   const SizedBox(height: 30),
-
-                  // Buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       OutlinedButton(
                         onPressed: () {
-                          // Reset filter
                           setState(() {
                             _filterJudul = null;
                             _filterStatus = null;
                           });
-                          Navigator.of(context).pop();
+                          Navigator.pop(context);
                         },
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.primaryOrange,
-                          side: BorderSide(color: AppTheme.primaryOrange),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          side: const BorderSide(color: AppTheme.primary),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        child: const Text('Reset Filter'),
+                        child: const Text('Reset Filter', style: TextStyle(color: AppTheme.primary)),
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          // Terapkan filter
                           setState(() {
                             _filterJudul = currentJudul;
                             _filterStatus = currentStatus;
                           });
-                          Navigator.of(context).pop();
+                          Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.highlightYellow,
-                          foregroundColor: AppTheme.darkBrown,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
+                          backgroundColor: AppTheme.third,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                         child: const Text('Terapkan'),
                       ),
@@ -219,225 +126,94 @@ class _DashboardAspirasiState extends State<DashboardAspirasi> {
     );
   }
 
-  // =========================================================================
-  // FUNGSI UTAMA
-  // =========================================================================
   List<PesanWarga> get _filteredPesanList {
-    if (_filterJudul == null && _filterStatus == null) {
-      return _pesanList;
-    }
-
-    return _pesanList.where((pesan) {
-      final matchesJudul =
-          _filterJudul == null ||
-          pesan.judul.toLowerCase().contains(_filterJudul!.toLowerCase());
-      final matchesStatus =
-          _filterStatus == null ||
-          pesan.status.toLowerCase() == _filterStatus!.toLowerCase();
-      return matchesJudul && matchesStatus;
+    return _pesanList.where((p) {
+      final byJudul = _filterJudul == null || p.judul.toLowerCase().contains(_filterJudul!.toLowerCase());
+      final byStatus = _filterStatus == null || p.status.toLowerCase() == _filterStatus!.toLowerCase();
+      return byJudul && byStatus;
     }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final filteredList = _filteredPesanList;
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          // Gradient background
-          gradient: LinearGradient(
-            colors: [AppTheme.darkBrown, AppTheme.warmCream],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              title: Text(
-                'Dashboard Warga',
-                style: theme.textTheme.displayLarge!.copyWith(
-                  color: AppTheme.darkBrown,
-                ),
-              ),
-              backgroundColor: AppTheme.primaryOrange,
-              floating: true,
-              pinned: true,
-              expandedHeight: 0, // No expansion needed for this screen
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Container(
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.primaryOrange.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+      backgroundColor: AppTheme.background,
+      appBar: AppBar(
+        title: const Text('Dashboard Aspirasi Warga'),
+        backgroundColor: AppTheme.primary,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Card(
+          elevation: 3,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showFilterModal(context),
+                    icon: const Icon(Icons.filter_list, color: Colors.white),
+                    label: const Text('Filter', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.secondary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Filter Button
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: ElevatedButton.icon(
-                          onPressed: () => _showFilterModal(context),
-                          icon: const Icon(
-                            Icons.filter_list,
-                            color: AppTheme.darkBrown,
-                          ),
-                          label: const Text(
-                            'Filter',
-                            style: TextStyle(color: AppTheme.darkBrown),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.highlightYellow,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            elevation: 5,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Data Table (Responsive/Scrollable)
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: DataTable(
-                          columnSpacing: 24,
-                          horizontalMargin: 8,
-                          headingRowColor: MaterialStateProperty.all(
-                            AppTheme.warmCream,
-                          ),
-                          headingTextStyle: theme.textTheme.bodyLarge!.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryOrange,
-                          ),
-                          columns: const [
-                            DataColumn(label: Text('NO')),
-                            DataColumn(label: Text('PENGIRIM')),
-                            DataColumn(label: Text('JUDUL')),
-                            DataColumn(label: Text('STATUS')),
-                            DataColumn(label: Text('TANGGAL DIBUAT')),
-                            DataColumn(label: Text('AKSI')),
-                          ],
-                          rows: filteredList.map((pesan) {
-                            return DataRow(
-                              cells: [
-                                DataCell(Text(pesan.no.toString())),
-                                DataCell(Text(pesan.pengirim)),
-                                DataCell(Text(pesan.judul)),
-                                DataCell(StatusChip(status: pesan.status)),
-                                DataCell(Text(pesan.tanggalDibuat)),
-                                DataCell(
-                                  PopupMenuButton<String>(
-                                    icon: const Icon(
-                                      Icons.more_vert,
-                                      color: AppTheme.primaryOrange,
-                                    ),
-                                    onSelected: (String result) {
-                                      if (result == 'Edit') {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const EditPesanScreen(),
-                                          ),
-                                        );
-                                      } else if (result == 'Detail') {
-                                        // TODO: Implement Detail Screen
-                                        print(
-                                          'Lihat Detail Pesan ${pesan.judul}',
-                                        );
-                                      } else if (result == 'Hapus') {
-                                        // TODO: Implement Delete Confirmation
-                                        print('Hapus Pesan ${pesan.judul}');
-                                      }
-                                    },
-                                    itemBuilder: (BuildContext context) =>
-                                        <PopupMenuEntry<String>>[
-                                          const PopupMenuItem<String>(
-                                            value: 'Detail',
-                                            child: Text('Detail'),
-                                          ),
-                                          const PopupMenuItem<String>(
-                                            value: 'Edit',
-                                            child: Text('Edit'),
-                                          ),
-                                          const PopupMenuItem<String>(
-                                            value: 'Hapus',
-                                            child: Text('Hapus'),
-                                          ),
-                                        ],
-                                  ),
-                                ),
-                              ],
-                            );
-                          }).toList(),
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Pagination (Simplified)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.arrow_back_ios,
-                              size: 16,
-                              color: AppTheme.warmCream,
-                            ),
-                            onPressed: () {}, // Logic for previous page
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.highlightYellow,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text(
-                              '1',
-                              style: TextStyle(
-                                color: AppTheme.darkBrown,
-                                fontWeight: FontWeight.bold,
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      columnSpacing: 20,
+                      headingRowColor: MaterialStateProperty.all(AppTheme.primary.withOpacity(0.1)),
+                      headingTextStyle: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary),
+                      dataRowColor: MaterialStateProperty.all(Colors.white),
+                      columns: const [
+                        DataColumn(label: Text('NO')),
+                        DataColumn(label: Text('PENGIRIM')),
+                        DataColumn(label: Text('JUDUL')),
+                        DataColumn(label: Text('STATUS')),
+                        DataColumn(label: Text('TANGGAL')),
+                        DataColumn(label: Text('AKSI')),
+                      ],
+                      rows: filteredList.map((pesan) {
+                        return DataRow(
+                          cells: [
+                            DataCell(Text(pesan.no.toString(), style: const TextStyle(color: AppTheme.primary))),
+                            DataCell(Text(pesan.pengirim, style: const TextStyle(color: AppTheme.primary))),
+                            DataCell(Text(pesan.judul, style: const TextStyle(color: AppTheme.primary))),
+                            DataCell(StatusChip(status: pesan.status)),
+                            DataCell(Text(pesan.tanggalDibuat, style: const TextStyle(color: AppTheme.primary))),
+                            DataCell(
+                              PopupMenuButton<String>(
+                                icon: const Icon(Icons.more_vert, color: AppTheme.secondary),
+                                onSelected: (value) {
+                                  if (value == 'Edit') {
+                                    Navigator.push(context, MaterialPageRoute(builder: (_) => const EditPesanScreen()));
+                                  }
+                                },
+                                itemBuilder: (_) => const [
+                                  PopupMenuItem(value: 'Detail', child: Text('Detail')),
+                                  PopupMenuItem(value: 'Edit', child: Text('Edit')),
+                                  PopupMenuItem(value: 'Hapus', child: Text('Hapus')),
+                                ],
                               ),
                             ),
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.arrow_forward_ios,
-                              size: 16,
-                              color: AppTheme.warmCream,
-                            ),
-                            onPressed: () {}, // Logic for next page
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

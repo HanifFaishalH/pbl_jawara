@@ -2,45 +2,39 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   // 🎨 Palet Warna
-  static const Color primaryOrange = Color(0xFFFF8100); // Tombol utama, header
-  static const Color highlightYellow = Color(0xFFFFE381); // Aksen
-  static const Color warmCream = Color(0xFFFFFDE7); // Background
-  static const Color darkBrown = Color(0xFF4E342E); // Teks utama
+  static const Color primary = Color(0xFF26547C); // Warna teks utama & AppBar
+  static const Color secondary = Color(0xFFEF476F); // Warna aksen
+  static const Color third = Color(0xFF06D6A0); // Warna tombol utama
+  static const Color fourth = Color(0xFFFFD166); // Warna ikon / highlight
+  static const Color background = Color(0xFFFCFCFC); // Latar utama
 
   static final ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
 
-    // 🌿 Warna latar belakang lembut
-    scaffoldBackgroundColor: warmCream,
+    scaffoldBackgroundColor: background,
 
-    colorScheme: ColorScheme(
-      primary: primaryOrange,
-      onPrimary: Colors.white,
-      primaryContainer: highlightYellow,
-      onPrimaryContainer: darkBrown,
-      secondary: highlightYellow,
-      onSecondary: darkBrown,
-      secondaryContainer: warmCream,
-      onSecondaryContainer: darkBrown,
-      background: warmCream,
-      onBackground: darkBrown,
-      surface: warmCream,
-      onSurface: darkBrown,
-      surfaceVariant: highlightYellow.withOpacity(0.2),
-      onSurfaceVariant: darkBrown,
-      error: Colors.red.shade700,
+    // 🎨 Skema warna utama
+    colorScheme: const ColorScheme.light(
+      primary: primary, // untuk teks dan elemen utama
+      onPrimary: Colors.white, // teks di atas warna primary
+      secondary: secondary, // warna aksen (misal untuk floating button)
+      onSecondary: Colors.white,
+      tertiary: third, // tombol utama
+      onTertiary: Colors.white,
+      background: background,
+      onBackground: primary,
+      surface: Colors.white,
+      onSurface: primary,
+      error: Colors.red,
       onError: Colors.white,
-      errorContainer: Colors.red.shade100,
-      onErrorContainer: Colors.red.shade900,
-      brightness: Brightness.light,
     ),
 
-    // 🧭 AppBar (header)
+    // 🧭 AppBar
     appBarTheme: const AppBarTheme(
-      backgroundColor: primaryOrange,
+      backgroundColor: primary,
       foregroundColor: Colors.white,
-      elevation: 2,
+      elevation: 3,
       centerTitle: true,
       titleTextStyle: TextStyle(
         fontSize: 20,
@@ -49,10 +43,10 @@ class AppTheme {
       ),
     ),
 
-    // 🔘 Tombol utama (CTA)
+    // 🔘 Tombol utama
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: primaryOrange,
+        backgroundColor: third,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -62,17 +56,23 @@ class AppTheme {
 
     // 📄 Teks
     textTheme: const TextTheme(
-      displayLarge: TextStyle(fontSize: 32.0, fontWeight: FontWeight.bold, color: darkBrown),
-      titleLarge: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold, color: darkBrown),
-      bodyLarge: TextStyle(fontSize: 16.0, color: darkBrown),
-      bodyMedium: TextStyle(fontSize: 14.0, color: darkBrown),
-      labelLarge: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w600, color: darkBrown),
+      displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: primary),
+      titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: primary),
+      bodyLarge: TextStyle(fontSize: 16, color: primary),
+      bodyMedium: TextStyle(fontSize: 14, color: primary),
+      labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: primary),
     ),
 
-    // 🔔 Chip, Badge, dan elemen kecil
+    // 🧩 Icon
+    iconTheme: const IconThemeData(
+      color: fourth,
+      size: 24,
+    ),
+
+    // 🔔 Chip / Badge
     chipTheme: ChipThemeData(
-      backgroundColor: highlightYellow.withOpacity(0.8),
-      labelStyle: const TextStyle(color: darkBrown),
+      backgroundColor: secondary.withOpacity(0.9),
+      labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     ),
   );
