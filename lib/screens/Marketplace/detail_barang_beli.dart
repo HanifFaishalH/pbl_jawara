@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class DetailBarangBeli extends StatelessWidget {
+  // Data ini diterima dari 'extra' saat push dari DaftarPembelian
   final Map<String, String> barangData;
 
   const DetailBarangBeli({super.key, required this.barangData});
 
-  // Fungsi helper baru untuk tampilan vertikal
+  // Widget kecil untuk menampilkan baris detail
   Widget _buildVerticalDetail(
       BuildContext context, String label, String value, Color? color) {
     final theme = Theme.of(context);
@@ -15,7 +16,6 @@ class DetailBarangBeli extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Label (di atas)
           Text(
             label,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -23,7 +23,6 @@ class DetailBarangBeli extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          // Value (di bawah, lebih menonjol)
           Text(
             value,
             style: theme.textTheme.titleMedium?.copyWith(
@@ -41,7 +40,14 @@ class DetailBarangBeli extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Mengambil nilai stok dan menkonversinya
+    // Parsing data agar aman
+    final String nama = barangData['nama'] ?? '-';
+    final String kategori = barangData['kategori'] ?? '-';
+    final String harga = barangData['harga'] ?? '0';
+    final String alamat = barangData['alamat'] ?? '-';
+    final String fotoUrl = barangData['foto'] ?? '';
+    
+    // Parsing stok ke integer untuk logika tombol
     final int stok = int.tryParse(barangData['stok'] ?? '0') ?? 0;
     final Color stokColor = stok > 0 ? Colors.blue.shade700 : Colors.red.shade700;
 
@@ -49,7 +55,7 @@ class DetailBarangBeli extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: colorScheme.primary,
         title: Text(
-          "Detail ${barangData['nama']}",
+          "Detail Produk",
           style: theme.textTheme.titleLarge?.copyWith(color: Colors.white),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -59,20 +65,41 @@ class DetailBarangBeli extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Gambar Barang Placeholder
+            // --- GAMBAR UTAMA ---
             Container(
-              height: 200,
+              height: 250,
+              width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                color: Colors.pink.shade50,
+                color: Colors.grey.shade100,
+                border: Border.all(color: Colors.grey.shade300),
               ),
-              child: const Center(
-                child: Icon(Icons.palette, size: 50, color: Colors.pink),
-              ),
+              clipBehavior: Clip.antiAlias,
+              child: fotoUrl.isNotEmpty
+                  ? Image.network(
+                      fotoUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.broken_image, size: 50, color: Colors.grey.shade400),
+                          const SizedBox(height: 8),
+                          Text("Gambar tidak dimuat", style: TextStyle(color: Colors.grey.shade600)),
+                        ],
+                      ),
+                    )
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.image_not_supported, size: 50, color: Colors.grey.shade400),
+                        const SizedBox(height: 8),
+                        Text("Tidak ada gambar", style: TextStyle(color: Colors.grey.shade600)),
+                      ],
+                    ),
             ),
             const SizedBox(height: 20),
-            
-            // Detail Barang
+
+            // --- KARTU INFORMASI ---
             Card(
               elevation: 2,
               shape: RoundedRectangleBorder(
@@ -80,58 +107,32 @@ class DetailBarangBeli extends StatelessWidget {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                // Mengubah Column untuk menampilkan item detail vertikal
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildVerticalDetail(
-                        context, 
-                        "Nama Barang",
-                        barangData['nama'] ?? '-', 
-                        null
-                    ),
+                    _buildVerticalDetail(context, "Nama Barang", nama, null),
                     const Divider(),
-                    _buildVerticalDetail(
-                        context, 
-                        "Kategori",
-                        barangData['kategori'] ?? '-', 
-                        null
-                    ),
+                    _buildVerticalDetail(context, "Kategori", kategori, null),
                     const Divider(),
-                    _buildVerticalDetail(
-                        context,
-                        "Harga",
-                        barangData['harga'] ?? 'Rp 0',
-                        Colors.green.shade700,
-                    ),
+                    _buildVerticalDetail(context, "Harga", "Rp $harga", Colors.green.shade700),
                     const Divider(),
-                    _buildVerticalDetail(
-                        context,
-                        "Stok Tersedia",
-                        barangData['stok'] ?? '0',
-                        stokColor,
-                    ),
+                    _buildVerticalDetail(context, "Stok Tersedia", "$stok Pcs", stokColor),
                     const Divider(),
-                    _buildVerticalDetail(
-                        context, 
-                        "Alamat Pengambilan",
-                        barangData['alamat'] ?? '-', 
-                        null
-                    ),
+                    _buildVerticalDetail(context, "Lokasi Penjual", alamat, null),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 30),
 
-            // Button Beli
+            // --- TOMBOL BELI ---
             ElevatedButton.icon(
               onPressed: stok > 0
                   ? () {
-                      // Navigasi ke halaman Checkout
+                      // Masuk ke checkout dengan membawa data yang sama
                       context.push('/checkout-barang', extra: barangData);
                     }
-                  : null, // Dinonaktifkan jika stok 0
+                  : null, // Tombol mati jika stok 0
               icon: const Icon(Icons.shopping_cart, color: Colors.white),
               label: Text(
                 stok > 0 ? "Beli Sekarang" : "Stok Habis",
@@ -143,7 +144,7 @@ class DetailBarangBeli extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                disabledBackgroundColor: Colors.grey,
+                disabledBackgroundColor: Colors.grey, // Warna saat disabled
               ),
             ),
           ],
