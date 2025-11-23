@@ -22,12 +22,10 @@ class AppTheme {
       onSecondary: Colors.white,
       tertiary: third, // tombol utama
       onTertiary: Colors.white,
-      background: background,
-      onBackground: primary,
-      surface: Colors.white,
+      surface: background,
       onSurface: primary,
       error: Colors.red,
-      onError: Colors.white,
+      onError: fourth,
     ),
 
     // 🧭 AppBar

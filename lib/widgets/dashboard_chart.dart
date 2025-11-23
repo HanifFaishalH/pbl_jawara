@@ -1,6 +1,9 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+/// 📈 DashboardChart Widget
+/// Menampilkan data kegiatan per kategori dalam bentuk pie chart.
+/// Bagian dari tampilan utama Dashboard.
 class DashboardChart extends StatelessWidget {
   const DashboardChart({super.key});
 
@@ -11,29 +14,37 @@ class DashboardChart extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
+            color: colorScheme.shadow.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "📊 Kegiatan per Kategori",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          // 🧾 Judul Widget
+          Text(
+            "📊 Statistik Kegiatan Warga",
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.primary,
+                ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Distribusi kegiatan berdasarkan kategori RW",
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurface.withOpacity(0.7),
+                ),
           ),
           const SizedBox(height: 16),
 
-          // Pie Chart
+          // 🍩 Pie Chart
           AspectRatio(
             aspectRatio: 1.4,
             child: PieChart(
@@ -44,8 +55,8 @@ class DashboardChart extends StatelessWidget {
                 sections: [
                   PieChartSectionData(
                     value: 40,
-                    color: Colors.blue,
-                    title: 'Sosial\n40%',
+                    color: colorScheme.primary,
+                    title: '40%',
                     radius: 60,
                     titleStyle: const TextStyle(
                       fontSize: 14,
@@ -55,19 +66,8 @@ class DashboardChart extends StatelessWidget {
                   ),
                   PieChartSectionData(
                     value: 30,
-                    color: Colors.orange,
-                    title: 'Keagamaan\n30%',
-                    radius: 60,
-                    titleStyle: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  PieChartSectionData(
-                    value: 20,
-                    color: Colors.purple,
-                    title: 'Pendidikan\n20%',
+                    color: colorScheme.secondary,
+                    title: '30%',
                     radius: 60,
                     titleStyle: const TextStyle(
                       fontSize: 14,
@@ -77,8 +77,19 @@ class DashboardChart extends StatelessWidget {
                   ),
                   PieChartSectionData(
                     value: 10,
-                    color: Colors.red,
-                    title: 'Olahraga\n10%',
+                    color: colorScheme.tertiary,
+                    title: '10%',
+                    radius: 60,
+                    titleStyle: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  PieChartSectionData(
+                    value: 10,
+                    color: colorScheme.onError,
+                    title: '10%',
                     radius: 60,
                     titleStyle: const TextStyle(
                       fontSize: 14,
@@ -91,9 +102,12 @@ class DashboardChart extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
+
+          // 🔘 Keterangan Warna
           Wrap(
             spacing: 8,
+            runSpacing: 8,
             children: const [
               _LegendDot(color: Colors.blue, label: 'Komunitas & Sosial'),
               _LegendDot(color: Colors.orange, label: 'Keagamaan'),
@@ -118,7 +132,11 @@ class _LegendDot extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 6),
         Text(label, style: const TextStyle(fontSize: 12)),
       ],

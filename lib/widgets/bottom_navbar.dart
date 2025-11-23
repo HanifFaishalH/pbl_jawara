@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:jawaramobile_1/widgets/menu_popup.dart'; // ⬅️ Tambahkan ini
+import 'package:jawaramobile_1/widgets/menu_popup.dart';
 
 class BottomNavbar extends StatefulWidget {
   const BottomNavbar({super.key});
@@ -10,7 +10,31 @@ class BottomNavbar extends StatefulWidget {
   State<BottomNavbar> createState() => _BottomNavbarState();
 }
 
-class _BottomNavbarState extends State<BottomNavbar> {
+class _BottomNavbarState extends State<BottomNavbar>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _scaleAnimation =
+        CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
+    _fadeAnimation =
+        CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).uri.toString();
     if (location.startsWith('/dashboard')) return 0;
@@ -20,19 +44,21 @@ class _BottomNavbarState extends State<BottomNavbar> {
     return 0;
   }
 
-  void _onItemTapped(int index) {
+  void _onItemTapped(int index) async {
     switch (index) {
       case 0:
         context.go('/dashboard');
         break;
       case 1:
-      // laporan
+        // laporan
         break;
       case 2:
-        showMenuPopUp(context); // ✅ ganti ini
+        await _controller.forward();
+        showMenuPopUp(context);
+        await _controller.reverse();
         break;
       case 3:
-      // pengguna
+        // pengguna
         break;
     }
   }
@@ -56,9 +82,9 @@ class _BottomNavbarState extends State<BottomNavbar> {
       backgroundColor: colorScheme.surface,
       items: items
           .map((e) => BottomNavigationBarItem(
-        icon: FaIcon(e['icon'] as IconData),
-        label: e['label'] as String,
-      ))
+                icon: FaIcon(e['icon'] as IconData),
+                label: e['label'] as String,
+              ))
           .toList(),
     );
   }
