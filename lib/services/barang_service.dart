@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class BarangService {
-  static const String BaseURl = "http://10.0.2.2:8000/api";
+  static const String BaseURl = "http://localhost:8000/api";
   static String? token;
 
   static void setToken(String newToken) {

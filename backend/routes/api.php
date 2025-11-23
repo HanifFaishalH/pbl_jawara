@@ -6,6 +6,14 @@ use App\Http\Controllers\Api\BarangController;
 use App\Http\Controllers\Api\KeranjangController;
 use App\Http\Controllers\Api\TransaksiController;
 use App\Http\Controllers\Api\PembayaranController;
+use App\Http\Controllers\API\AuthController;
+
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+});
 
 Route::get('/barang', [BarangController::class, 'index']);
 Route::get('/barang/{id}', [BarangController::class, 'show']);

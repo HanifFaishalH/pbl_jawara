@@ -6,6 +6,7 @@ import '../../widgets/auth/login_form.dart';
 import '../../widgets/auth/login_divider.dart';
 import '../../widgets/auth/login_google_button.dart';
 import '../../widgets/auth/login_register_link.dart';
+import '../../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -47,20 +48,30 @@ class _LoginPageState extends State<LoginPage>
     super.dispose();
   }
 
-  void _handleLogin() {
-    if (_formKey.currentState!.validate()) {
+  void _handleLogin() async {
+  if (_formKey.currentState!.validate()) {
+    try {
+      final authService = AuthService();
+      final result = await authService.login(
+        _emailController.text,
+        _passwordController.text,
+      );
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Login berhasil!'),
+        SnackBar(
+          content: Text('Login berhasil, selamat datang ${result['user']['user_nama_depan']}'),
           backgroundColor: Colors.green,
         ),
       );
 
-      Future.delayed(const Duration(milliseconds: 700), () {
-        context.go('/dashboard');
-      });
+      context.go('/dashboard');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
     }
   }
+}
 
   void _handleGoogleLogin() {
     ScaffoldMessenger.of(context).showSnackBar(
