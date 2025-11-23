@@ -71,6 +71,8 @@ import 'package:jawaramobile_1/screens/Marketplace/pesanan_masuk.dart';
 import 'package:jawaramobile_1/screens/Marketplace/detail_pesanan_masuk.dart';
 import 'package:jawaramobile_1/screens/Marketplace/riwayat_pesanan_page.dart';
 import 'package:jawaramobile_1/screens/Marketplace/detail_riwayat_pesanan_page.dart';
+// 1. IMPORT FILE KERANJANG DI SINI
+import 'package:jawaramobile_1/screens/Marketplace/keranjang_page.dart'; 
 
 final appRouter = GoRouter(
   initialLocation: '/login',
@@ -337,12 +339,23 @@ final appRouter = GoRouter(
       name: 'dashboard-aspirasi',
       builder: (context, state) => const DashboardAspirasi(),
     ),
-    // ====== Marketplace ======
+    
+    // ======================================================
+    // ====== MARKETPLACE SECTION (UPDATED) =================
+    // ======================================================
     GoRoute(
       path: '/menu-marketplace',
       name: 'menu-marketplace',
       builder: (context, state) => const MarketplaceMenu(),
     ),
+    
+    // 2. ROUTE KERANJANG DITAMBAHKAN DI SINI
+    GoRoute(
+      path: '/keranjang',
+      name: 'keranjang',
+      builder: (context, state) => const KeranjangPage(),
+    ),
+
     GoRoute(
       path: '/daftar-barang-jual',
       builder: (context, state) => const DaftarBarang(),
@@ -372,11 +385,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/checkout-barang',
       builder: (context, state) {
-        final item = state.extra as Map<String, String>;
-        return CheckoutBarang(barangData: item);
+        final data = state.extra; 
+        return CheckoutBarang(checkoutData: data);
       },
     ),
-    // Contoh penambahan rute di GoRouter
     GoRoute(
         path: '/pesanan-masuk',
         builder: (context, state) => const PesananMasuk(),
@@ -387,10 +399,6 @@ final appRouter = GoRouter(
         final item = state.extra as Map<String, String>;
         return DetailPesananMasuk(pesananData: item);
       },
-    ),
-    GoRoute(
-      path: '/daftar-pembelian',
-      builder: (context, state) => const DaftarPembelian(),
     ),
     GoRoute(
       path: '/riwayat-pesanan',

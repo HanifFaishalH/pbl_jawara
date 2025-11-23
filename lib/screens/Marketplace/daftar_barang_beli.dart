@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:jawaramobile_1/services/barang_service.dart'; // Sesuaikan import ini
+import 'package:jawaramobile_1/services/barang_service.dart';
 
 class DaftarPembelian extends StatefulWidget {
   const DaftarPembelian({super.key});
@@ -19,28 +19,23 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
     futureBarang = BarangService().fetchBarang();
   }
 
-  // Helper untuk mengambil string aman dari Map
   String _safeGet(Map<String, dynamic> item, String key, [String defaultValue = '-']) {
     final value = item[key];
     if (value == null) return defaultValue;
     return value.toString();
   }
 
-  // Filter List berdasarkan kategori
   List<dynamic> _getFilteredBarangList(List<dynamic> allBarang) {
     if (selectedCategory == 'Semua') return allBarang;
 
     return allBarang.where((item) {
       final itemMap = item as Map<String, dynamic>;
-      
-      // Mengambil nama kategori jika bentuknya object/nested dari Laravel
       String catName = '';
       if (itemMap['kategori'] is Map) {
         catName = itemMap['kategori']['kategori_nama'] ?? '';
       } else {
         catName = itemMap['kategori']?.toString() ?? '';
       }
-      
       return catName.toLowerCase().contains(selectedCategory.toLowerCase());
     }).toList();
   }
@@ -62,6 +57,13 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
           onPressed: () => context.go('/menu-marketplace'),
         ),
         actions: [
+          // --- IKON KERANJANG ---
+          IconButton(
+            icon: const Icon(Icons.shopping_cart, color: Colors.white),
+            onPressed: () {
+              context.push('/keranjang'); 
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.receipt_long, color: Colors.white),
             onPressed: () => context.go('/riwayat-pesanan'),
@@ -89,7 +91,6 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- CHIP KATEGORI ---
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text("Kategori Populer", style: theme.textTheme.titleMedium),
@@ -107,21 +108,12 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
                     ],
                   ),
                 ),
-
-                // --- JUDUL DAFTAR ---
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text("Daftar Barang", style: theme.textTheme.titleLarge),
                 ),
-
-                // --- GRID BARANG ---
                 filteredBarangList.isEmpty
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(30.0),
-                          child: Text("Tidak ada barang ditemukan."),
-                        ),
-                      )
+                    ? const Center(child: Padding(padding: EdgeInsets.all(30.0), child: Text("Tidak ada barang ditemukan.")))
                     : GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -134,19 +126,13 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
                         itemCount: filteredBarangList.length,
                         itemBuilder: (context, index) {
                           final item = filteredBarangList[index] as Map<String, dynamic>;
-
-                          // 1. Ekstraksi Data untuk Tampilan Grid
                           final String nama = _safeGet(item, 'barang_nama');
                           final String harga = _safeGet(item, 'barang_harga', '0');
-                          final String alamat = _safeGet(item, 'alamat', 'Malang'); // Default jika null
-                          // Sesuaikan key 'image' ini dengan response API Laravel Anda
+                          final String alamat = _safeGet(item, 'alamat', 'Malang');
                           final String fotoUrl = item['image']?.toString() ?? ""; 
 
                           return InkWell(
                             onTap: () {
-                              // 2. LOGIKA UTAMA: Siapkan data bersih untuk halaman Detail
-                              
-                              // Ambil nama kategori dari object nested
                               String kategoriBersih = '-';
                               if (item['kategori'] != null) {
                                 if (item['kategori'] is Map) {
@@ -160,63 +146,34 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
                                 'nama': nama,
                                 'kategori': kategoriBersih,
                                 'harga': harga,
-                                'stok': _safeGet(item, 'barang_stok', '0'), // Pastikan key 'barang_stok' benar
+                                'stok': _safeGet(item, 'barang_stok', '0'),
                                 'alamat': alamat,
-                                'foto': fotoUrl, // URL Foto dikirim
+                                'foto': fotoUrl,
                                 'id': _safeGet(item, 'barang_id'),
                               };
 
-                              // Pindah ke halaman detail dengan membawa data extra
-                              context.push(
-                                '/detail-barang-beli',
-                                extra: dataUntukDetail,
-                              );
+                              context.push('/detail-barang-beli', extra: dataUntukDetail);
                             },
                             child: Card(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                               clipBehavior: Clip.antiAlias,
                               elevation: 2,
                               child: Column(
                                 children: [
-                                  // Gambar di Grid
                                   Expanded(
                                     child: fotoUrl.isNotEmpty
-                                        ? Image.network(
-                                            fotoUrl,
-                                            width: double.infinity,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (ctx, err, _) => Container(
-                                              color: Colors.grey.shade200,
-                                              child: const Icon(Icons.broken_image, color: Colors.grey),
-                                            ),
-                                          )
-                                        : Container(
-                                            color: Colors.grey.shade200,
-                                            child: const Icon(Icons.image, size: 40, color: Colors.grey),
-                                          ),
+                                        ? Image.network(fotoUrl, width: double.infinity, fit: BoxFit.cover,
+                                            errorBuilder: (ctx, err, _) => Container(color: Colors.grey.shade200, child: const Icon(Icons.broken_image)))
+                                        : Container(color: Colors.grey.shade200, child: const Icon(Icons.image, size: 40)),
                                   ),
-                                  // Teks di Grid
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          nama,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(fontWeight: FontWeight.bold),
-                                        ),
+                                        Text(nama, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold)),
                                         const SizedBox(height: 4),
-                                        Text(
-                                          "Rp $harga",
-                                          style: TextStyle(
-                                            color: Colors.red.shade700,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
+                                        Text("Rp $harga", style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold)),
                                       ],
                                     ),
                                   ),

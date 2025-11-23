@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // 1. WAJIB IMPORT INI
 import '../../widgets/auth/login_header.dart';
 import '../../widgets/auth/login_welcome.dart';
 import '../../widgets/auth/login_form.dart';
@@ -49,29 +50,45 @@ class _LoginPageState extends State<LoginPage>
   }
 
   void _handleLogin() async {
-  if (_formKey.currentState!.validate()) {
-    try {
-      final authService = AuthService();
-      final result = await authService.login(
-        _emailController.text,
-        _passwordController.text,
-      );
+    if (_formKey.currentState!.validate()) {
+      try {
+        final authService = AuthService();
+        // Asumsi: result berisi Map dari JSON response Laravel
+        final result = await authService.login(
+          _emailController.text,
+          _passwordController.text,
+        );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Login berhasil, selamat datang ${result['user']['user_nama_depan']}'),
-          backgroundColor: Colors.green,
-        ),
-      );
+        // 2. LOGIKA PENYIMPANAN TOKEN (SANGAT PENTING)
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        
+        // Pastikan key 'token' sesuai dengan response JSON dari Laravel Anda
+        // Biasanya: { "token": "...", "user": {...} }
+        String token = result['token'] ?? ''; 
+        await prefs.setString('token', token);
+        
+        // Simpan juga nama user jika perlu untuk ditampilkan di dashboard nanti
+        String namaUser = result['user']['user_nama_depan'] ?? 'User';
+        await prefs.setString('user_nama', namaUser);
 
-      context.go('/dashboard');
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Login berhasil, selamat datang $namaUser'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        context.go('/dashboard');
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Gagal Login: ${e.toString()}")),
+        );
+      }
     }
   }
-}
 
   void _handleGoogleLogin() {
     ScaffoldMessenger.of(context).showSnackBar(
