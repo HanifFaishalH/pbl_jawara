@@ -21,6 +21,7 @@ class usersModel extends Authenticatable
         'user_nama_depan',
         'user_nama_belakang',
         'user_tanggal_lahir',
+        'user_alamat',
         'foto',
     ];
 

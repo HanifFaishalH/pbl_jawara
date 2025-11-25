@@ -11,17 +11,41 @@ class KeranjangController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $keranjang = KeranjangModel::with('barang')
+
+        // PERBAIKAN: Load 'barang.user' untuk mengambil data penjual (alamat)
+        $keranjang = KeranjangModel::with(['barang.user'])
             ->where('user_id', $user->user_id)
             ->get();
 
+        // Mapping data agar Frontend lebih mudah membacanya
+        $data = $keranjang->map(function($item) {
+            // Ambil alamat dari relasi: Keranjang -> Barang -> User (Penjual)
+            $alamat = 'Alamat tidak tersedia';
+            if ($item->barang && $item->barang->user) {
+                $alamat = $item->barang->user->user_alamat;
+            }
+
+            return [
+                'keranjang_id' => $item->keranjang_id,
+                'barang_id'    => $item->barang_id,
+                'jumlah'       => $item->jumlah,
+                // Data Barang Flattened (Diratakan)
+                'barang_nama'  => $item->barang->barang_nama,
+                'barang_harga' => $item->barang->barang_harga,
+                'barang_foto'  => $item->barang->barang_foto,
+                'barang_stok'  => $item->barang->barang_stok,
+                // DATA PENTING: Alamat Penjual
+                'alamat_penjual' => $alamat,
+            ];
+        });
+
         return response()->json([
             'success' => true,
-            'data' => $keranjang
+            'data' => $data
         ]);
     }
 
-    // UPDATE: LOGIKA MERGE (GABUNG JUMLAH)
+    // ... (Method store, update, destroy biarkan tetap sama seperti kode Anda sebelumnya)
     public function store(Request $request)
     {
         $request->validate([
@@ -30,19 +54,15 @@ class KeranjangController extends Controller
         ]);
 
         $user = $request->user();
-
-        // Cek apakah barang ini sudah ada di keranjang user?
         $existingItem = KeranjangModel::where('user_id', $user->user_id)
             ->where('barang_id', $request->barang_id)
             ->first();
 
         if ($existingItem) {
-            // Jika ada, update jumlahnya saja (Jumlah Lama + Jumlah Baru)
             $existingItem->jumlah += $request->jumlah;
             $existingItem->save();
             $keranjang = $existingItem;
         } else {
-            // Jika belum ada, buat baru
             $keranjang = KeranjangModel::create([
                 'user_id' => $user->user_id,
                 'barang_id' => $request->barang_id,
@@ -50,50 +70,30 @@ class KeranjangController extends Controller
             ]);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Barang berhasil masuk keranjang',
-            'data' => $keranjang
-        ]);
+        return response()->json(['success' => true, 'message' => 'Sukses', 'data' => $keranjang]);
     }
 
-    // UPDATE: UBAH JUMLAH (+ / -) LANGSUNG DARI KERANJANG
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'jumlah' => 'required|integer|min:1'
-        ]);
-
+        $request->validate(['jumlah' => 'required|integer|min:1']);
         $user = $request->user();
-        
-        // Pastikan keranjang milik user yang login
-        $item = KeranjangModel::where('keranjang_id', $id)
-                ->where('user_id', $user->user_id)
-                ->first();
+        $item = KeranjangModel::where('keranjang_id', $id)->where('user_id', $user->user_id)->first();
 
-        if (!$item) {
-            return response()->json(['success' => false, 'message' => 'Item tidak ditemukan'], 404);
-        }
+        if (!$item) return response()->json(['success' => false, 'message' => 'Not found'], 404);
 
         $item->jumlah = $request->jumlah;
         $item->save();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Jumlah berhasil diupdate'
-        ]);
+        return response()->json(['success' => true]);
     }
 
-    // HAPUS ITEM
     public function destroy(Request $request, $id)
     {
         $user = $request->user();
         $item = KeranjangModel::where('keranjang_id', $id)->where('user_id', $user->user_id)->first();
-
         if ($item) {
             $item->delete();
-            return response()->json(['success' => true, 'message' => 'Item dihapus']);
+            return response()->json(['success' => true]);
         }
-        return response()->json(['success' => false, 'message' => 'Gagal menghapus'], 404);
+        return response()->json(['success' => false], 404);
     }
 }

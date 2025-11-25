@@ -1,95 +1,142 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-// Import DetailPesananMasuk yang baru
-import 'detail_pesanan_masuk.dart'; // Sesuaikan path import Anda
+import 'package:jawaramobile_1/services/transaksi_service.dart';
 
-class PesananMasuk extends StatelessWidget {
+class PesananMasuk extends StatefulWidget {
   const PesananMasuk({super.key});
 
-  // Data dummy pesanan
-  final List<Map<String, String>> _pesanan = const [
-    {
-      "id": "P001",
-      "nama_barang": "Batik Cap Kawung",
-      "pembeli": "Bapak Hilmi",
-      "status": "Menunggu Pengambilan",
-      "tanggal": "18 November 2025",
-    },
-    {
-      "id": "P002",
-      "nama_barang": "Meja Kayu Jati",
-      "pembeli": "Ibu Azizah",
-      "status": "Selesai",
-      "tanggal": "15 November 2025",
-    },
-  ];
+  @override
+  State<PesananMasuk> createState() => _PesananMasukState();
+}
+
+class _PesananMasukState extends State<PesananMasuk> {
+  late Future<List<dynamic>> _futurePesanan;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshData();
+  }
+
+  Future<void> _refreshData() async {
+    setState(() {
+      _futurePesanan = TransaksiService().fetchPesananMasuk();
+    });
+  }
+
+  Future<void> _selesaikanPesanan(int id) async {
+    bool confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Selesaikan Pesanan?"),
+        content: const Text("Pastikan barang sudah diambil pembeli."),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Batal")),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Ya, Selesai")),
+        ],
+      ),
+    ) ?? false;
+
+    if (confirm) {
+      bool success = await TransaksiService().updateStatusTransaksi(id, 'selesai');
+      if (success) {
+        if(!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Status pesanan selesai!")));
+        _refreshData();
+      } else {
+        if(!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Gagal update status.")));
+      }
+    }
+  }
 
   Color _getStatusColor(String status) {
-    if (status.contains('Menunggu')) return Colors.orange;
-    if (status.contains('Selesai')) return Colors.green;
+    final s = status.toLowerCase();
+    if (s.contains('menunggu') || s.contains('pending')) return Colors.orange;
+    if (s.contains('selesai')) return Colors.green;
+    if (s.contains('dibatalkan')) return Colors.red;
     return Colors.grey;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: colorScheme.primary,
-        title: Text(
-          "Pesanan Masuk 📦",
-          style: theme.textTheme.titleLarge?.copyWith(color: Colors.white),
-        ),
+        backgroundColor: theme.colorScheme.primary,
+        title: const Text("Pesanan Masuk 📦", style: TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: _pesanan.isEmpty
-          ? Center(
-              child: Text(
-                "Tidak ada pesanan masuk.",
-                style: theme.textTheme.titleMedium,
-              ),
-            )
-          : ListView.builder(
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: FutureBuilder<List<dynamic>>(
+          future: _futurePesanan,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+            
+            final pesananList = snapshot.data ?? [];
+            if (pesananList.isEmpty) return const Center(child: Text("Belum ada pesanan masuk."));
+
+            return ListView.builder(
               padding: const EdgeInsets.all(16.0),
-              itemCount: _pesanan.length,
+              itemCount: pesananList.length,
               itemBuilder: (context, index) {
-                final item = _pesanan[index];
+                final item = pesananList[index];
+                final String status = item['status'] ?? 'Menunggu';
+                final int idTransaksi = item['transaksi_id']; // Penting
+
+                bool showButtonSelesai = (status == 'menunggu_diambil' || status == 'pending');
+
                 return Card(
-                  elevation: 1,
                   margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: ListTile(
-                    leading: const Icon(Icons.receipt, color: Colors.blue),
-                    title: Text("Pesanan #${item['id']}",
-                        style: theme.textTheme.titleMedium),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text("Barang: ${item['nama_barang']}"),
-                        Text("Pembeli: ${item['pembeli']}"),
-                        Text("Tanggal: ${item['tanggal']}"),
-                      ],
-                    ),
-                    trailing: Chip(
-                      label: Text(
-                        item['status']!,
-                        style: const TextStyle(color: Colors.white),
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.receipt, color: Colors.blue),
+                        title: Text("Order ID: $idTransaksi"),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("Barang: ${item['barang_nama']}"),
+                            Text("Pembeli: ${item['user_nama']}"),
+                            Text("Total: Rp ${item['total_harga']}"),
+                          ],
+                        ),
+                        trailing: Chip(
+                          label: Text(
+                            status.replaceAll('_', ' '), 
+                            style: const TextStyle(color: Colors.white, fontSize: 10)
+                          ),
+                          backgroundColor: _getStatusColor(status),
+                        ),
                       ),
-                      backgroundColor: _getStatusColor(item['status']!),
-                    ),
-                    // PEMBARUAN NAVIGASI
-                    onTap: () {
-                      context.push('/detail-pesanan-masuk', extra: item);
-                    },
+                      
+                      // Tombol Selesai (Hanya muncul jika belum selesai/batal)
+                      if (showButtonSelesai)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () => _selesaikanPesanan(idTransaksi),
+                              icon: const Icon(Icons.check_circle, size: 18),
+                              label: const Text("Tandai Selesai (Barang Diambil)"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 );
               },
-            ),
+            );
+          },
+        ),
+      ),
     );
   }
 }

@@ -12,7 +12,7 @@ class BarangModel extends Model
     protected $table = 'm_barang';
     protected $primaryKey = 'barang_id';
     protected $fillable = [
-        'kategori_id', 'barang_kode', 'barang_nama', 
+        'kategori_id', 'user_id', 'barang_kode', 'barang_nama', 
         'barang_deskripsi', 'barang_harga', 'barang_stok', 'barang_foto'
     ];
 
@@ -32,5 +32,11 @@ class BarangModel extends Model
     public function detailTransaksi()
     {
         return $this->hasMany(TransaksiDetailModel::class, 'barang_id', 'barang_id');
+    }
+
+    public function user()
+    {
+        // Asumsi di tabel m_barang ada kolom user_id (pemilik barang)
+        return $this->belongsTo(usersModel::class, 'user_id', 'user_id');
     }
 }
