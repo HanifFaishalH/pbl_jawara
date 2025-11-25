@@ -60,7 +60,8 @@ class _DetailBarangBeliState extends State<DetailBarangBeli> {
     final String nama = widget.barangData['nama'] ?? '-';
     final String kategori = widget.barangData['kategori'] ?? '-';
     final String harga = widget.barangData['harga'] ?? '0';
-    final String alamat = widget.barangData['alamat'] ?? '-';
+    // Gunakan 'alamat_penjual' sesuai dengan respon JSON Laravel
+    final String alamat = widget.barangData['alamat_penjual'] ?? '-';
     final String fotoUrl = widget.barangData['foto'] ?? '';
     final int stok = int.tryParse(widget.barangData['stok'] ?? '0') ?? 0;
     final Color stokColor = stok > 0 ? Colors.blue.shade700 : Colors.red.shade700;

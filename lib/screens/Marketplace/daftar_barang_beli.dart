@@ -19,6 +19,7 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
     futureBarang = BarangService().fetchBarang();
   }
 
+  // Helper untuk mengambil data dengan aman (mencegah null)
   String _safeGet(Map<String, dynamic> item, String key, [String defaultValue = '-']) {
     final value = item[key];
     if (value == null) return defaultValue;
@@ -126,10 +127,16 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
                         itemCount: filteredBarangList.length,
                         itemBuilder: (context, index) {
                           final item = filteredBarangList[index] as Map<String, dynamic>;
+                          
+                          // --- PENGAMBILAN DATA ---
                           final String nama = _safeGet(item, 'barang_nama');
                           final String harga = _safeGet(item, 'barang_harga', '0');
-                          final String alamat = _safeGet(item, 'alamat', 'Malang');
-                          final String fotoUrl = item['image']?.toString() ?? ""; 
+                          
+                          // PERBAIKAN 1: Mengambil 'alamat_penjual' sesuai JSON Laravel
+                          final String alamat = _safeGet(item, 'alamat_penjual', 'Alamat tidak tersedia');
+                          
+                          // PERBAIKAN 2: Mengambil 'barang_foto' sesuai JSON Laravel (sebelumnya 'image')
+                          final String fotoUrl = item['barang_foto']?.toString() ?? ""; 
 
                           return InkWell(
                             onTap: () {
@@ -147,7 +154,10 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
                                 'kategori': kategoriBersih,
                                 'harga': harga,
                                 'stok': _safeGet(item, 'barang_stok', '0'),
-                                'alamat': alamat,
+                                
+                                // PERBAIKAN 3: Mengirim key 'alamat_penjual' agar konsisten
+                                'alamat_penjual': alamat, 
+                                
                                 'foto': fotoUrl,
                                 'id': _safeGet(item, 'barang_id'),
                               };
@@ -172,6 +182,9 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(nama, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                        const SizedBox(height: 4),
+                                        // Opsional: Menampilkan alamat penjual di Card
+                                        Text(alamat, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                                         const SizedBox(height: 4),
                                         Text("Rp $harga", style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold)),
                                       ],

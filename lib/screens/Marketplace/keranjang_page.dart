@@ -13,7 +13,7 @@ class _KeranjangPageState extends State<KeranjangPage> {
   List<dynamic> _cartItems = [];
   bool _isLoading = true;
   
-  // Menyimpan ID keranjang yang dipilih (Checkbox)
+  // Menyimpan ID keranjang yang dipilih
   final Set<int> _selectedItemIds = {};
 
   @override
@@ -24,34 +24,36 @@ class _KeranjangPageState extends State<KeranjangPage> {
 
   Future<void> _fetchCart() async {
     setState(() => _isLoading = true);
-    final items = await KeranjangService().getKeranjang();
-    setState(() {
-      _cartItems = items;
-      _isLoading = false;
-    });
+    try {
+      final items = await KeranjangService().getKeranjang();
+      setState(() {
+        _cartItems = items;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      // Handle error connection logic here if needed
+    }
   }
 
-  // Logic Update Jumlah (+ / -)
   Future<void> _updateQty(int index, int delta) async {
     final item = _cartItems[index];
-    int currentQty = int.parse(item['jumlah'].toString());
+    int currentQty = int.tryParse(item['jumlah'].toString()) ?? 1;
     int newQty = currentQty + delta;
-    int keranjangId = int.parse(item['keranjang_id'].toString());
+    int keranjangId = int.tryParse(item['keranjang_id'].toString()) ?? 0;
 
-    if (newQty < 1) return; // Minimal 1
+    if (newQty < 1) return;
 
-    // Update UI langsung biar cepat (Optimistic)
+    // Optimistic Update
     setState(() {
       _cartItems[index]['jumlah'] = newQty;
     });
 
-    // Panggil API di background
     await KeranjangService().updateQuantity(keranjangId, newQty);
   }
 
-  // Logic Hapus Item
   Future<void> _deleteItem(int index) async {
-    int keranjangId = int.parse(_cartItems[index]['keranjang_id'].toString());
+    int keranjangId = int.tryParse(_cartItems[index]['keranjang_id'].toString()) ?? 0;
     
     setState(() {
       _selectedItemIds.remove(keranjangId);
@@ -61,13 +63,13 @@ class _KeranjangPageState extends State<KeranjangPage> {
     await KeranjangService().deleteItem(keranjangId);
   }
 
-  // Hitung Total Harga (Hanya yang dicentang)
   int get _totalSelectedPrice {
     int total = 0;
     for (var item in _cartItems) {
-      int id = int.parse(item['keranjang_id'].toString());
+      int id = int.tryParse(item['keranjang_id'].toString()) ?? 0;
       if (_selectedItemIds.contains(id)) {
-        int harga = int.tryParse(item['barang']['barang_harga'].toString()) ?? 0;
+        // Karena mapping baru di Controller, harga ada di root object
+        int harga = int.tryParse(item['barang_harga'].toString()) ?? 0;
         int qty = int.tryParse(item['jumlah'].toString()) ?? 0;
         total += (harga * qty);
       }
@@ -83,22 +85,24 @@ class _KeranjangPageState extends State<KeranjangPage> {
       return;
     }
 
-    // Filter barang yang dipilih & Format data
+    // Format data untuk dikirim ke CheckoutBarang
     List<Map<String, dynamic>> selectedItems = [];
     for (var item in _cartItems) {
-      int id = int.parse(item['keranjang_id'].toString());
+      int id = int.tryParse(item['keranjang_id'].toString()) ?? 0;
       if (_selectedItemIds.contains(id)) {
         selectedItems.add({
-          'nama': item['barang']['barang_nama'],
-          'harga': item['barang']['barang_harga'].toString(),
+          'id': item['barang_id'], // Penting untuk API Transaksi
+          'nama': item['barang_nama'],
+          'harga': item['barang_harga'].toString(),
           'jumlah': item['jumlah'].toString(),
-          'foto': item['barang']['image'] ?? '',
-          'alamat': item['barang']['alamat'] ?? 'Toko Warga', 
+          'foto': item['barang_foto'] ?? '',
+          
+          // PERBAIKAN UTAMA: Ambil alamat_penjual dari response API yang baru
+          'alamat_penjual': item['alamat_penjual'] ?? 'Alamat tidak tersedia', 
         });
       }
     }
 
-    // Kirim Data ke Halaman Checkout
     context.push('/checkout-barang', extra: {'items': selectedItems});
   }
 
@@ -116,7 +120,6 @@ class _KeranjangPageState extends State<KeranjangPage> {
               ? const Center(child: Text("Keranjang Kosong"))
               : Column(
                   children: [
-                    // LIST BARANG
                     Expanded(
                       child: ListView.separated(
                         padding: const EdgeInsets.all(12),
@@ -124,9 +127,12 @@ class _KeranjangPageState extends State<KeranjangPage> {
                         separatorBuilder: (ctx, i) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final item = _cartItems[index];
-                          final barang = item['barang'] ?? {};
-                          final int keranjangId = int.parse(item['keranjang_id'].toString());
-                          final int harga = int.tryParse(barang['barang_harga'].toString()) ?? 0;
+                          final int keranjangId = int.tryParse(item['keranjang_id'].toString()) ?? 0;
+                          
+                          // Gunakan key sesuai mapping baru di Controller
+                          final String nama = item['barang_nama'] ?? '-';
+                          final String harga = item['barang_harga']?.toString() ?? '0';
+                          final String foto = item['barang_foto']?.toString() ?? '';
                           final int qty = int.tryParse(item['jumlah'].toString()) ?? 1;
 
                           return Card(
@@ -135,7 +141,6 @@ class _KeranjangPageState extends State<KeranjangPage> {
                               padding: const EdgeInsets.all(8.0),
                               child: Row(
                                 children: [
-                                  // CHECKBOX
                                   Checkbox(
                                     value: _selectedItemIds.contains(keranjangId),
                                     onChanged: (bool? val) {
@@ -148,29 +153,26 @@ class _KeranjangPageState extends State<KeranjangPage> {
                                       });
                                     },
                                   ),
-                                  // GAMBAR
                                   Container(
                                     width: 60, height: 60,
                                     decoration: BoxDecoration(
                                       color: Colors.grey[200],
                                       borderRadius: BorderRadius.circular(8)
                                     ),
-                                    child: barang['image'] != null
-                                        ? Image.network(barang['image'], fit: BoxFit.cover, errorBuilder: (_,__,___)=>const Icon(Icons.image))
+                                    child: foto.isNotEmpty
+                                        ? Image.network(foto, fit: BoxFit.cover, errorBuilder: (_,__,___)=>const Icon(Icons.image))
                                         : const Icon(Icons.image),
                                   ),
                                   const SizedBox(width: 12),
-                                  // INFO & TOMBOL JUMLAH
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(barang['barang_nama'] ?? 'Item', style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                        Text(nama, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
                                         Text("Rp $harga", style: TextStyle(color: Colors.grey[600])),
                                         const SizedBox(height: 8),
                                         Row(
                                           children: [
-                                            // Minus
                                             InkWell(
                                               onTap: () => _updateQty(index, -1),
                                               child: Container(
@@ -183,7 +185,6 @@ class _KeranjangPageState extends State<KeranjangPage> {
                                               padding: const EdgeInsets.symmetric(horizontal: 12),
                                               child: Text("$qty", style: const TextStyle(fontWeight: FontWeight.bold)),
                                             ),
-                                            // Plus
                                             InkWell(
                                               onTap: () => _updateQty(index, 1),
                                               child: Container(
@@ -193,7 +194,6 @@ class _KeranjangPageState extends State<KeranjangPage> {
                                               ),
                                             ),
                                             const Spacer(),
-                                            // Hapus
                                             IconButton(
                                               icon: const Icon(Icons.delete, color: Colors.red, size: 20),
                                               onPressed: () => _deleteItem(index),
@@ -210,13 +210,11 @@ class _KeranjangPageState extends State<KeranjangPage> {
                         },
                       ),
                     ),
-                    
-                    // BOTTOM BAR CHECKOUT
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 5, offset: Offset(0, -2))]
+                        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 5, offset: const Offset(0, -2))]
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,

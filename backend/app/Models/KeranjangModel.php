@@ -13,13 +13,13 @@ class KeranjangModel extends Model
     protected $primaryKey = 'keranjang_id';
     protected $fillable = ['user_id', 'barang_id', 'jumlah'];
 
-    // Relasi ke user
+    // Relasi ke User (Pembeli)
     public function user()
     {
         return $this->belongsTo(usersModel::class, 'user_id', 'user_id');
     }
 
-    // Relasi ke barang
+    // Relasi ke Barang
     public function barang()
     {
         return $this->belongsTo(BarangModel::class, 'barang_id', 'barang_id');

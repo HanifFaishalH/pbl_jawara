@@ -10,9 +10,10 @@ class BarangSeeder extends Seeder
     public function run(): void
     {
         DB::table('m_barang')->insert([
-            // --- Barang Batik Cap ---
+            // --- Barang Batik Cap (Milik User ID 6 - Misal: Yanto) ---
             [
                 'kategori_id' => 1,
+                'user_id' => 6, // <--- TAMBAHAN PENTING
                 'barang_kode' => "BRG-CAP-001",
                 'barang_nama' => "Batik Cap Motif Kawung",
                 'barang_deskripsi' => "Batik Cap dengan motif kawung tradisional.",
@@ -24,6 +25,7 @@ class BarangSeeder extends Seeder
             ],
             [
                 'kategori_id' => 1,
+                'user_id' => 6, // <--- Milik Yanto lagi
                 'barang_kode' => "BRG-CAP-002",
                 'barang_nama' => "Batik Cap Motif Parang",
                 'barang_deskripsi' => "Batik Cap dengan motif parang klasik.",
@@ -34,9 +36,10 @@ class BarangSeeder extends Seeder
                 'updated_at' => now(),
             ],
 
-            // --- Barang Batik Tulis ---
+            // --- Barang Batik Tulis (Milik User ID 2 - Misal: Pak RW) ---
             [
                 'kategori_id' => 2,
+                'user_id' => 2, // <--- TAMBAHAN PENTING (Beda Penjual)
                 'barang_kode' => "BRG-TLS-001",
                 'barang_nama' => "Batik Tulis Premium Mega Mendung",
                 'barang_deskripsi' => "Batik tulis premium dengan motif mega mendung khas Cirebon.",
@@ -48,6 +51,7 @@ class BarangSeeder extends Seeder
             ],
             [
                 'kategori_id' => 2,
+                'user_id' => 2, // <--- Milik Pak RW lagi
                 'barang_kode' => "BRG-TLS-002",
                 'barang_nama' => "Batik Tulis Motif Sidomukti",
                 'barang_deskripsi' => "Batik tulis eksklusif motif Sidomukti untuk acara resmi.",
