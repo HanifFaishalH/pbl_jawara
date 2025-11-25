@@ -1,24 +1,41 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart'; // 1. WAJIB TAMBAH INI
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jawaramobile_1/services/auth_service.dart';
+import 'package:flutter/foundation.dart'; // PENTING: Untuk kIsWeb
 
 class BarangService {
-  // PENTING: Gunakan 10.0.2.2 untuk Emulator
-  static const String BaseURl = "http://localhost:8000/api"; 
+  
+  // --- KONFIGURASI OTOMATIS (WEB vs ANDROID) ---
+  
+  // 1. Base URL API
+  static String get baseUrl {
+    if (kIsWeb) {
+      return "http://localhost:8000/api"; // Browser Chrome
+    } else {
+      return "http://10.0.2.2:8000/api";  // Emulator Android
+    }
+  }
 
-  // --- 2. HELPER: AMBIL TOKEN MANUAL (Anti Reset) ---
+  // 2. Base URL Gambar (Menggunakan Proxy Route yang baru dibuat)
+  // Ini mengarah ke route: Route::get('/image-proxy/{filename}')
+  static String get baseImageUrl {
+    if (kIsWeb) {
+      return "http://localhost:8000/api/image-proxy/"; 
+    } else {
+      return "http://10.0.2.2:8000/api/image-proxy/";
+    }
+  }
+
+  // --- HELPER TOKEN ---
   Future<String?> _getToken() async {
-    // Cek apakah di memory (AuthService) masih ada?
     if (AuthService.token != null && AuthService.token!.isNotEmpty) {
       return AuthService.token;
     }
     
-    // Jika memory kosong (habis restart), ambil dari Storage HP
     final prefs = await SharedPreferences.getInstance();
     String? storedToken = prefs.getString('auth_token');
     
-    // (Opsional) Isi balik ke AuthService biar request selanjutnya cepat
     if (storedToken != null) {
       AuthService.token = storedToken;
     }
@@ -26,14 +43,12 @@ class BarangService {
     return storedToken;
   }
 
-  // Method untuk Marketplace (Semua Barang)
+  // --- FETCH SEMUA BARANG ---
   Future<List<dynamic>> fetchBarang() async {
-    final url = Uri.parse("$BaseURl/barang");
+    final url = Uri.parse("$baseUrl/barang"); // Menggunakan getter baseUrl
     
-    // 3. GUNAKAN HELPER _getToken()
     final token = await _getToken(); 
 
-    // Header Authorization
     Map<String, String> headers = {
       'Accept': 'application/json',
     };
@@ -47,15 +62,14 @@ class BarangService {
       final body = jsonDecode(response.body);
       return body['data'];      
     } else {
-      throw Exception('Gagal load barang');
+      throw Exception('Gagal load barang: ${response.statusCode}');
     }
   }
 
-  // Method untuk Dagangan Saya (Barang User Login)
+  // --- FETCH BARANG SAYA ---
   Future<List<dynamic>> fetchUserBarang() async {
-    final url = Uri.parse("$BaseURl/barang/user");
+    final url = Uri.parse("$baseUrl/barang/user"); // Menggunakan getter baseUrl
     
-    // 4. GUNAKAN HELPER _getToken() DI SINI JUGA
     final token = await _getToken(); 
 
     if (token == null) {
@@ -74,7 +88,6 @@ class BarangService {
       final body = jsonDecode(response.body);
       return body['data'];      
     } else {
-      // Print error body untuk debugging
       print("Gagal Fetch User Barang: ${response.body}");
       throw Exception('Gagal load barang saya');
     }

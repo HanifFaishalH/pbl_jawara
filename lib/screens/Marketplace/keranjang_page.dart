@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jawaramobile_1/services/keranjang_service.dart';
+// 1. IMPORT BARU: Diperlukan untuk akses baseImageUrl
+import 'package:jawaramobile_1/services/barang_service.dart';
 
 class KeranjangPage extends StatefulWidget {
   const KeranjangPage({super.key});
@@ -68,7 +70,6 @@ class _KeranjangPageState extends State<KeranjangPage> {
     for (var item in _cartItems) {
       int id = int.tryParse(item['keranjang_id'].toString()) ?? 0;
       if (_selectedItemIds.contains(id)) {
-        // Karena mapping baru di Controller, harga ada di root object
         int harga = int.tryParse(item['barang_harga'].toString()) ?? 0;
         int qty = int.tryParse(item['jumlah'].toString()) ?? 0;
         total += (harga * qty);
@@ -90,14 +91,24 @@ class _KeranjangPageState extends State<KeranjangPage> {
     for (var item in _cartItems) {
       int id = int.tryParse(item['keranjang_id'].toString()) ?? 0;
       if (_selectedItemIds.contains(id)) {
+        
+        // Logic Foto untuk dikirim ke halaman checkout
+        String rawFoto = item['barang_foto']?.toString() ?? '';
+        String fullFotoUrl = '';
+        if (rawFoto.isNotEmpty) {
+           if (rawFoto.startsWith('http')) {
+             fullFotoUrl = rawFoto;
+           } else {
+             fullFotoUrl = "${BarangService.baseImageUrl}$rawFoto";
+           }
+        }
+
         selectedItems.add({
-          'id': item['barang_id'], // Penting untuk API Transaksi
+          'id': item['barang_id'], 
           'nama': item['barang_nama'],
           'harga': item['barang_harga'].toString(),
           'jumlah': item['jumlah'].toString(),
-          'foto': item['barang_foto'] ?? '',
-          
-          // PERBAIKAN UTAMA: Ambil alamat_penjual dari response API yang baru
+          'foto': fullFotoUrl, // Kirim URL lengkap agar di checkout juga muncul
           'alamat_penjual': item['alamat_penjual'] ?? 'Alamat tidak tersedia', 
         });
       }
@@ -129,11 +140,23 @@ class _KeranjangPageState extends State<KeranjangPage> {
                           final item = _cartItems[index];
                           final int keranjangId = int.tryParse(item['keranjang_id'].toString()) ?? 0;
                           
-                          // Gunakan key sesuai mapping baru di Controller
                           final String nama = item['barang_nama'] ?? '-';
                           final String harga = item['barang_harga']?.toString() ?? '0';
-                          final String foto = item['barang_foto']?.toString() ?? '';
                           final int qty = int.tryParse(item['jumlah'].toString()) ?? 1;
+
+                          // 2. PERBAIKAN LOGIKA FOTO (DISPLAY)
+                          String rawFoto = item['barang_foto']?.toString() ?? '';
+                          String fotoUrl = '';
+                          
+                          if (rawFoto.isNotEmpty) {
+                            // Jika database menyimpan nama file saja (misal: "batik.jpg")
+                            // Kita gabungkan dengan baseImageUrl dari BarangService
+                            if (rawFoto.startsWith('http')) {
+                                fotoUrl = rawFoto;
+                            } else {
+                                fotoUrl = "${BarangService.baseImageUrl}$rawFoto";
+                            }
+                          }
 
                           return Card(
                             elevation: 2,
@@ -153,15 +176,22 @@ class _KeranjangPageState extends State<KeranjangPage> {
                                       });
                                     },
                                   ),
+                                  // WIDGET FOTO DIPERBAIKI
                                   Container(
                                     width: 60, height: 60,
                                     decoration: BoxDecoration(
                                       color: Colors.grey[200],
                                       borderRadius: BorderRadius.circular(8)
                                     ),
-                                    child: foto.isNotEmpty
-                                        ? Image.network(foto, fit: BoxFit.cover, errorBuilder: (_,__,___)=>const Icon(Icons.image))
-                                        : const Icon(Icons.image),
+                                    child: fotoUrl.isNotEmpty
+                                        ? Image.network(
+                                            fotoUrl, 
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return const Icon(Icons.broken_image, size: 24, color: Colors.grey);
+                                            },
+                                          )
+                                        : const Icon(Icons.image, size: 24, color: Colors.grey),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
