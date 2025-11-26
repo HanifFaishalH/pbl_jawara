@@ -2,29 +2,20 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jawaramobile_1/services/auth_service.dart';
-import 'package:flutter/foundation.dart'; // PENTING: Untuk kIsWeb
 
 class BarangService {
   
-  // --- KONFIGURASI OTOMATIS (WEB vs ANDROID) ---
+  // --- KONFIGURASI SERVER (LOCALHOST) ---
   
   // 1. Base URL API
+  // Pastikan Anda sudah menjalankan 'adb reverse tcp:8000 tcp:8000' di terminal
   static String get baseUrl {
-    if (kIsWeb) {
-      return "http://localhost:8000/api"; // Browser Chrome
-    } else {
-      return "http://10.0.2.2:8000/api";  // Emulator Android
-    }
+    return "http://localhost:8000/api";
   }
 
-  // 2. Base URL Gambar (Menggunakan Proxy Route yang baru dibuat)
-  // Ini mengarah ke route: Route::get('/image-proxy/{filename}')
+  // 2. Base URL Gambar
   static String get baseImageUrl {
-    if (kIsWeb) {
-      return "http://localhost:8000/api/image-proxy/"; 
-    } else {
-      return "http://10.0.2.2:8000/api/image-proxy/";
-    }
+    return "http://localhost:8000/api/image-proxy/";
   }
 
   // --- HELPER TOKEN ---
@@ -45,7 +36,7 @@ class BarangService {
 
   // --- FETCH SEMUA BARANG ---
   Future<List<dynamic>> fetchBarang() async {
-    final url = Uri.parse("$baseUrl/barang"); // Menggunakan getter baseUrl
+    final url = Uri.parse("$baseUrl/barang"); 
     
     final token = await _getToken(); 
 
@@ -68,7 +59,7 @@ class BarangService {
 
   // --- FETCH BARANG SAYA ---
   Future<List<dynamic>> fetchUserBarang() async {
-    final url = Uri.parse("$baseUrl/barang/user"); // Menggunakan getter baseUrl
+    final url = Uri.parse("$baseUrl/barang/user"); 
     
     final token = await _getToken(); 
 
