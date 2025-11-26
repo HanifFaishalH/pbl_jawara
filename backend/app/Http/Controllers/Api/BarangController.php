@@ -13,10 +13,17 @@ class BarangController extends Controller
 {
     public function index()
     {
-        // Kode index tetap sama
+        // Eager load 'user' untuk mengambil data penjual
         $barang = BarangModel::with(['kategori', 'user'])->get();
         
         $data = $barang->map(function($item) {
+            // Logika pengambilan nama user
+            $namaPenjual = 'Penjual Jawara';
+            if ($item->user) {
+                $namaPenjual = trim(($item->user->user_nama_depan ?? '') . ' ' . ($item->user->user_nama_belakang ?? ''));
+                if (empty($namaPenjual)) $namaPenjual = "User #" . $item->user->user_id;
+            }
+
             return [
                 'barang_id' => $item->barang_id,
                 'barang_nama' => $item->barang_nama,
@@ -25,6 +32,8 @@ class BarangController extends Controller
                 'barang_foto' => $item->barang_foto,
                 'kategori' => $item->kategori->kategori_nama,
                 'alamat_penjual' => $item->user ? $item->user->user_alamat : 'Alamat tidak tersedia',
+                // Tambahkan ini:
+                'nama_penjual' => $namaPenjual, 
                 'penjual_id' => $item->user_id,
             ];
         });
@@ -34,8 +43,7 @@ class BarangController extends Controller
 
     public function show($id)
     {
-        // Kode show tetap sama
-        $barang = BarangModel::with('kategori')->find($id);
+        $barang = BarangModel::with(['kategori', 'user'])->find($id);
         if (!$barang) {
             return response()->json(['success' => false, 'message' => 'Barang tidak ditemukan'], 404);
         }

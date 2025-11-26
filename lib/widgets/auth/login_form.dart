@@ -144,7 +144,7 @@ class LoginForm extends StatelessWidget {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFF6D28D9)),
+        borderSide: const BorderSide(color: Color(0xFF26547C)),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );

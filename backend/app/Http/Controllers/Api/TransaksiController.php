@@ -15,8 +15,8 @@ class TransaksiController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        // Urutkan dari yang terbaru
-        $transaksi = TransaksiModel::with('detail.barang')
+        
+        $transaksi = TransaksiModel::with('detail.barang.user')
             ->where('user_id', $user->user_id)
             ->orderBy('created_at', 'desc') 
             ->get();
@@ -44,13 +44,14 @@ class TransaksiController extends Controller
                 'transaksi_kode' => 'TRX' . time() . rand(100,999),
                 'transaksi_tanggal' => now(),
                 'total_harga' => $request->total_harga,
-                'status' => 'menunggu_diambil', // Status Default
+                'status' => 'menunggu_diambil', 
                 'catatan' => $request->catatan, 
                 'tanggal_pengambilan' => $request->tanggal_pengambilan,
                 'jam_pengambilan' => $request->jam_pengambilan,
             ]);
 
             foreach ($request->barang as $item) {
+                // Lock for Update untuk mencegah Race Condition stok
                 $barangDb = BarangModel::lockForUpdate()->find($item['barang_id']);
                 
                 if (!$barangDb) throw new \Exception("Barang ID {$item['barang_id']} tidak ditemukan.");
@@ -98,11 +99,9 @@ class TransaksiController extends Controller
 
         $data = $transaksiMasuk->map(function($detail) {
             return [
-                // PENTING: ID Transaksi diperlukan untuk tombol update
                 'transaksi_id' => $detail->transaksi->transaksi_id, 
                 'barang_nama'  => $detail->barang->barang_nama, 
                 'user_nama'    => $detail->transaksi->user->user_nama_depan ?? 'Pembeli',
-                // Ambil status dari tabel transaksi header
                 'status'       => $detail->transaksi->status, 
                 'tanggal'      => $detail->created_at->format('d M Y'),
                 'total_harga'  => $detail->harga * $detail->jumlah,
@@ -113,7 +112,7 @@ class TransaksiController extends Controller
         return response()->json(['success' => true, 'data' => $data]);
     }
 
-    // 4. PUT: Update Status (Selesai / Dibatalkan) & Logika Stok
+    // 4. PUT: Update Status
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
@@ -126,14 +125,13 @@ class TransaksiController extends Controller
             return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
         }
 
-        // Cegah perubahan jika sudah final
         if (in_array($transaksi->status, ['selesai', 'dibatalkan'])) {
             return response()->json(['message' => 'Transaksi sudah final (selesai/batal)'], 400);
         }
 
         DB::beginTransaction();
         try {
-            // Jika status menjadi 'dibatalkan', KEMBALIKAN STOK
+            // Logika Pengembalian Stok jika Dibatalkan
             if ($request->status == 'dibatalkan') {
                 foreach ($transaksi->detail as $detail) {
                     $barang = BarangModel::lockForUpdate()->find($detail->barang_id);
@@ -144,7 +142,6 @@ class TransaksiController extends Controller
                 }
             }
 
-            // Update status
             $transaksi->status = $request->status;
             $transaksi->save();
 

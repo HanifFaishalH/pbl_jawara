@@ -44,7 +44,7 @@ class _BottomNavbarState extends State<BottomNavbar>
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Berhasil logout'),
-          backgroundColor: Colors.green,
+          backgroundColor: Color(0xFF26547C),
         ),
       );
 
