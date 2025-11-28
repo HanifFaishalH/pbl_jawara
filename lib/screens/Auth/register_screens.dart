@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/auth_service.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/auth/login_header.dart';
 import '../../widgets/auth/register_form.dart';
@@ -22,6 +23,8 @@ class _RegisterScreensState extends State<RegisterScreens> {
   final _alamatController = TextEditingController();
   bool _obscurePassword = true;
 
+  final _authService = AuthService(); // 🔹 langsung pakai service
+
   @override
   void dispose() {
     _namaController.dispose();
@@ -40,36 +43,61 @@ class _RegisterScreensState extends State<RegisterScreens> {
     );
   }
 
-  void _handleDaftar() {
-    if (_formKey.currentState!.validate()) {
-      String email = _emailController.text;
-      String password = _passwordController.text;
+  Future<void> _handleDaftar() async {
+    if (!_formKey.currentState!.validate()) return;
 
+    if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Login berhasil!'),
+          content: Text("Password dan konfirmasi tidak cocok"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // 🔹 Kumpulkan data dari form
+    final body = {
+      'nama': _namaController.text,
+      'nik': _nikController.text,
+      'email': _emailController.text,
+      'phone': _phoneController.text,
+      'alamat': _alamatController.text,
+      'password': _passwordController.text,
+      'password_confirmation': _confirmPasswordController.text,
+    };
+
+    // 🔹 Panggil service langsung
+    final result = await _authService.register(body);
+
+    if (result['success']) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Registrasi berhasil! Silakan login."),
           backgroundColor: Colors.green,
         ),
       );
 
-      Future.delayed(const Duration(milliseconds: 50), () {
+      // 🔹 Arahkan ke login
+      Future.delayed(const Duration(milliseconds: 500), () {
         context.go('/login');
       });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message']),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   void _handleLogin() {
-    Future.delayed(const Duration(milliseconds: 50), () {
-      context.go('/login');
-    });
-    // ScaffoldMessenger.of(context).showSnackBar(
-    //   const SnackBar(content: Text('Halaman pendaftaran dalam pengembangan')),
-    // );
+    context.go('/login');
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -79,8 +107,8 @@ class _RegisterScreensState extends State<RegisterScreens> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const LoginHeader(), const SizedBox(height: 40),
-                // Welcome Text
+                const LoginHeader(),
+                const SizedBox(height: 40),
                 const Text(
                   'Daftar Akun',
                   style: TextStyle(
@@ -111,11 +139,9 @@ class _RegisterScreensState extends State<RegisterScreens> {
                       _obscurePassword = !_obscurePassword;
                     });
                   },
-                  onRegister: _handleDaftar,
+                  onRegister: _handleDaftar, // 🔹 langsung panggil handler
                 ),
                 const SizedBox(height: 32),
-
-                // Divider
                 Row(
                   children: [
                     Expanded(child: Divider(color: Colors.grey[400])),
@@ -130,12 +156,8 @@ class _RegisterScreensState extends State<RegisterScreens> {
                   ],
                 ),
                 const SizedBox(height: 24),
-
-                // Google Button
                 LoginGoogleButton(onTap: _handleGoogleLogin),
                 const SizedBox(height: 24),
-
-                // Register Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

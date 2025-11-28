@@ -1,50 +1,78 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   // Sesuaikan URL dengan IP Address backend Anda
-  static const String baseUrl = "http://localhost:8000/api"; 
+  // static const String baseUrl = "http://localhost:8000/api";
+
+  // Kalau pakai emulator Android, ganti localhost yang ini.
+  static const String baseUrl = "http://10.0.2.2:8000/api";
+   
   
   // Variabel Global untuk menyimpan sesi saat ini
   static String? token;
   static int? currentRoleId;
 
+  final logger = Logger(
+    printer: PrettyPrinter(
+      methodCount: 2,
+      errorMethodCount: 5,
+      lineLength: 80,
+      colors: true,
+      printEmojis: true,
+      dateTimeFormat: (time) => DateTime.now().toString(),
+    )
+  );
+
   // --- 1. LOGIN ---
   Future<Map<String, dynamic>> login(String email, String password) async {
-    final url = Uri.parse("$baseUrl/login");
+  final url = Uri.parse("$baseUrl/login");
 
-    try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
-      );
+  try {
+    logger.i("Mengirim request login ke: $url");
+    
+    final response = await http.post(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+      }),
+    );
 
+    logger.d("Response status: ${response.statusCode}");
+    logger.d("Response body: ${response.body}");
+
+    if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+      String newToken = data['token'];
+      int roleId = data['user']['role_id'];
+      await _saveSession(newToken, roleId);
 
-      if (response.statusCode == 200) {
-        String newToken = data['token'];
-        // Pastikan backend mengirim object 'user' yang berisi 'role_id'
-        int roleId = data['user']['role_id']; 
-
-        // Simpan ke sesi aplikasi (Memory & Storage)
-        await _saveSession(newToken, roleId);
-        
-        return data;
-      } else {
-        throw Exception(data['message'] ?? 'Login gagal');
-      }
-    } catch (e) {
-      rethrow;
+      logger.i("Login berhasil untuk user role_id=$roleId");
+      return {'success': true, 'data': data};
+    } else {
+      final data = jsonDecode(response.body);
+      logger.w("Login gagal: ${data['message']}");
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Login gagal. Periksa kembali akun Anda.',
+      };
     }
+  } catch (e, stackTrace) {
+    logger.e("Terjadi error saat login", error: e, stackTrace: stackTrace);
+    return {
+      'success': false,
+      'message': 'Ups, ada kesalahan pada server. Coba lagi nanti.',
+    };
   }
+}
+
 
   // --- 2. LOAD SESSION (Dipanggil saat Splash Screen) ---
   // Fungsi ini menjaga user tetap login saat aplikasi dibuka kembali
@@ -64,6 +92,48 @@ class AuthService {
     token = newToken;
     currentRoleId = roleId;
   }
+
+  Future<Map<String, dynamic>> register(Map<String, String> body) async {
+  final url = Uri.parse("$baseUrl/register");
+
+  try {
+    logger.i("Mengirim request register ke: $url");
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    logger.d("Response status: ${response.statusCode}");
+    logger.d("Response body: ${response.body}");
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 201) {
+      String newToken = data['token'];
+      int roleId = data['user']['role_id'] ?? 0; // jika tidak ada role_id
+      await _saveSession(newToken, roleId);
+      logger.i("✅ Registrasi berhasil untuk ${data['user']['email']}");
+      return {'success': true, 'data': data};
+    } else {
+      logger.w("⚠️ Gagal register: ${data['message']}");
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Registrasi gagal. Periksa data Anda.',
+      };
+    }
+  } catch (e, stackTrace) {
+    logger.e("🔥 Error saat register", error: e, stackTrace: stackTrace);
+    return {
+      'success': false,
+      'message': 'Ups, ada kesalahan pada server. Coba lagi nanti.',
+    };
+  }
+}
 
   // --- 4. LOGOUT ---
   Future<void> logout() async {

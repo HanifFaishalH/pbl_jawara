@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Response;
 
 // === PUBLIC ROUTES ===
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
 Route::get('/barang', [BarangController::class, 'index']);
 Route::get('/barang/{id}', [BarangController::class, 'show'])->whereNumber('id');
 
