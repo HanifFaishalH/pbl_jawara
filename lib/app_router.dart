@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jawaramobile_1/screens/Auth/login_screens.dart';
 import 'package:jawaramobile_1/screens/Auth/register_screens.dart';
+import 'package:jawaramobile_1/screens/Dashboard/dashboard_selector.dart';
 import 'package:jawaramobile_1/screens/Mutasi/mutasi_detail_page.dart';
 import 'package:jawaramobile_1/screens/Mutasi/mutasi_page.dart';
 
 // ====== Screens Utama ======
-import 'package:jawaramobile_1/screens/dashboard_screen.dart';
 import 'package:jawaramobile_1/screens/data_warga_rumah.dart';
 
 // ====== Pemasukan ======
@@ -93,7 +93,7 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/dashboard',
       name: 'dashboard',
-      builder: (context, state) => const DashboardScreen(),
+      builder: (context, state) => const DashboardSelector(),
     ),
     // ====== Popup Menu ======
     GoRoute(
