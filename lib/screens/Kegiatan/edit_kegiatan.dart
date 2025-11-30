@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jawaramobile_1/widgets/kegiatan/tambah_kegiatan_form.dart';
+import 'package:jawaramobile_1/screens/Kegiatan/tambah_kegiatan_form.dart';
 
 class EditKegiatanScreen extends StatelessWidget {
   // Halaman ini akan menerima data kegiatan yang akan diedit

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:jawaramobile_1/services/auth_service.dart'; // 1. IMPORT AUTH SERVICE
+
+// ====== Screens Auth & Dashboard ======
 import 'package:jawaramobile_1/screens/Auth/login_screens.dart';
 import 'package:jawaramobile_1/screens/Auth/register_screens.dart';
 import 'package:jawaramobile_1/screens/Dashboard/dashboard_selector.dart';
+
+// ====== Screens Lainnya (Import tetap sama) ======
 import 'package:jawaramobile_1/screens/Mutasi/mutasi_detail_page.dart';
 import 'package:jawaramobile_1/screens/Mutasi/mutasi_page.dart';
-
-// ====== Screens Utama ======
 import 'package:jawaramobile_1/screens/data_warga_rumah.dart';
 
 // ====== Pemasukan ======
@@ -32,10 +35,10 @@ import 'package:jawaramobile_1/screens/LaporanKeuangan/cetak_laporan_screen.dart
 import 'package:jawaramobile_1/screens/LaporanKeuangan/menu_laporan_keuangan.dart';
 
 // ====== Kegiatan ======
-import 'package:jawaramobile_1/screens/Kegiatan/daftar_kegiatan.dart';
-import 'package:jawaramobile_1/screens/Kegiatan/tambah_kegiatan.dart';
-import 'package:jawaramobile_1/screens/Kegiatan/detail_kegiatan.dart';
-import 'package:jawaramobile_1/screens/Kegiatan/edit_kegiatan.dart';
+import 'package:jawaramobile_1/screens/Kegiatan/kegiatan_screen.dart';
+import 'package:jawaramobile_1/screens/Kegiatan/tambah_kegiatan_form.dart';
+import 'package:jawaramobile_1/screens/Kegiatan/detail_kegiatan_screen.dart';
+// import 'package:jawaramobile_1/screens/Kegiatan/edit_kegiatan.dart'; // Tidak dipakai karena reuse form
 
 // ====== Broadcast ======
 import 'package:jawaramobile_1/screens/Broadcast/daftar_broadcast.dart';
@@ -71,11 +74,36 @@ import 'package:jawaramobile_1/screens/Marketplace/pesanan_masuk.dart';
 import 'package:jawaramobile_1/screens/Marketplace/detail_pesanan_masuk.dart';
 import 'package:jawaramobile_1/screens/Marketplace/riwayat_pesanan_page.dart';
 import 'package:jawaramobile_1/screens/Marketplace/detail_riwayat_pesanan_page.dart';
-// 1. IMPORT FILE KERANJANG DI SINI
-import 'package:jawaramobile_1/screens/Marketplace/keranjang_page.dart'; 
+import 'package:jawaramobile_1/screens/Marketplace/keranjang_page.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/login',
+  // 2. LOGIKA INITIAL LOCATION
+  // Jika token ada di AuthService, langsung ke Dashboard. Jika tidak, ke Login.
+  initialLocation: AuthService.token != null ? '/dashboard' : '/login',
+
+  // 3. LOGIKA REDIRECT (PENJAGA KEAMANAN)
+  // Fungsi ini dijalankan setiap kali navigasi berpindah
+  redirect: (context, state) {
+    // Cek status login saat ini
+    final bool isLoggedIn = AuthService.token != null;
+    
+    // Cek apakah user sedang berada di halaman Login atau Register
+    final bool isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+
+    // SKENARIO A: User BELUM Login, tapi mencoba buka halaman lain (misal dashboard)
+    if (!isLoggedIn && !isLoggingIn) {
+      return '/login'; // Tendang ke login
+    }
+
+    // SKENARIO B: User SUDAH Login, tapi mencoba buka halaman login lagi
+    if (isLoggedIn && isLoggingIn) {
+      return '/dashboard'; // Arahkan ke dashboard
+    }
+
+    // Jika tidak ada masalah, biarkan user lewat
+    return null;
+  },
+
   routes: <GoRoute>[
     // ====== Autentikasi ======
     GoRoute(
@@ -95,13 +123,12 @@ final appRouter = GoRouter(
       name: 'dashboard',
       builder: (context, state) => const DashboardSelector(),
     ),
-    // ====== Popup Menu ======
     GoRoute(
       path: '/menu-popup',
       name: 'menu-popup',
       builder: (context, state) => Scaffold(
         backgroundColor: Colors.black.withOpacity(0.5),
-        body: Center(),
+        body: const Center(),
       ),
     ),
 
@@ -213,7 +240,7 @@ final appRouter = GoRouter(
       builder: (context, state) => const CetakLaporanScreen(),
     ),
 
-    // ====== Kegiatan ======
+    // ====== Kegiatan (Updated Route) ======
     GoRoute(
       path: '/kegiatan',
       name: 'kegiatan',
@@ -222,22 +249,47 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/tambah-kegiatan',
       name: 'tambah-kegiatan',
-      builder: (context, state) => const TambahKegiatanScreen(),
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text("Tambah Kegiatan"),
+            backgroundColor: Theme.of(context).primaryColor,
+            foregroundColor: Colors.white,
+          ),
+          body: const SingleChildScrollView(
+            padding: EdgeInsets.all(16.0),
+            child: TambahKegiatanForm(),
+          ),
+        );
+      },
     ),
     GoRoute(
       path: '/detail-kegiatan',
       name: 'detail-kegiatan',
       builder: (context, state) {
-        final data = state.extra as Map<String, String>;
-        return DetailKegiatanScreen(kegiatanData: data);
+        // Ambil data dari extra
+        final data = state.extra as Map<String, dynamic>; 
+        
+        // Ubah 'data:' menjadi 'kegiatanData:'
+        return DetailKegiatanScreen(kegiatanData: data); 
       },
     ),
     GoRoute(
       path: '/edit-kegiatan',
       name: 'edit-kegiatan',
       builder: (context, state) {
-        final data = state.extra as Map<String, String>;
-        return EditKegiatanScreen(kegiatanData: data);
+        final data = state.extra; 
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text("Edit Kegiatan"),
+            backgroundColor: Theme.of(context).primaryColor,
+            foregroundColor: Colors.white,
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: TambahKegiatanForm(initialData: data), 
+          ),
+        );
       },
     ),
 
@@ -269,6 +321,7 @@ final appRouter = GoRouter(
       },
     ),
 
+    // ====== LogActivity ======
     GoRoute(
       path: '/log-aktivitas',
       name: 'log-aktivitas',
@@ -283,18 +336,19 @@ final appRouter = GoRouter(
       },
     ),
 
+    // ====== Manajemen Pengguna ======
     GoRoute(
       path: '/manajemen-pengguna',
       name: 'manajemen-pengguna',
       builder: (context, state) => const DaftarPenggunaScreen(),
     ),
-
     GoRoute(
       path: '/tambah-pengguna',
       name: 'tambah-pengguna',
       builder: (context, state) => const TambahPenggunaScreen(),
     ),
 
+    // ====== Channel Transfer ======
     GoRoute(
       path: '/daftar-channel',
       name: 'daftar-channel',
@@ -305,12 +359,10 @@ final appRouter = GoRouter(
       name: 'tambah-channel',
       builder: (context, state) => const TambahChannelScreen(),
     ),
-
     GoRoute(
       path: '/channel-transfer',
       name: 'channel-transfer',
-      builder: (context, state) =>
-          const DaftarChannelScreen(), // arahkan ke daftar
+      builder: (context, state) => const DaftarChannelScreen(),
     ),
 
     // ====== Lain-lain ======
@@ -319,13 +371,11 @@ final appRouter = GoRouter(
       name: 'penerimaan-warga',
       builder: (context, state) => const PenerimaanWargaScreen(),
     ),
-
     GoRoute(
       path: '/mutasi',
       name: 'mutasi',
       builder: (context, state) => MutasiPage(),
     ),
-
     GoRoute(
       path: '/mutasi-detail',
       name: 'mutasi-detail',
@@ -340,22 +390,17 @@ final appRouter = GoRouter(
       builder: (context, state) => const DashboardAspirasi(),
     ),
     
-    // ======================================================
-    // ====== MARKETPLACE SECTION (UPDATED) =================
-    // ======================================================
+    // ====== MARKETPLACE ======
     GoRoute(
       path: '/menu-marketplace',
       name: 'menu-marketplace',
       builder: (context, state) => const MarketplaceMenu(),
     ),
-    
-    // 2. ROUTE KERANJANG DITAMBAHKAN DI SINI
     GoRoute(
       path: '/keranjang',
       name: 'keranjang',
       builder: (context, state) => const KeranjangPage(),
     ),
-
     GoRoute(
       path: '/daftar-barang-jual',
       builder: (context, state) => const DaftarBarang(),

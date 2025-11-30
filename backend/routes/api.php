@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\KeranjangController;
 use App\Http\Controllers\Api\TransaksiController;
 use App\Http\Controllers\Api\PembayaranController;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\Api\KegiatanController;
 
 // --- IMPORT PENTING UNTUK PROXY GAMBAR ---
 use Illuminate\Support\Facades\Storage;
@@ -44,6 +45,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Pembayaran
     Route::post('/pembayaran', [PembayaranController::class, 'store']);
+
+    Route::get('/kegiatan', [KegiatanController::class, 'index']);
+    Route::get('/kegiatan/{id}', [KegiatanController::class, 'show']);
+    Route::post('/kegiatan', [KegiatanController::class, 'store']);
+    Route::put('/kegiatan/{id}', [KegiatanController::class, 'update']); // Pakai POST untuk update file
+    Route::delete('/kegiatan/{id}', [KegiatanController::class, 'destroy']);
 });
 
 // =========================================================================
