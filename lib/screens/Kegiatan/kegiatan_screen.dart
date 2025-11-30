@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jawaramobile_1/services/auth_service.dart';
 import 'package:jawaramobile_1/services/kegiatan_service.dart';
-// Sesuaikan import di bawah ini dengan struktur folder Anda
 import 'package:jawaramobile_1/widgets/kegiatan/kegiatan_card.dart';
 import 'package:jawaramobile_1/widgets/kegiatan/kegiatan_empty_state.dart';
 
@@ -18,7 +17,14 @@ class _KegiatanScreenState extends State<KegiatanScreen> {
   List<dynamic> _list = [];
   bool _loading = true;
 
-  bool get isAdmin => AuthService.currentRoleId == 1;
+  // --- PERBAIKAN DI SINI ---
+  // Mengizinkan akses manajemen untuk:
+  // 1 = Admin, 2 = RW, 3 = RT
+  bool get canManage {
+    final allowedRoles = [1, 2, 3];
+    return allowedRoles.contains(AuthService.currentRoleId);
+  }
+  // -------------------------
 
   @override
   void initState() {
@@ -65,7 +71,8 @@ class _KegiatanScreenState extends State<KegiatanScreen> {
         centerTitle: true,
       ),
       
-      floatingActionButton: isAdmin
+      // Menggunakan variabel canManage untuk menampilkan tombol tambah
+      floatingActionButton: canManage
           ? FloatingActionButton.extended(
               backgroundColor: primaryColor,
               icon: const Icon(Icons.add),
@@ -89,10 +96,9 @@ class _KegiatanScreenState extends State<KegiatanScreen> {
                     itemCount: _list.length,
                     itemBuilder: (context, index) {
                       final item = _list[index];
-                      // Memanggil widget terpisah
                       return KegiatanCard(
                         item: item,
-                        onRefreshNeeded: _refresh, // Pass fungsi refresh ke child
+                        onRefreshNeeded: _refresh,
                       );
                     },
                   ),

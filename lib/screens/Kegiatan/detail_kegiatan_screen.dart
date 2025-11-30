@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:jawaramobile_1/services/auth_service.dart';
-// Import widgets
 import 'package:jawaramobile_1/widgets/kegiatan/detail_header.dart';
 import 'package:jawaramobile_1/widgets/kegiatan/detail_content.dart';
 import 'package:jawaramobile_1/widgets/kegiatan/detail_admin_actions.dart';
@@ -12,8 +11,11 @@ class DetailKegiatanScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Cek Role
-    bool isAdmin = AuthService.currentRoleId == 1;
+    // --- PERBAIKAN DI SINI ---
+    // Cek Role: Izinkan Admin (1), RW (2), dan RT (3)
+    final allowedRoles = [1, 2, 3];
+    bool canManage = allowedRoles.contains(AuthService.currentRoleId);
+    // -------------------------
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -45,7 +47,8 @@ class DetailKegiatanScreen extends StatelessWidget {
                       description: kegiatanData['kegiatan_deskripsi'] ?? 'Tidak ada deskripsi.',
                     ),
                     
-                    if (isAdmin) 
+                    // Tampilkan tombol aksi jika user punya hak akses (1, 2, atau 3)
+                    if (canManage) 
                       DetailAdminActions(kegiatanData: kegiatanData),
                       
                     const SizedBox(height: 20),
