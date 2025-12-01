@@ -347,6 +347,10 @@ final appRouter = GoRouter(
       name: 'tambah-pengguna',
       builder: (context, state) => const TambahPenggunaScreen(),
     ),
+    GoRoute(
+      path: '/pengguna',
+      redirect: (context, state) => '/pengguna',
+    ),
 
     // ====== Channel Transfer ======
     GoRoute(
