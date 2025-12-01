@@ -3,42 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class DashboardHeader extends StatefulWidget {
-  final String? title;       // opsional: untuk role-specific title
-  final String? subtitle;    // opsional: untuk keterangan tambahan
+class DashboardHeader extends StatelessWidget {
+  final String? title;
 
-  const DashboardHeader({
-    super.key,
-    this.title,
-    this.subtitle,
-  });
+  const DashboardHeader({super.key, this.title});
 
-  @override
-  State<DashboardHeader> createState() => _DashboardHeaderState();
-}
-
-class _DashboardHeaderState extends State<DashboardHeader> {
-  String userName = 'User';
-  String userRole = 'Pengguna';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserData();
-  }
-
-  Future<void> _loadUserData() async {
+  Future<Map<String, String>> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    final namaDepan = prefs.getString('user_nama_depan') ?? 'User';
+    final nama = prefs.getString('user_nama_depan') ?? 'User';
     final roleId = prefs.getInt('auth_role_id') ?? 0;
 
-    setState(() {
-      userName = namaDepan;
-      userRole = _getRoleName(roleId);
-    });
+    return {
+      'nama': nama,
+      'role': _getRoleName(roleId),
+    };
   }
 
-  String _getRoleName(int id) {
+  static String _getRoleName(int id) {
     switch (id) {
       case 1:
         return "Admin";
@@ -62,105 +43,81 @@ class _DashboardHeaderState extends State<DashboardHeader> {
     final theme = Theme.of(context);
     final color = theme.colorScheme;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+    return FutureBuilder<Map<String, String>>(
+      future: _loadUserData(),
+      builder: (context, snapshot) {
+        final userName = snapshot.data?['nama'] ?? 'User';
+        final userRole = snapshot.data?['role'] ?? 'Pengguna';
+
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
           decoration: BoxDecoration(
-            color: color.surface.withOpacity(0.8),
-            borderRadius: BorderRadius.circular(16),
+            color: color.surface,
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: color.shadow.withOpacity(0.15),
+                color: color.shadow.withOpacity(0.08),
                 blurRadius: 10,
-                offset: const Offset(0, 4),
+                offset: const Offset(0, 3),
               ),
             ],
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // 👤 Avatar dan Sapaan
-              Row(
-                children: [
-                  // Avatar
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: color.primary.withOpacity(0.1),
-                    ),
-                    child: Icon(
-                      FontAwesomeIcons.user,
-                      color: color.primary,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Nama dan peran
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Hai, $userName 👋',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: color.onSurface,
-                          fontWeight: FontWeight.bold,
-                        ),
+              // Avatar
+              CircleAvatar(
+                radius: 26,
+                backgroundColor: color.primaryContainer,
+                child: Icon(
+                  FontAwesomeIcons.user,
+                  color: color.onPrimaryContainer,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 14),
+
+              // Nama dan role
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Halo, $userName",
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: color.primary,
+                        fontWeight: FontWeight.bold,
                       ),
-                      Text(
-                        widget.title ?? userRole,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: color.onSurfaceVariant,
-                        ),
+                    ),
+                    Text(
+                      title ?? userRole,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: color.onSurfaceVariant,
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
 
-              // 🔔 Ikon Notifikasi
-              Stack(
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Notifikasi dalam pengembangan'),
-                        ),
-                      );
-                    },
-                    icon: FaIcon(
-                      FontAwesomeIcons.bell,
-                      color: color.primary,
-                      size: 22,
+              // Notifikasi
+              IconButton(
+                icon: Icon(
+                  FontAwesomeIcons.bell,
+                  color: color.primary,
+                  size: 22,
+                ),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Notifikasi sedang dikembangkan'),
                     ),
-                  ),
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: color.secondary,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: color.surface,
-                          width: 1.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                  );
+                },
               ),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
