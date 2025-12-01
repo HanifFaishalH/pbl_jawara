@@ -1,103 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../widgets/dashboard_header.dart';
 import '../../widgets/kegiatan_section.dart';
 import '../../widgets/bottom_navbar.dart';
 
-class DashboardWargaScreen extends StatefulWidget {
+class DashboardWargaScreen extends StatelessWidget {
   const DashboardWargaScreen({super.key});
-
-  @override
-  State<DashboardWargaScreen> createState() => _DashboardWargaScreenState();
-}
-
-class _DashboardWargaScreenState extends State<DashboardWargaScreen> {
-  String userName = 'User';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserName();
-  }
-
-  Future<void> _loadUserName() async {
-    final prefs = await SharedPreferences.getInstance();
-    final namaDepan = prefs.getString('user_nama_depan') ?? 'User';
-    setState(() {
-      userName = namaDepan;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      extendBody: true, // biar konten di belakang navbar bisa tembus
+      extendBody: true,
       backgroundColor: colors.surface,
       body: SafeArea(
         child: Stack(
           children: [
-            // 🔹 KONTEN UTAMA
             Padding(
-              padding: const EdgeInsets.only(bottom: 90), // beri ruang untuk navbar
+              padding: const EdgeInsets.only(bottom: 90),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // HEADER
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Halo, $userName 👋',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: colors.primary,
-                                    ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Selamat datang kembali',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(color: colors.onSurfaceVariant),
-                              ),
-                            ],
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.notifications_none),
-                            color: colors.primary,
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Notifikasi belum tersedia')),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
+                    // ✅ Gunakan header baru
+                    const DashboardHeader(
+                      title: "Dashboard Warga",
+                      subtitle: "Selamat datang kembali",
                     ),
 
-                    // KEGIATAN SECTION
+                    const SizedBox(height: 24),
+
+                    // Kegiatan section
                     const KegiatanSection(
                       roleFilter: "Warga",
                       showAddButton: false,
                       title: "Kegiatan Warga",
                       subtitle: "Kegiatan terbaru minggu ini",
                     ).animate().fadeIn(duration: 700.ms),
+
                     const SizedBox(height: 24),
 
-                    // TOMBOL KIRIM LAPORAN
+                    // Tombol kirim laporan
                     ElevatedButton.icon(
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -123,7 +68,7 @@ class _DashboardWargaScreenState extends State<DashboardWargaScreen> {
               ),
             ),
 
-            // 🔹 NAVBAR MENGAMBANG DI BAWAH
+            // Navbar mengambang di bawah
             Align(
               alignment: Alignment.bottomCenter,
               child: SafeArea(
