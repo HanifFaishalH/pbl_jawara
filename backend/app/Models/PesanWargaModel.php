@@ -18,11 +18,15 @@ class PesanWargaModel extends Model
         'dibaca'
     ];
 
+    protected $casts = [
+        'dibaca' => 'boolean'
+    ];
+
     public function pengirim() {
-        return $this->belongsTo(usersModel::class, 'pengirim_id','user_id');
+        return $this->belongsTo(usersModel::class, 'pengirim_id', 'user_id');
     }
 
     public function penerima() {
-        return $this->belongsTo(usersModel::class, 'pengirim_id','user_id');
+        return $this->belongsTo(usersModel::class, 'penerima_id', 'user_id');
     }
 }

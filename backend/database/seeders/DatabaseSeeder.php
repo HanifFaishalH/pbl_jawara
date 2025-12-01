@@ -24,9 +24,9 @@ class DatabaseSeeder extends Seeder
             PembayaranSeeder::class,
             KegiatanSeeder::class,
 
-            WargaSeeder::class,
             RumahSeeder::class,
             KeluargaSeeder::class,
+            WargaSeeder::class,
             MutasiWargaSeeder::class,
             MutasiKeluargaSeeder::class,
             ChannelTransferSeeder::class,

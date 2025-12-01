@@ -21,12 +21,12 @@ class PesanWarga {
 
   factory PesanWarga.fromJson(Map<String, dynamic> json) {
     return PesanWarga(
-      pesanId: json['pesan_id'],
-      pengirimId: json['pengirim_id'],
-      penerimaId: json['penerima_id'],
-      isiPesan: json['isi_pesan'],
-      dibaca: json['dibaca'],
-      createdAt: json['created_at'],
+      pesanId: (json['pesan_id'] ?? 0) as int,
+      pengirimId: (json['pengirim_id'] ?? 0) as int,
+      penerimaId: (json['penerima_id'] ?? 0) as int,
+      isiPesan: (json['isi_pesan'] ?? '').toString(),
+      dibaca: json['dibaca'] == 1 || json['dibaca'] == true,
+      createdAt: (json['created_at'] ?? '').toString(),
       pengirimNama: json['pengirim']?['user_nama_depan'],
       penerimaNama: json['penerima']?['user_nama_depan'],
     );
