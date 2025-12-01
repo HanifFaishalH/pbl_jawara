@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:jawaramobile_1/screens/Broadcast/broadcast_screen.dart';
+import 'package:jawaramobile_1/screens/PesanWarga/chat_pesan_warga_screen.dart';
+import 'package:jawaramobile_1/screens/PesanWarga/pesan_warga_screen.dart';
 import 'package:jawaramobile_1/services/auth_service.dart'; // 1. IMPORT AUTH SERVICE
 
 // ====== Screens Auth & Dashboard ======
@@ -41,7 +44,6 @@ import 'package:jawaramobile_1/screens/Kegiatan/detail_kegiatan_screen.dart';
 // import 'package:jawaramobile_1/screens/Kegiatan/edit_kegiatan.dart'; // Tidak dipakai karena reuse form
 
 // ====== Broadcast ======
-import 'package:jawaramobile_1/screens/Broadcast/daftar_broadcast.dart';
 import 'package:jawaramobile_1/screens/Broadcast/tambah_broadcast.dart';
 import 'package:jawaramobile_1/screens/Broadcast/detail_broadcast.dart';
 import 'package:jawaramobile_1/screens/Broadcast/edit_broadcast.dart';
@@ -387,27 +389,33 @@ final appRouter = GoRouter(
       name: 'broadcast',
       builder: (context, state) => const BroadcastScreen(),
     ),
+
     GoRoute(
       path: '/tambah-broadcast',
       name: 'tambah-broadcast',
       builder: (context, state) => const TambahBroadcastScreen(),
     ),
+
     GoRoute(
       path: '/detail-broadcast',
       name: 'detail-broadcast',
       builder: (context, state) {
-        final data = state.extra as Map<String, String>;
+        // gunakan dynamic agar tidak crash jika data bukan Map<String, String>
+        final data = state.extra as Map<String, dynamic>;
         return DetailBroadcastScreen(broadcastData: data);
       },
     ),
+
     GoRoute(
       path: '/edit-broadcast',
       name: 'edit-broadcast',
       builder: (context, state) {
-        final data = state.extra as Map<String, String>;
+        // gunakan dynamic juga
+        final data = state.extra as Map<String, dynamic>;
         return EditBroadcastScreen(broadcastData: data);
       },
     ),
+
 
     // ====== LogActivity ======
     GoRoute(
@@ -638,5 +646,24 @@ final appRouter = GoRouter(
         return DetailRiwayatPesananPage(pesanan: pesanan);
       },
     ),
+    // ====== Pesan Warga ======
+    GoRoute(
+      path: '/pesan-warga',
+      name: 'pesan-warga',
+      builder: (context, state) => const PesanWargaScreen(),
+    ),
+
+    GoRoute(
+      path: '/chat-pesan-warga',
+      name: 'chat-pesan-warga',
+      builder: (context, state) {
+        final args = state.extra as Map<String, dynamic>;
+        return ChatPesanWargaScreen(
+          penerimaId: args['penerimaId'],
+          penerimaNama: args['penerimaNama'],
+        );
+      },
+    ),
+
   ],
 );

@@ -13,6 +13,7 @@ class AuthService {
   // 🧠 Variabel global sesi
   static String? token;
   static int? currentRoleId;
+  static int? userId;
 
   final logger = Logger(
     printer: PrettyPrinter(

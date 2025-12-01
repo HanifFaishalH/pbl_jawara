@@ -53,38 +53,46 @@ class _LoginPageState extends State<LoginPage>
 
   // --- LOGIKA LOGIN OTOMATIS ---
   void _handleLogin() async {
-    if (_formKey.currentState!.validate()) {
-      // 1. Tampilkan Loading Indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
+  if (_formKey.currentState!.validate()) {
+    // 1. Tampilkan Loading Indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final authService = AuthService();
+      final result = await authService.login(
+        _emailController.text,
+        _passwordController.text,
       );
 
-      try {
-        final authService = AuthService();
-        final result = await authService.login(
-          _emailController.text,
-          _passwordController.text,
-        );
+      if (mounted) Navigator.pop(context); // tutup loading
 
-        // 2. Tutup Loading Indicator
-        if (mounted) Navigator.pop(context);
+      if (result['success'] == true) {
+        final data = result['data'];
+        final user = data['user'];
+        final prefs = await SharedPreferences.getInstance();
 
-        // 3. Simpan Token & User
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        String token = result['token'] ?? ''; 
-        await prefs.setString('token', token);
-        
-        String namaUser = 'User';
-        if (result['user'] != null) {
-           namaUser = result['user']['user_nama_depan'] ?? 'User';
-        }
-        await prefs.setString('user_nama', namaUser);
+        // ✅ simpan token dengan key yg benar
+        final token = data['token'] ?? '';
+        await prefs.setString('auth_token', token);
 
-        if (!mounted) return;
+        // ✅ simpan user info
+        await prefs.setInt('auth_user_id', user['user_id']);
+        await prefs.setInt('auth_role_id', user['role_id']);
+        await prefs.setString('user_nama_depan', user['user_nama_depan'] ?? 'User');
+        await prefs.setString('user_nama_belakang', user['user_nama_belakang'] ?? '');
 
-        // 4. TAMPILKAN POP UP SUKSES (Tanpa Tombol)
+        // ✅ update ke AuthService (agar dipakai global)
+        AuthService.token = token;
+        AuthService.userId = user['user_id'];
+        AuthService.currentRoleId = user['role_id'];
+
+        final namaUser = user['user_nama_depan'] ?? 'User';
+
+        // 4. Tampilkan popup sukses
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -98,39 +106,29 @@ class _LoginPageState extends State<LoginPage>
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [const BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))],
+                  boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10, offset: const Offset(0, 4))],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        shape: BoxShape.circle,
-                      ),
+                      decoration: BoxDecoration(color: Colors.green.shade50, shape: BoxShape.circle),
                       child: Icon(Icons.check_circle, color: Colors.green.shade600, size: 60),
                     ),
                     const SizedBox(height: 20),
-                    
                     const Text(
                       "Login Berhasil!",
                       style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
                     ),
                     const SizedBox(height: 10),
-                    
                     Text(
                       "Selamat datang kembali, $namaUser",
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.grey[600], fontSize: 14),
                     ),
                     const SizedBox(height: 24),
-                    
-                    // Indikator sedang mengalihkan
-                    const SizedBox(
-                      height: 20, width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
+                    const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)),
                     const SizedBox(height: 8),
                     const Text("Mengalihkan ke Dashboard...", style: TextStyle(fontSize: 12, color: Colors.grey)),
                   ],
@@ -140,34 +138,40 @@ class _LoginPageState extends State<LoginPage>
           },
         );
 
-        // 5. DELAY 2 DETIK LALU PINDAH
         await Future.delayed(const Duration(seconds: 2));
-
         if (!mounted) return;
-        Navigator.pop(context); // Tutup Dialog Sukses
-        context.go('/dashboard'); // Pindah Halaman
-
-      } catch (e) {
-        // Tutup Loading jika error
+        Navigator.pop(context); // tutup dialog sukses
+        context.go('/dashboard');
+      } else {
+        // Gagal login
         if (mounted && Navigator.canPop(context)) Navigator.pop(context);
-        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.white),
-                const SizedBox(width: 10),
-                Expanded(child: Text("Gagal Login: ${e.toString()}")),
-              ],
-            ),
+            content: Text(result['message'] ?? 'Login gagal'),
             backgroundColor: Colors.red.shade600,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
         );
       }
+    } catch (e) {
+      if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 10),
+              Expanded(child: Text("Gagal Login: ${e.toString()}")),
+            ],
+          ),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
     }
   }
+}
+
 
   void _handleGoogleLogin() {
     ScaffoldMessenger.of(context).showSnackBar(
