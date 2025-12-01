@@ -5,8 +5,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardHeader extends StatelessWidget {
   final String? title;
+  final String? subtitle; // ✅ Tambahkan ini
 
-  const DashboardHeader({super.key, this.title});
+  const DashboardHeader({
+    super.key,
+    this.title,
+    this.subtitle, // ✅ Tambahkan juga di konstruktor
+  });
 
   Future<Map<String, String>> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -64,8 +69,9 @@ class DashboardHeader extends StatelessWidget {
             ],
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Avatar
+              // 🧍‍♂️ Avatar
               CircleAvatar(
                 radius: 26,
                 backgroundColor: color.primaryContainer,
@@ -77,7 +83,7 @@ class DashboardHeader extends StatelessWidget {
               ),
               const SizedBox(width: 14),
 
-              // Nama dan role
+              // 🧾 Nama, role, dan subtitle
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,11 +101,20 @@ class DashboardHeader extends StatelessWidget {
                         color: color.onSurfaceVariant,
                       ),
                     ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: color.onSurfaceVariant.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
 
-              // Notifikasi
+              // 🔔 Notifikasi
               IconButton(
                 icon: Icon(
                   FontAwesomeIcons.bell,
