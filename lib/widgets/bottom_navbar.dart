@@ -40,6 +40,7 @@ class _BottomNavbarState extends State<BottomNavbar>
   Future<void> _logout() async {
     try {
       await AuthService().logout();
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -50,31 +51,71 @@ class _BottomNavbarState extends State<BottomNavbar>
 
       context.go('/login');
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gagal logout: $e')),
       );
     }
   }
 
+  void _showUnderDevelopment() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: const [
+            Icon(Icons.construction, color: Colors.white),
+            SizedBox(width: 10),
+            Text("Fitur ini sedang dalam pengembangan."),
+          ],
+        ),
+        backgroundColor: Colors.orange.shade800,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   void _onItemTapped(int index) async {
-    switch (index) {
-      case 0:
-        context.go('/dashboard');
-        break;
-      case 1:
-        context.go('/laporan');
-        break;
-      case 2:
-        await _controller.forward();
-        showMenuPopUp(context);
-        await _controller.reverse();
-        break;
-      case 3:
-        context.go('/pengguna');
-        break;
-      case 4:
-        _logout();
-        break;
+    try {
+      switch (index) {
+        case 0:
+          context.go('/dashboard');
+          break;
+
+        case 1:
+          // Jika route tidak ditemukan, tampilkan pesan
+          try {
+            context.go('/laporan');
+          } catch (_) {
+            _showUnderDevelopment();
+          }
+          break;
+
+        case 2:
+          await _controller.forward();
+          if (!mounted) return;
+          showMenuPopUp(context);
+          await _controller.reverse();
+          break;
+
+        case 3:
+          try {
+            context.go('/pengguna');
+          } catch (_) {
+            _showUnderDevelopment();
+          }
+          break;
+
+        case 4:
+          _logout();
+          break;
+
+        default:
+          _showUnderDevelopment();
+      }
+    } catch (_) {
+      _showUnderDevelopment();
     }
   }
 
@@ -95,7 +136,7 @@ class _BottomNavbarState extends State<BottomNavbar>
       onTap: _onItemTapped,
       type: BottomNavigationBarType.fixed,
       selectedItemColor: colorScheme.primary,
-      unselectedItemColor: colorScheme.onSurface.withOpacity(0.5),
+      unselectedItemColor: colorScheme.onSurface.withValues(alpha: 0.5), // ✅ fixed
       backgroundColor: colorScheme.surface,
       items: items
           .map((e) => BottomNavigationBarItem(
