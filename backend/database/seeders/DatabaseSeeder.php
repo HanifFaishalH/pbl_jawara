@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             TransaksiDetailSeeder::class,
             PembayaranSeeder::class,
             KegiatanSeeder::class,
+            AspirasiSeeder::class,
         ]);
     }
 }
