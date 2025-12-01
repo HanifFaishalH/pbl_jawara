@@ -8,7 +8,8 @@ use App\Http\Controllers\Api\TransaksiController;
 use App\Http\Controllers\Api\PembayaranController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\Api\KegiatanController;
-
+use App\Http\Controllers\Api\PesanBroadcastController;
+use App\Http\Controllers\Api\PesanWargaController;
 // --- IMPORT PENTING UNTUK PROXY GAMBAR ---
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
@@ -51,6 +52,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/kegiatan', [KegiatanController::class, 'store']);
     Route::put('/kegiatan/{id}', [KegiatanController::class, 'update']); // Pakai POST untuk update file
     Route::delete('/kegiatan/{id}', [KegiatanController::class, 'destroy']);
+
+    // Pesan Warga
+    Route::get('/pesan-warga', [PesanWargaController::class, 'index']);
+    Route::post('/pesan-warga', [PesanWargaController::class, 'store']);
+    Route::put('/pesan-warga/{id}/dibaca', [PesanWargaController::class, 'updateDibaca']);
+    Route::get('/pesan-warga/chat/{id}', [PesanWargaController::class, 'getChat']);
+
+    // Pesan Broadcast
+    Route::get('/pesan-broadcast', [PesanBroadcastController::class, 'index']);
+    Route::post('/pesan-broadcast', [PesanBroadcastController::class, 'store']);
+    Route::delete('/pesan-broadcast/{id}', [PesanBroadcastController::class, 'destroy']);
 });
 
 // =========================================================================
