@@ -47,7 +47,7 @@ class _MenuPopUpContent extends StatelessWidget {
     final theme = Theme.of(context);
     final int roleId = AuthService.currentRoleId ?? 6;
 
-    // gunakan named routes sesuai app router kamu
+    // === Daftar Menu (Gunakan route name dari app router kamu) ===
     final Map<String, Map<String, dynamic>> menuLibrary = {
       // ---- Menu Umum ----
       'dashboard': {
@@ -58,7 +58,6 @@ class _MenuPopUpContent extends StatelessWidget {
       'pesan_warga': {
         'icon': Icons.chat_bubble,
         'title': 'Pesan Warga',
-        // 👉 buka LIST pengguna (sesuai router: name 'pesan-warga')
         'action': () => context.pushNamed('pesan-warga'),
       },
       'broadcast': {
@@ -73,7 +72,7 @@ class _MenuPopUpContent extends StatelessWidget {
       },
       'log_aktivitas': {
         'icon': Icons.history,
-        'title': 'Log Aktifitas',
+        'title': 'Log Aktivitas',
         'action': () => context.pushNamed('log-aktivitas'),
       },
       'marketplace': {
@@ -87,8 +86,6 @@ class _MenuPopUpContent extends StatelessWidget {
         'action': () => context.pushNamed('channel-transfer'),
       },
       'aspirasi': {
-        'icon': Icons.lightbulb, 'title': 'Aspirasi', 
-        'action': () => context.push('/aspirasi-screen')
         'icon': Icons.lightbulb,
         'title': 'Aspirasi',
         'action': () => context.pushNamed('dashboard-aspirasi'),
@@ -110,13 +107,6 @@ class _MenuPopUpContent extends StatelessWidget {
         'title': 'Penerimaan Warga',
         'action': () => context.pushNamed('penerimaan-warga'),
       },
-      'mutasi_keluarga': {
-        'icon': Icons.switch_account, 'title': 'Mutasi Keluarga', 
-        'action': () => context.push('/daftar-mutasi-keluarga')
-      },
-      'mutasi_warga': {
-        'icon': Icons.person_search, 'title': 'Mutasi Warga', 
-        'action': () => context.push('/daftar-mutasi-warga')
       'mutasi': {
         'icon': Icons.switch_account,
         'title': 'Mutasi Keluarga',
@@ -139,7 +129,7 @@ class _MenuPopUpContent extends StatelessWidget {
       },
     };
 
-    // susunan menu
+    // === Susunan Menu Dasar ===
     final List<Map<String, dynamic>> menuItems = [];
     final baseKeys = [
       'dashboard',
@@ -151,19 +141,16 @@ class _MenuPopUpContent extends StatelessWidget {
       'channel',
       'aspirasi',
     ];
+
     for (final key in baseKeys) {
-      if (menuLibrary.containsKey(key)) menuItems.add(menuLibrary[key]!);
+      if (menuLibrary.containsKey(key)) {
+        menuItems.add(menuLibrary[key]!);
+      }
     }
 
-    // B. Menu Tambahan Berdasarkan Role
-    if (roleId == 1) { 
-      // === ADMIN (1) ===
-      // Tambahkan sisa menu yang belum ada di baseKeys
-      List<String> adminKeys = [
-        'data_warga', 'laporan_keuangan', 'penerimaan_warga', 
-        'mutasi_warga', 'mutasi_keluarga',
-        'pemasukan', 'pengeluaran', 'manajemen_pengguna'
+    // === Menu Tambahan Berdasarkan Role ===
     if (roleId == 1) {
+      // === ADMIN ===
       final adminKeys = [
         'data_warga',
         'laporan_keuangan',
@@ -177,26 +164,39 @@ class _MenuPopUpContent extends StatelessWidget {
         menuItems.add(menuLibrary[key]!);
       }
     } else if (roleId == 2 || roleId == 3) {
-      menuItems.add(menuLibrary['data_warga']!);
-      menuItems.add(menuLibrary['laporan_keuangan']!);
-      menuItems.add(menuLibrary['penerimaan_warga']!);
-      menuItems.add(menuLibrary['mutasi_warga']!);
-      menuItems.add(menuLibrary['mutasi_keluarga']!);
-
-      menuItems.add(menuLibrary['mutasi']!);
+      // === PENGURUS / RW ===
+      final pengurusKeys = [
+        'data_warga',
+        'laporan_keuangan',
+        'penerimaan_warga',
+        'mutasi',
+      ];
+      for (final key in pengurusKeys) {
+        menuItems.add(menuLibrary[key]!);
+      }
     } else if (roleId == 4) {
-      menuItems.add(menuLibrary['data_warga']!);
-      menuItems.add(menuLibrary['manajemen_pengguna']!);
-      menuItems.add(menuLibrary['mutasi_warga']!);
-      menuItems.add(menuLibrary['mutasi_keluarga']!);
-
-      menuItems.add(menuLibrary['mutasi']!);
+      // === KETUA RT ===
+      final ketuaKeys = [
+        'data_warga',
+        'manajemen_pengguna',
+        'mutasi',
+      ];
+      for (final key in ketuaKeys) {
+        menuItems.add(menuLibrary[key]!);
+      }
     } else if (roleId == 5) {
-      menuItems.add(menuLibrary['pemasukan']!);
-      menuItems.add(menuLibrary['pengeluaran']!);
-      menuItems.add(menuLibrary['laporan_keuangan']!);
+      // === BENDAHARA ===
+      final bendaharaKeys = [
+        'pemasukan',
+        'pengeluaran',
+        'laporan_keuangan',
+      ];
+      for (final key in bendaharaKeys) {
+        menuItems.add(menuLibrary[key]!);
+      }
     }
 
+    // === UI Popup ===
     return Material(
       color: Colors.transparent,
       child: Container(
@@ -218,7 +218,7 @@ class _MenuPopUpContent extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // handle bar
+              // Handle bar (indikator drag)
               Container(
                 margin: const EdgeInsets.only(top: 10, bottom: 5),
                 width: 40,
@@ -228,7 +228,7 @@ class _MenuPopUpContent extends StatelessWidget {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              // grid menu
+              // Grid Menu
               GridView.builder(
                 padding: const EdgeInsets.all(20),
                 shrinkWrap: true,
@@ -274,7 +274,8 @@ class _MenuPopUpContent extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 4.0),
                             child: Text(
                               item['title'] as String,
                               textAlign: TextAlign.center,
