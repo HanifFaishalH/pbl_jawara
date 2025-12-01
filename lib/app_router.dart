@@ -57,6 +57,23 @@ import 'package:jawaramobile_1/screens/ManajemenPengguna/tambah_pengguna_screen.
 // ====== Channel Transfer ======
 import 'package:jawaramobile_1/screens/ChannelTransfer/daftar_channel_screen.dart';
 import 'package:jawaramobile_1/screens/ChannelTransfer/tambah_channel_screen.dart';
+import 'package:jawaramobile_1/screens/ChannelTransfer/detail_channel_screen.dart';
+
+// ====== Data Warga ======
+import 'package:jawaramobile_1/screens/DataWargaRumah/form_warga_screen.dart';
+import 'package:jawaramobile_1/screens/DataWargaRumah/detail_warga_screen.dart';
+import 'package:jawaramobile_1/screens/DataWargaRumah/form_keluarga_screen.dart';
+import 'package:jawaramobile_1/screens/DataWargaRumah/detail_keluarga_screen.dart';
+import 'package:jawaramobile_1/screens/DataWargaRumah/form_rumah_screen.dart';
+import 'package:jawaramobile_1/screens/DataWargaRumah/detail_rumah_screen.dart';
+
+// ====== Mutasi Warga & Keluarga ======
+import 'package:jawaramobile_1/screens/Mutasi/daftar_mutasi_warga_screen.dart';
+import 'package:jawaramobile_1/screens/Mutasi/daftar_mutasi_keluarga_screen.dart';
+import 'package:jawaramobile_1/screens/Mutasi/form_mutasi_warga_screen.dart';
+import 'package:jawaramobile_1/screens/Mutasi/form_mutasi_keluarga_screen.dart';
+import 'package:jawaramobile_1/screens/Mutasi/detail_mutasi_warga_screen.dart';
+import 'package:jawaramobile_1/screens/Mutasi/detail_mutasi_keluarga_screen.dart';
 
 // ====== Lainnya ======
 import 'package:jawaramobile_1/screens/penerimaan_warga_screen.dart';
@@ -137,6 +154,72 @@ final appRouter = GoRouter(
       path: '/data-warga-rumah',
       name: 'data-warga-rumah',
       builder: (context, state) => const DataWargaPage(),
+    ),
+    // Warga
+    GoRoute(
+      path: '/tambah-warga',
+      name: 'tambah-warga',
+      builder: (context, state) => const FormWargaScreen(),
+    ),
+    GoRoute(
+      path: '/edit-warga/:id',
+      name: 'edit-warga',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return FormWargaScreen(wargaId: id);
+      },
+    ),
+    GoRoute(
+      path: '/detail-warga/:id',
+      name: 'detail-warga',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return DetailWargaScreen(wargaId: id);
+      },
+    ),
+    // Keluarga
+    GoRoute(
+      path: '/tambah-keluarga',
+      name: 'tambah-keluarga',
+      builder: (context, state) => const FormKeluargaScreen(),
+    ),
+    GoRoute(
+      path: '/edit-keluarga/:id',
+      name: 'edit-keluarga',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return FormKeluargaScreen(keluargaId: id);
+      },
+    ),
+    GoRoute(
+      path: '/detail-keluarga/:id',
+      name: 'detail-keluarga',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return DetailKeluargaScreen(keluargaId: id);
+      },
+    ),
+    // Rumah
+    GoRoute(
+      path: '/tambah-rumah',
+      name: 'tambah-rumah',
+      builder: (context, state) => const FormRumahScreen(),
+    ),
+    GoRoute(
+      path: '/edit-rumah/:id',
+      name: 'edit-rumah',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return FormRumahScreen(rumahId: id);
+      },
+    ),
+    GoRoute(
+      path: '/detail-rumah/:id',
+      name: 'detail-rumah',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return DetailRumahScreen(rumahId: id);
+      },
     ),
 
     // ====== Pemasukan ======
@@ -364,6 +447,22 @@ final appRouter = GoRouter(
       builder: (context, state) => const TambahChannelScreen(),
     ),
     GoRoute(
+      path: '/edit-channel/:id',
+      name: 'edit-channel',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return TambahChannelScreen(channelId: id);
+      },
+    ),
+    GoRoute(
+      path: '/detail-channel/:id',
+      name: 'detail-channel',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return DetailChannelScreen(channelId: id);
+      },
+    ),
+    GoRoute(
       path: '/channel-transfer',
       name: 'channel-transfer',
       builder: (context, state) => const DaftarChannelScreen(),
@@ -375,6 +474,7 @@ final appRouter = GoRouter(
       name: 'penerimaan-warga',
       builder: (context, state) => const PenerimaanWargaScreen(),
     ),
+    // Mutasi Lama (deprecated)
     GoRoute(
       path: '/mutasi',
       name: 'mutasi',
@@ -386,6 +486,62 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final data = state.extra as Map<String, dynamic>;
         return MutasiDetailPage(data: data);
+      },
+    ),
+
+    // ====== Mutasi Warga (Baru) ======
+    GoRoute(
+      path: '/daftar-mutasi-warga',
+      name: 'daftar-mutasi-warga',
+      builder: (context, state) => const DaftarMutasiWargaScreen(),
+    ),
+    GoRoute(
+      path: '/tambah-mutasi-warga',
+      name: 'tambah-mutasi-warga',
+      builder: (context, state) => const FormMutasiWargaScreen(),
+    ),
+    GoRoute(
+      path: '/edit-mutasi-warga/:id',
+      name: 'edit-mutasi-warga',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return FormMutasiWargaScreen(mutasiId: id);
+      },
+    ),
+    GoRoute(
+      path: '/detail-mutasi-warga/:id',
+      name: 'detail-mutasi-warga',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return DetailMutasiWargaScreen(mutasiId: id);
+      },
+    ),
+
+    // ====== Mutasi Keluarga (Baru) ======
+    GoRoute(
+      path: '/daftar-mutasi-keluarga',
+      name: 'daftar-mutasi-keluarga',
+      builder: (context, state) => const DaftarMutasiKeluargaScreen(),
+    ),
+    GoRoute(
+      path: '/tambah-mutasi-keluarga',
+      name: 'tambah-mutasi-keluarga',
+      builder: (context, state) => const FormMutasiKeluargaScreen(),
+    ),
+    GoRoute(
+      path: '/edit-mutasi-keluarga/:id',
+      name: 'edit-mutasi-keluarga',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return FormMutasiKeluargaScreen(mutasiId: id);
+      },
+    ),
+    GoRoute(
+      path: '/detail-mutasi-keluarga/:id',
+      name: 'detail-mutasi-keluarga',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return DetailMutasiKeluargaScreen(mutasiId: id);
       },
     ),
     GoRoute(

@@ -96,9 +96,13 @@ class _MenuPopUpContent extends StatelessWidget {
         'icon': Icons.person_add, 'title': 'Penerimaan Warga', 
         'action': () => context.push('/penerimaan-warga')
       },
-      'mutasi': {
+      'mutasi_keluarga': {
         'icon': Icons.switch_account, 'title': 'Mutasi Keluarga', 
-        'action': () => context.push('/mutasi')
+        'action': () => context.push('/daftar-mutasi-keluarga')
+      },
+      'mutasi_warga': {
+        'icon': Icons.person_search, 'title': 'Mutasi Warga', 
+        'action': () => context.push('/daftar-mutasi-warga')
       },
       'pemasukan': {
         'icon': Icons.download, 'title': 'Pemasukan', 
@@ -131,7 +135,8 @@ class _MenuPopUpContent extends StatelessWidget {
       // === ADMIN (1) ===
       // Tambahkan sisa menu yang belum ada di baseKeys
       List<String> adminKeys = [
-        'data_warga', 'laporan_keuangan', 'penerimaan_warga', 'mutasi',
+        'data_warga', 'laporan_keuangan', 'penerimaan_warga', 
+        'mutasi_warga', 'mutasi_keluarga',
         'pemasukan', 'pengeluaran', 'manajemen_pengguna'
       ];
       for (var key in adminKeys) {
@@ -143,13 +148,15 @@ class _MenuPopUpContent extends StatelessWidget {
       menuItems.add(menuLibrary['data_warga']!);
       menuItems.add(menuLibrary['laporan_keuangan']!);
       menuItems.add(menuLibrary['penerimaan_warga']!);
-      menuItems.add(menuLibrary['mutasi']!);
+      menuItems.add(menuLibrary['mutasi_warga']!);
+      menuItems.add(menuLibrary['mutasi_keluarga']!);
 
     } else if (roleId == 4) {
       // === SEKRETARIS (4) ===
       menuItems.add(menuLibrary['data_warga']!);
       menuItems.add(menuLibrary['manajemen_pengguna']!);
-      menuItems.add(menuLibrary['mutasi']!);
+      menuItems.add(menuLibrary['mutasi_warga']!);
+      menuItems.add(menuLibrary['mutasi_keluarga']!);
 
     } else if (roleId == 5) {
       // === BENDAHARA (5) ===
