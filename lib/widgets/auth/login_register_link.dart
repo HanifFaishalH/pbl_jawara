@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jawaramobile_1/theme/AppTheme.dart';
+
 
 class LoginRegisterLink extends StatelessWidget {
   final VoidCallback onTap;
@@ -25,12 +25,12 @@ class LoginRegisterLink extends StatelessWidget {
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
-          child: const Text(
+          child: Text(
             'Daftar',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Color(0xFFFF8100),
+              color: colorScheme.primary,
             ),
           ),
         ),
