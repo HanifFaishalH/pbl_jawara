@@ -39,22 +39,50 @@ class _DataWargaPageState extends State<DataWargaPage>
         centerTitle: true,
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
+        elevation: 0,
       ),
-      backgroundColor: colorScheme.surface,
+      backgroundColor: Colors.grey[50],
       body: Column(
         children: [
           // ================= TAB BAR =================
           Container(
-            color: colorScheme.primaryContainer,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
             child: TabBar(
               controller: _tabController,
               indicatorColor: colorScheme.primary,
+              indicatorWeight: 3,
               labelColor: colorScheme.primary,
-              unselectedLabelColor: colorScheme.onSurface.withOpacity(0.6),
-              tabs: const [
-                Tab(text: "Data Warga"),
-                Tab(text: "Keluarga"),
-                Tab(text: "Data Rumah"),
+              unselectedLabelColor: Colors.grey[600],
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.normal,
+                fontSize: 14,
+              ),
+              tabs: [
+                Tab(
+                  icon: Icon(Icons.people, size: 20),
+                  text: "Warga",
+                ),
+                Tab(
+                  icon: Icon(Icons.family_restroom, size: 20),
+                  text: "Keluarga",
+                ),
+                Tab(
+                  icon: Icon(Icons.home, size: 20),
+                  text: "Rumah",
+                ),
               ],
             ),
           ),
@@ -63,7 +91,6 @@ class _DataWargaPageState extends State<DataWargaPage>
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              physics: const NeverScrollableScrollPhysics(),
               children: const [
                 TabelWarga(),
                 TabelKeluarga(),

@@ -8,6 +8,12 @@ use App\Http\Controllers\Api\TransaksiController;
 use App\Http\Controllers\Api\PembayaranController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\Api\KegiatanController;
+use App\Http\Controllers\Api\ChannelTransferController;
+use App\Http\Controllers\Api\WargaController;
+use App\Http\Controllers\Api\KeluargaController;
+use App\Http\Controllers\Api\RumahController;
+use App\Http\Controllers\Api\MutasiKeluargaController;
+use App\Http\Controllers\Api\MutasiWargaController;
 
 // --- IMPORT PENTING UNTUK PROXY GAMBAR ---
 use Illuminate\Support\Facades\Storage;
@@ -51,6 +57,50 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/kegiatan', [KegiatanController::class, 'store']);
     Route::put('/kegiatan/{id}', [KegiatanController::class, 'update']); // Pakai POST untuk update file
     Route::delete('/kegiatan/{id}', [KegiatanController::class, 'destroy']);
+
+    // Channel Transfer
+    Route::get('/channel-transfer', [ChannelTransferController::class, 'index']);
+    Route::get('/channel-transfer/{id}', [ChannelTransferController::class, 'show']);
+    Route::post('/channel-transfer', [ChannelTransferController::class, 'store']);
+    Route::put('/channel-transfer/{id}', [ChannelTransferController::class, 'update']);
+    Route::delete('/channel-transfer/{id}', [ChannelTransferController::class, 'destroy']);
+
+    // Data Warga
+    Route::get('/warga', [WargaController::class, 'index']);
+    Route::get('/warga/{id}', [WargaController::class, 'show']);
+    Route::post('/warga', [WargaController::class, 'store']);
+    Route::put('/warga/{id}', [WargaController::class, 'update']);
+    Route::delete('/warga/{id}', [WargaController::class, 'destroy']);
+
+    // Data Keluarga
+    Route::get('/keluarga', [KeluargaController::class, 'index']);
+    Route::get('/keluarga/{id}', [KeluargaController::class, 'show']);
+    Route::post('/keluarga', [KeluargaController::class, 'store']);
+    Route::put('/keluarga/{id}', [KeluargaController::class, 'update']);
+    Route::delete('/keluarga/{id}', [KeluargaController::class, 'destroy']);
+
+    // Data Rumah
+    Route::get('/rumah', [RumahController::class, 'index']);
+    Route::get('/rumah/{id}', [RumahController::class, 'show']);
+    Route::post('/rumah', [RumahController::class, 'store']);
+    Route::put('/rumah/{id}', [RumahController::class, 'update']);
+    Route::delete('/rumah/{id}', [RumahController::class, 'destroy']);
+
+    // Mutasi Keluarga
+    Route::get('/mutasi-keluarga', [MutasiKeluargaController::class, 'index']);
+    Route::get('/mutasi-keluarga/{id}', [MutasiKeluargaController::class, 'show']);
+    Route::post('/mutasi-keluarga', [MutasiKeluargaController::class, 'store']);
+    Route::put('/mutasi-keluarga/{id}', [MutasiKeluargaController::class, 'update']);
+    Route::delete('/mutasi-keluarga/{id}', [MutasiKeluargaController::class, 'destroy']);
+    Route::put('/mutasi-keluarga/{id}/status', [MutasiKeluargaController::class, 'updateStatus']);
+
+    // Mutasi Warga
+    Route::get('/mutasi-warga', [MutasiWargaController::class, 'index']);
+    Route::get('/mutasi-warga/{id}', [MutasiWargaController::class, 'show']);
+    Route::post('/mutasi-warga', [MutasiWargaController::class, 'store']);
+    Route::put('/mutasi-warga/{id}', [MutasiWargaController::class, 'update']);
+    Route::delete('/mutasi-warga/{id}', [MutasiWargaController::class, 'destroy']);
+    Route::put('/mutasi-warga/{id}/status', [MutasiWargaController::class, 'updateStatus']);
 });
 
 // =========================================================================
