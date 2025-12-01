@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\KeluargaController;
 use App\Http\Controllers\Api\RumahController;
 use App\Http\Controllers\Api\MutasiKeluargaController;
 use App\Http\Controllers\Api\MutasiWargaController;
+use App\Http\Controllers\Api\AspirasiController;
+use App\Http\Controllers\Api\LogActivityController;
 
 // --- IMPORT PENTING UNTUK PROXY GAMBAR ---
 use Illuminate\Support\Facades\Storage;
@@ -55,7 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/kegiatan', [KegiatanController::class, 'index']);
     Route::get('/kegiatan/{id}', [KegiatanController::class, 'show']);
     Route::post('/kegiatan', [KegiatanController::class, 'store']);
-    Route::put('/kegiatan/{id}', [KegiatanController::class, 'update']); // Pakai POST untuk update file
+    Route::put('/kegiatan/{id}', [KegiatanController::class, 'update']);
     Route::delete('/kegiatan/{id}', [KegiatanController::class, 'destroy']);
 
     // Channel Transfer
@@ -101,6 +103,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/mutasi-warga/{id}', [MutasiWargaController::class, 'update']);
     Route::delete('/mutasi-warga/{id}', [MutasiWargaController::class, 'destroy']);
     Route::put('/mutasi-warga/{id}/status', [MutasiWargaController::class, 'updateStatus']);
+
+    // Aspirasi
+    Route::get('/aspirasi', [AspirasiController::class, 'index']);
+    Route::post('/aspirasi', [AspirasiController::class, 'store']);
+    Route::get('/aspirasi/{id}', [AspirasiController::class, 'show']);
+    Route::post('/aspirasi/{id}/konfirmasi', [AspirasiController::class, 'updateStatus']);
+
+    // Log Activity
+    Route::get('/log-activity', [LogActivityController::class, 'index']);
+    Route::get('/log-activity/{id}', [LogActivityController::class, 'show']);
+    Route::get('/log-activity/statistics', [LogActivityController::class, 'statistics']);
+    Route::delete('/log-activity/cleanup', [LogActivityController::class, 'cleanup']);
 });
 
 // =========================================================================

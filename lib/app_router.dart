@@ -77,7 +77,7 @@ import 'package:jawaramobile_1/screens/Mutasi/detail_mutasi_keluarga_screen.dart
 
 // ====== Lainnya ======
 import 'package:jawaramobile_1/screens/penerimaan_warga_screen.dart';
-import 'package:jawaramobile_1/screens/dashboard_aspirasi.dart';
+//import 'package:jawaramobile_1/screens/dashboard_aspirasi.dart';
 
 // ====== Marketplace ======
 import 'package:jawaramobile_1/screens/Marketplace/menu_marketplace.dart';
@@ -92,6 +92,11 @@ import 'package:jawaramobile_1/screens/Marketplace/detail_pesanan_masuk.dart';
 import 'package:jawaramobile_1/screens/Marketplace/riwayat_pesanan_page.dart';
 import 'package:jawaramobile_1/screens/Marketplace/detail_riwayat_pesanan_page.dart';
 import 'package:jawaramobile_1/screens/Marketplace/keranjang_page.dart';
+
+import 'package:jawaramobile_1/screens/Aspirasi/aspirasi_screen.dart';
+import 'package:jawaramobile_1/screens/Aspirasi/tambah_aspirasi_screen.dart';
+import 'package:jawaramobile_1/screens/Aspirasi/detail_aspirasi_screen.dart';
+import 'package:jawaramobile_1/models/aspirasi_models.dart';
 
 final appRouter = GoRouter(
   // 2. LOGIKA INITIAL LOCATION
@@ -545,11 +550,28 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/dashboard-aspirasi',
-      name: 'dashboard-aspirasi',
-      builder: (context, state) => const DashboardAspirasi(),
+      path: '/aspirasi-screen',
+      name: 'aspirasi-screen',
+      // Class ini berasal dari file aspirasi_screen.dart
+      builder: (context, state) => const DashboardAspirasi(), 
+      
+      routes: [
+        GoRoute(
+          path: 'tambah',
+          name: 'tambah-aspirasi',
+          builder: (context, state) => const TambahAspirasiScreen(),
+        ),
+        GoRoute(
+          path: 'detail',
+          name: 'detail-aspirasi',
+          builder: (context, state) {
+            // Mengambil object aspirasi yang dikirim via parameter 'extra'
+            final aspirasi = state.extra as AspirasiModel;
+            return DetailAspirasiScreen(aspirasi: aspirasi);
+          },
+        ),
+      ],
     ),
-    
     // ====== MARKETPLACE ======
     GoRoute(
       path: '/menu-marketplace',

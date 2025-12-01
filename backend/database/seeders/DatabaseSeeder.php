@@ -23,16 +23,7 @@ class DatabaseSeeder extends Seeder
             TransaksiDetailSeeder::class,
             PembayaranSeeder::class,
             KegiatanSeeder::class,
-            
-            // Data Warga & Channel Transfer
-            RumahSeeder::class,
-            KeluargaSeeder::class,
-            WargaSeeder::class,
-            ChannelTransferSeeder::class,
-            
-            // Mutasi
-            MutasiWargaSeeder::class,
-            MutasiKeluargaSeeder::class,
+            AspirasiSeeder::class,
         ]);
     }
 }
