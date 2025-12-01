@@ -16,7 +16,8 @@ use App\Http\Controllers\Api\MutasiKeluargaController;
 use App\Http\Controllers\Api\MutasiWargaController;
 use App\Http\Controllers\Api\AspirasiController;
 use App\Http\Controllers\Api\LogActivityController;
-
+use App\Http\Controllers\Api\PesanBroadcastController;
+use App\Http\Controllers\Api\PesanWargaController;
 // --- IMPORT PENTING UNTUK PROXY GAMBAR ---
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
@@ -110,11 +111,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/aspirasi/{id}', [AspirasiController::class, 'show']);
     Route::post('/aspirasi/{id}/konfirmasi', [AspirasiController::class, 'updateStatus']);
 
+    // Broadcast
+    Route::get('/pesan-broadcast', [PesanBroadcastController::class, 'index']);
+    Route::post('/pesan-broadcast', [PesanBroadcastController::class, 'store']);
+    Route::put('/pesan-broadcast/{id}', [PesanBroadcastController::class, 'update']);
+    Route::delete('/pesan-broadcast/{id}', [PesanBroadcastController::class, 'destroy']);
+
+    // === Pesan Warga ===
+    Route::get('/pesan-warga', [PesanWargaController::class, 'index']);
+    Route::post('/pesan-warga', [PesanWargaController::class, 'store']);
+    Route::get('/pesan-warga/{id}', [PesanWargaController::class, 'show']);
+    Route::delete('/pesan-warga/{id}', [PesanWargaController::class, 'destroy']);
+
     // Log Activity
-    Route::get('/log-activity', [LogActivityController::class, 'index']);
-    Route::get('/log-activity/{id}', [LogActivityController::class, 'show']);
-    Route::get('/log-activity/statistics', [LogActivityController::class, 'statistics']);
-    Route::delete('/log-activity/cleanup', [LogActivityController::class, 'cleanup']);
+    // Route::get('/log-activity', [LogActivityController::class, 'index']);
+    // Route::get('/log-activity/{id}', [LogActivityController::class, 'show']);
+    // Route::get('/log-activity/statistics', [LogActivityController::class, 'statistics']);
+    // Route::delete('/log-activity/cleanup', [LogActivityController::class, 'cleanup']);
 });
 
 // =========================================================================

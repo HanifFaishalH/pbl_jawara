@@ -40,6 +40,41 @@ class PesanBroadcastController extends Controller
         return response()->json(['status' => 'success', 'data' => $broadcast]);
     }
 
+    public function update(Request $request, $id)
+    {
+        $user = Auth::user();
+
+        if ($user->role_id != 1) {
+            return response()->json(['status' => 'error', 'message' => 'Hanya admin yang dapat mengedit broadcast.'], 403);
+        }
+
+        $request->validate([
+            'judul' => 'required|string|max:100',
+            'isi_pesan' => 'required|string',
+        ]);
+
+        $broadcast = PesanBroadcastModel::findOrFail($id);
+
+        $broadcast->update([
+            'judul' => $request->judul,
+            'isi_pesan' => $request->isi_pesan,
+        ]);
+
+        if ($request->hasFile('foto')) {
+            $path = $request->file('foto')->store('broadcast_foto', 'public');
+            $broadcast->foto = $path;
+        }
+
+        if ($request->hasFile('dokumen')) {
+            $path = $request->file('dokumen')->store('broadcast_dokumen', 'public');
+            $broadcast->dokumen = $path;
+        }
+
+        $broadcast->save();
+
+        return response()->json(['status' => 'success', 'data' => $broadcast]);
+    }
+
     public function destroy($id)
     {
         $user = Auth::user();
