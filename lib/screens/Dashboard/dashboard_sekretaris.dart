@@ -29,8 +29,9 @@ class DashboardSekretarisScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
 
+                    // 📂 Statistik Arsip
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(18),
                       decoration: BoxDecoration(
                         color: colors.surfaceVariant,
                         borderRadius: BorderRadius.circular(16),
@@ -42,11 +43,148 @@ class DashboardSekretarisScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: const Text(
-                        "📁 Arsip surat masuk: 4\n📬 Surat keluar: 2",
-                        style: TextStyle(fontSize: 15),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Arsip Surat",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          Row(
+                            children: [
+                              // Surat Masuk
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: colors.primaryContainer.withOpacity(0.9),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Icon(Icons.mark_email_unread_rounded,
+                                          color: colors.onPrimaryContainer, size: 28),
+                                      const SizedBox(width: 12),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Masuk",
+                                            style: TextStyle(
+                                              color: colors.onPrimaryContainer,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            "4 Surat",
+                                            style: TextStyle(
+                                              color: colors.onPrimaryContainer.withOpacity(0.9),
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+
+                              // Surat Keluar
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: colors.tertiaryContainer.withOpacity(0.9),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Icon(Icons.outbox_rounded,
+                                          color: colors.onTertiaryContainer, size: 28),
+                                      const SizedBox(width: 12),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Keluar",
+                                            style: TextStyle(
+                                              color: colors.onTertiaryContainer,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            "2 Surat",
+                                            style: TextStyle(
+                                              color: colors.onTertiaryContainer.withOpacity(0.9),
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ).animate().fadeIn(duration: 700.ms),
+
+                    const SizedBox(height: 24),
+
+                    // ✉️ Tombol aksi cepat
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Tambah surat masuk coming soon")),
+                              );
+                            },
+                            label: const Text("Tambah Surat Masuk"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Tambah surat keluar coming soon")),
+                              );
+                            },
+                            label: const Text("Surat Keluar"),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: colors.primary,
+                              side: BorderSide(color: colors.primary),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ).animate().fadeIn(duration: 600.ms, delay: 200.ms),
 
                     const SizedBox(height: 100),
                   ],
@@ -54,7 +192,7 @@ class DashboardSekretarisScreen extends StatelessWidget {
               ),
             ),
 
-            // Navbar
+            // 🔹 Navbar mengambang
             Align(
               alignment: Alignment.bottomCenter,
               child: SafeArea(

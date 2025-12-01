@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dashboard_admin.dart';
+import 'dashboard_bendahara.dart';
+import 'dashboard_sekretaris.dart';
 import 'dashboard_rw.dart';
 import 'dashboard_rt.dart';
-import 'dashboard_sekretaris.dart';
-import 'dashboard_bendahara.dart';
 import 'dashboard_warga.dart';
 
 class DashboardSelector extends StatefulWidget {
