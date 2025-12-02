@@ -5,10 +5,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   // Base URL (gunakan IP emulator Android)
-  static const String baseUrl = "http://10.0.2.2:8000/api";
+  // static const String baseUrl = "http://localhost:8000/api";
 
   // Kalau pakai emu web
-  // static const String baseUrl = "http://127.0.0.1:8000/api";
+  static const String baseUrl = "http://127.0.0.1:8000/api";
 
   // 🧠 Variabel global sesi
   static String? token;

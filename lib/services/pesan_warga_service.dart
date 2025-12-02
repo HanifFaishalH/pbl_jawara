@@ -2,11 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:jawaramobile_1/models/pesan_warga.dart';
+import 'package:jawaramobile_1/services/auth_service.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PesanWargaService {
-  static const String baseUrl = "http://10.0.2.2:8000/api";
+  static const String baseUrl = AuthService.baseUrl;
   final logger = Logger();
 
   /// Ambil semua chat antara user login dengan penerimaId

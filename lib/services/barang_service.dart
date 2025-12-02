@@ -10,12 +10,12 @@ class BarangService {
   // 1. Base URL API
     // <-- Pakai Emu Web -->
   // Pastikan Anda sudah menjalankan 'adb reverse tcp:8000 tcp:8000' di terminal
-  // static String get baseUrl {
-  //   return "http://localhost:8000/api";
-  // }
   static String get baseUrl {
-    return "http://10.0.2.2:8000/api";
+    return "http://localhost:8000/api";
   }
+  // static String get baseUrl {
+  //   return "http://10.0.2.2:8000/api";
+  // }
 
   // 2. Base URL Gambar
   // <-- Pakai Emu Web -->

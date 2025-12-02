@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:jawaramobile_1/services/auth_service.dart';
 
 class ActivityLogService {
-  static const String baseUrl = 'http://127.0.0.1:8000/api';
+  final String baseUrl = AuthService.baseUrl;
 
   Future<List<dynamic>> getLogs({
     String? type,

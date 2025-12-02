@@ -7,7 +7,7 @@ import 'package:logger/logger.dart';
 import '../services/auth_service.dart'; // pastikan path benar
 
 class BroadcastService {
-  final String baseUrl = "http://10.0.2.2:8000/api";
+  final String baseUrl = AuthService.baseUrl;
   final Logger logger = Logger();
 
   // === Get All Broadcast ===

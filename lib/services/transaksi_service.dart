@@ -5,7 +5,7 @@ import 'package:jawaramobile_1/services/auth_service.dart';
 
 class TransaksiService {
   // Ganti IP sesuai environment (Emulator: 10.0.2.2, HP Fisik: IP Laptop)
-  static const String baseUrl = "http://localhost:8000/api"; 
+  static const String baseUrl = AuthService.baseUrl; 
 
   Future<String?> _getToken() async {
     if (AuthService.token != null && AuthService.token!.isNotEmpty) {
