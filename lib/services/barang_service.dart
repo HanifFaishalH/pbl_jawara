@@ -19,12 +19,12 @@ class BarangService {
 
   // 2. Base URL Gambar
   // <-- Pakai Emu Web -->
-  // static String get baseImageUrl {
-  //   return "http://localhost:8000/api/image-proxy/";
-  // }
   static String get baseImageUrl {
-    return "http://10.0.2.2:8000/api/image-proxy/";
+    return "http://localhost:8000/api/image-proxy/";
   }
+  //static String get baseImageUrl {
+    //return "http://10.0.2.2:8000/api/image-proxy/";
+  //}
 
   // --- HELPER TOKEN ---
   Future<String?> _getToken() async {

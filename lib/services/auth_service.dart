@@ -4,34 +4,39 @@ import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  // Base URL (gunakan IP emulator Android)
-  // static const String baseUrl = "http://localhost:8000/api";
-
-  // Kalau pakai emu web
+  // ------------------------------------------------------------------------
+  // 🔧 KONFIGURASI URL
+  // ------------------------------------------------------------------------
+  // Gunakan 10.0.2.2 jika menggunakan Android Emulator bawaan Android Studio
+  // Gunakan 127.0.0.1 jika menggunakan Web atau iOS Simulator
+  // Gunakan IP Laptop (misal 192.168.1.x) jika menggunakan HP fisik
+  
+  // static const String baseUrl = "http://10.0.2.2:8000/api"; 
   static const String baseUrl = "http://127.0.0.1:8000/api";
 
-  // 🧠 Variabel global sesi
+  // 🧠 Variabel global sesi (disimpan di memori statis agar mudah diakses)
   static String? token;
   static int? currentRoleId;
   static int? userId;
+  static String? userNamaDepan;
 
   final logger = Logger(
     printer: PrettyPrinter(
-      methodCount: 1,
-      errorMethodCount: 3,
-      lineLength: 80,
-      colors: true,
+      methodCount: 0, 
+      errorMethodCount: 3, 
+      lineLength: 80, 
+      colors: true, 
       printEmojis: true,
     ),
   );
 
   // ===========================
-  // LOGIN
+  // 🔐 LOGIN
   // ===========================
   Future<Map<String, dynamic>> login(String email, String password) async {
     final url = Uri.parse("$baseUrl/login");
     try {
-      logger.i("🔹 Login request: $url");
+      logger.i("🔹 Login request ke: $url");
 
       final response = await http.post(
         url,
@@ -42,41 +47,45 @@ class AuthService {
         body: jsonEncode({'email': email, 'password': password}),
       );
 
-      logger.d("Status: ${response.statusCode}");
-      logger.d("Body: ${response.body}");
-
+      logger.d("Status Code: ${response.statusCode}");
+      
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final user = data['user'];
-        final prefs = await SharedPreferences.getInstance();
+        
+        // ✅ Login Sukses: SIMPAN SESI
+        await _saveSession(
+          data['token'], 
+          user['role_id'],
+          namaDepan: user['user_nama_depan'],
+          namaBelakang: user['user_nama_belakang']
+        );
 
-        // 💾 Simpan data user
-        await prefs.setString('user_nama_depan', user['user_nama_depan'] ?? 'User');
-        await prefs.setString('user_nama_belakang', user['user_nama_belakang'] ?? '');
-        await _saveSession(data['token'], user['role_id']);
-
-        logger.i("✅ Login sukses: ${user['email']}");
+        logger.i("✅ Login berhasil: ${user['email']} (Role ID: ${user['role_id']})");
         return {'success': true, 'data': data};
       }
 
+      // ❌ Login Gagal (Password salah / User tidak ditemukan)
       final error = jsonDecode(response.body);
       return {
         'success': false,
-        'message': error['message'] ?? 'Login gagal. Periksa kredensial Anda.'
+        'message': error['message'] ?? 'Email atau password salah.'
       };
-    } catch (e, s) {
-      logger.e("❌ Error login", error: e, stackTrace: s);
-      return {'success': false, 'message': 'Kesalahan server. Coba lagi nanti.'};
+
+    } catch (e) {
+      logger.e("❌ Error login: $e");
+      return {'success': false, 'message': 'Gagal terhubung ke server.'};
     }
   }
 
   // ===========================
-  // REGISTER
+  // 📝 REGISTER
   // ===========================
-  Future<Map<String, dynamic>> register(Map<String, String> body) async {
+  Future<Map<String, dynamic>> register(Map<String, dynamic> body) async {
     final url = Uri.parse("$baseUrl/register");
     try {
-      logger.i("🟢 Register request: $url");
+      logger.i("🟢 Register request ke: $url");
+      logger.d("📦 Data: $body");
 
       final response = await http.post(
         url,
@@ -87,101 +96,140 @@ class AuthService {
         body: jsonEncode(body),
       );
 
-      logger.d("Status: ${response.statusCode}");
-      logger.d("Body: ${response.body}");
+      logger.d("Status Code: ${response.statusCode}");
 
-      if (response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        final user = data['user'];
-        final prefs = await SharedPreferences.getInstance();
-
-        // 💾 Simpan data user
-        await prefs.setString('user_nama_depan', user['user_nama_depan'] ?? 'User');
-        await prefs.setString('user_nama_belakang', user['user_nama_belakang'] ?? '');
-        await _saveSession(data['token'], user['role_id']);
-
-        logger.i("✅ Registrasi sukses: ${user['email']}");
-        return {'success': true, 'data': data};
+      if (response.statusCode == 201) { // 201 = Created
+        // ✅ Register Sukses
+        // ⚠️ PENTING: Kita TIDAK memanggil _saveSession disini.
+        // User harus menunggu konfirmasi admin dan login manual nanti.
+        
+        logger.i("✅ Registrasi berhasil dibuat (Status: Pending)");
+        return {
+          'success': true, 
+          'message': 'Registrasi berhasil. Silakan tunggu verifikasi admin.'
+        };
       }
 
-      final error = jsonDecode(response.body);
+      // ❌ Register Gagal (Validasi Error)
+      final responseData = jsonDecode(response.body);
+      String message = responseData['message'] ?? 'Registrasi gagal.';
+      
+      // Ambil pesan error spesifik jika ada (misal: Email sudah dipakai)
+      if (responseData['errors'] != null) {
+        // Mengambil error pertama dari list error
+        Map<String, dynamic> errors = responseData['errors'];
+        if (errors.isNotEmpty) {
+           message = errors.values.first[0];
+        }
+      }
+
+      logger.w("⚠️ Gagal register: $message");
       return {
         'success': false,
-        'message': error['message'] ?? 'Registrasi gagal. Coba lagi.'
+        'message': message
       };
-    } catch (e, s) {
-      logger.e("❌ Error register", error: e, stackTrace: s);
-      return {'success': false, 'message': 'Kesalahan server. Coba lagi nanti.'};
+
+    } catch (e) {
+      logger.e("❌ Error register: $e");
+      return {'success': false, 'message': 'Gagal terhubung ke server.'};
     }
   }
 
   // ===========================
-  // SIMPAN & LOAD SESSION
+  // 💾 MANAJEMEN SESI (Simpan & Load)
   // ===========================
+  
+  // Fungsi internal untuk menyimpan data ke HP (Shared Preferences)
   Future<void> _saveSession(String newToken, int roleId,
       {String? namaDepan, String? namaBelakang}) async {
     final prefs = await SharedPreferences.getInstance();
+    
     await prefs.setString('auth_token', newToken);
     await prefs.setInt('auth_role_id', roleId);
-    if (namaDepan != null) prefs.setString('user_nama_depan', namaDepan);
-    if (namaBelakang != null) prefs.setString('user_nama_belakang', namaBelakang);
+    
+    if (namaDepan != null) {
+      await prefs.setString('user_nama_depan', namaDepan);
+    }
+    if (namaBelakang != null) {
+      await prefs.setString('user_nama_belakang', namaBelakang);
+    }
+
+    // Update variabel static agar bisa langsung dipakai di aplikasi
     token = newToken;
     currentRoleId = roleId;
+    userNamaDepan = namaDepan;
   }
 
-  static Future<void> loadSession() async {
+  // Dipanggil saat aplikasi pertama kali dibuka (Splash Screen)
+  static Future<bool> loadSession() async {
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('auth_token');
     currentRoleId = prefs.getInt('auth_role_id');
+    userNamaDepan = prefs.getString('user_nama_depan');
+
+    // Return true jika ada token (artinya user masih login)
+    return token != null;
   }
 
   // ===========================
-  // LOGOUT
+  // 🚪 LOGOUT
   // ===========================
   Future<void> logout() async {
     final url = Uri.parse("$baseUrl/logout");
+    
+    // Coba request logout ke server (agar token di server dihapus)
     try {
-      await http.post(
+      if (token != null) {
+        await http.post(
+          url,
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        );
+      }
+    } catch (e) {
+      logger.w("⚠️ Logout server gagal (mungkin koneksi), lanjut logout lokal.");
+    } finally {
+      // Hapus data di HP (Wajib)
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      
+      // Reset variabel static
+      token = null;
+      currentRoleId = null;
+      userNamaDepan = null;
+      userId = null;
+      
+      logger.i("👋 Logout berhasil, sesi dibersihkan.");
+    }
+  }
+
+  // ===========================
+  // 👤 CEK USER (ME)
+  // ===========================
+  // Berguna untuk memastikan token masih valid
+  Future<Map<String, dynamic>> me() async {
+    final url = Uri.parse("$baseUrl/me");
+    try {
+      final response = await http.get(
         url,
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',
         },
       );
-    } catch (_) {
-      // Abaikan error jaringan, tetap lanjut logout lokal
-    } finally {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
-      token = null;
-      currentRoleId = null;
-      logger.i("👋 Logout berhasil, sesi dihapus");
-    }
-  }
 
-  // ===========================
-  // ME (Cek data user)
-  // ===========================
-  Future<Map<String, dynamic>> me() async {
-    final url = Uri.parse("$baseUrl/me");
-    final response = await http.get(
-      url,
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final prefs = await SharedPreferences.getInstance();
-      if (data['role_id'] != null) {
-        await prefs.setInt('auth_role_id', data['role_id']);
-        currentRoleId = data['role_id'];
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'user': data};
+      } else {
+        // Token kadaluarsa atau tidak valid
+        await logout(); // Paksa logout
+        return {'success': false, 'message': 'Sesi habis'};
       }
-      return data;
-    } else {
-      throw Exception('Gagal mengambil data user');
+    } catch (e) {
+      return {'success': false, 'message': 'Error koneksi'};
     }
   }
 }
