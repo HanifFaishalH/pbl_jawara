@@ -18,6 +18,8 @@ use App\Http\Controllers\Api\AspirasiController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\PesanBroadcastController;
 use App\Http\Controllers\Api\PesanWargaController;
+use App\Http\Controllers\Api\PenggunaController;
+use App\Http\Controllers\Api\RoleController;
 // --- IMPORT PENTING UNTUK PROXY GAMBAR ---
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
@@ -127,6 +129,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/pesan-warga', [PesanWargaController::class, 'store']);
     Route::get('/pesan-warga/{id}', [PesanWargaController::class, 'show']);
     Route::delete('/pesan-warga/{id}', [PesanWargaController::class, 'destroy']);
+
+    Route::get('/roles', [RoleController::class, 'index']);
+
+    // === Manajemen Pengguna ===
+    Route::get('/pengguna', [PenggunaController::class, 'index']);
+    Route::post('/pengguna', [PenggunaController::class, 'store']); 
+    Route::put('/pengguna/{id}', [PenggunaController::class, 'update']); 
+    Route::delete('/pengguna/{id}', [PenggunaController::class, 'destroy']); 
+    Route::post('/pengguna/{id}/status', [PenggunaController::class, 'updateStatus']);
 
     // Log Activity
     // Route::get('/log-activity', [LogActivityController::class, 'index']);

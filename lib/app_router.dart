@@ -59,6 +59,8 @@ import 'package:jawaramobile_1/screens/ActivityLog/detail_activity_log_screen.da
 // ====== Manajemen Pengguna ======
 import 'package:jawaramobile_1/screens/ManajemenPengguna/daftar_pengguna_screen.dart';
 import 'package:jawaramobile_1/screens/ManajemenPengguna/tambah_pengguna_screen.dart';
+import 'package:jawaramobile_1/screens/ManajemenPengguna/detail_pengguna.dart';
+import 'package:jawaramobile_1/models/pengguna_model.dart';
 
 // ====== Channel Transfer ======
 import 'package:jawaramobile_1/screens/ChannelTransfer/daftar_channel_screen.dart';
@@ -466,6 +468,15 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/pengguna',
       redirect: (context, state) => '/pengguna',
+    ),
+    GoRoute(
+      path: '/detail-pengguna',
+      name: 'detail-pengguna',
+      builder: (context, state) {
+        // Ambil objek pengguna yang dikirim via extra
+        final user = state.extra as PenggunaModel; 
+        return DetailPenggunaScreen(user: user);
+      },
     ),
 
     // ====== Channel Transfer ======

@@ -1,168 +1,234 @@
-import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
-import 'package:jawaramobile_1/widgets/manajemen_pengguna_filter.dart';
 import 'package:go_router/go_router.dart';
+import '../../models/pengguna_model.dart';
+import '../../services/man_pengguna_service.dart';
+// Sesuaikan path ini dengan lokasi file filter kamu
+import '../../widgets/manajemen_pengguna_filter.dart'; 
 
 class DaftarPenggunaScreen extends StatefulWidget {
   const DaftarPenggunaScreen({super.key});
+
   @override
   State<DaftarPenggunaScreen> createState() => _DaftarPenggunaScreenState();
 }
 
 class _DaftarPenggunaScreenState extends State<DaftarPenggunaScreen> {
-  final List<Map<String, String>> _users = [
-    {"nama":"mimin","email":"mimin@gmail.com","status":"Diterima"},
-    {"nama":"Farhan","email":"farhan@gmail.com","status":"Diterima"},
-    {"nama":"dewqedwddw","email":"admiwewen1@gmail.com","status":"Pending"},
-    {"nama":"Rendha Putra Rahmadya","email":"rendhazuper@gmail.com","status":"Diterima"},
-    {"nama":"bla","email":"y@gmail.com","status":"Ditolak"},
-    {"nama":"Anti Micin","email":"antimicin3@gmail.com","status":"Diterima"},
-  ];
+  final PenggunaService _service = PenggunaService();
+  
+  List<PenggunaModel> _allUsers = [];
+  List<PenggunaModel> _filteredUsers = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
+  // Variabel untuk menyimpan state filter saat ini
   String? _queryNama;
   String? _queryStatus;
 
-  List<Map<String, String>> get _filtered {
-    return _users.where((u) {
-      final okNama = _queryNama == null || _queryNama!.isEmpty
-          ? true
-          : (u['nama']!.toLowerCase().contains(_queryNama!.toLowerCase()));
-      final okStatus = _queryStatus == null || _queryStatus!.isEmpty
-          ? true
-          : (u['status'] == _queryStatus);
-      return okNama && okStatus;
-    }).toList();
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
   }
 
-  void _openFilter() {
-    showDialog(
+  Future<void> _fetchData() async {
+    setState(() { 
+      _isLoading = true; 
+      _errorMessage = null; 
+    });
+    
+    try {
+      final users = await _service.getPengguna();
+      setState(() {
+        _allUsers = users;
+        _applyFilter(); // Filter ulang setiap data di-refresh
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() { 
+        _errorMessage = e.toString(); 
+        _isLoading = false; 
+      });
+    }
+  }
+
+  void _applyFilter() {
+    setState(() {
+      _filteredUsers = _allUsers.where((u) {
+        // Logika Nama
+        final okNama = _queryNama == null || _queryNama!.isEmpty 
+            ? true 
+            : (u.nama.toLowerCase().contains(_queryNama!.toLowerCase()));
+        
+        // Logika Status
+        final okStatus = _queryStatus == null || _queryStatus!.isEmpty 
+            ? true 
+            : (u.status.toLowerCase() == _queryStatus!.toLowerCase());
+            
+        return okNama && okStatus;
+      }).toList();
+    });
+  }
+
+  // LOGIKA UTAMA INTEGRASI FILTER
+  void _openFilter() async {
+    // 1. Panggil dialog dan tunggu (await) hasilnya
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Filter Manajemen Pengguna"),
-        content: const ManajemenPenggunaFilter(),
-        actions: [
-          OutlinedButton(
-            onPressed: () {
-              setState(() {
-                _queryNama = null;
-                _queryStatus = null;
-              });
-              Navigator.of(context).pop();
-            },
-            child: const Text("Reset Filter"),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text("Terapkan"),
-          ),
-        ],
+        title: const Text("Filter Data"),
+        // 2. Masukkan Widget Filter & Kirim data saat ini (agar tidak reset saat dibuka)
+        content: ManajemenPenggunaFilter(
+          initialNama: _queryNama,
+          initialStatus: _queryStatus,
+        ),
+        // CATATAN: Jangan tambahkan 'actions' di sini, 
+        // karena tombol sudah ada di dalam ManajemenPenggunaFilter
       ),
     );
+
+    // 3. Jika user menekan "Terapkan" (result tidak null), update state screen ini
+    if (result != null) {
+      setState(() {
+        _queryNama = result['nama'];
+        _queryStatus = result['status'];
+        _applyFilter();
+      });
+    }
   }
 
   Color statusBg(String s) {
-    switch (s) {
-      case 'Diterima': return Colors.green.withOpacity(.12);
-      case 'Pending':  return Colors.orange.withOpacity(.12);
-      case 'Ditolak':  return Colors.red.withOpacity(.12);
-      default: return Colors.grey.withOpacity(.12);
+    switch (s.toLowerCase()) {
+      case 'diterima': return Colors.green.withOpacity(0.1);
+      case 'pending':  return Colors.orange.withOpacity(0.1);
+      case 'ditolak':  return Colors.red.withOpacity(0.1);
+      default: return Colors.grey.withOpacity(0.1);
     }
   }
+
   Color statusFg(String s) {
-    switch (s) {
-      case 'Diterima': return Colors.green.shade800;
-      case 'Pending':  return Colors.orange.shade800;
-      case 'Ditolak':  return Colors.red.shade800;
-      default: return Colors.grey.shade800;
+    switch (s.toLowerCase()) {
+      case 'diterima': return Colors.green.shade700;
+      case 'pending':  return Colors.orange.shade700;
+      case 'ditolak':  return Colors.red.shade700;
+      default: return Colors.grey.shade700;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final rows = _filtered;
+    // Cek apakah sedang ada filter aktif untuk visual feedback
+    final bool isFiltering = _queryNama != null || _queryStatus != null;
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text("Daftar Pengguna"),
-        actions: [ IconButton(icon: const Icon(Icons.filter_list), onPressed: _openFilter) ],
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.filter_list,
+              color: isFiltering ? Colors.blue : null, // Biru jika sedang memfilter
+            ), 
+            onPressed: _openFilter
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/tambah-pengguna'),
+        onPressed: () async {
+          await context.pushNamed('tambah-pengguna');
+          _fetchData(); 
+        },
         child: const Icon(Icons.person_add_alt_1),
       ),
-      body: Container(
-        margin: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.95),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4))],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: DataTable2(
-            columnSpacing: 12,
-            horizontalMargin: 12,
-            headingRowColor: MaterialStateProperty.all(
-              theme.colorScheme.primary.withOpacity(0.1),
-            ),
-            headingTextStyle: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.secondary,
-            ),
-            // 2 kolom sederhana: Nama, Status
-            columns: const [
-              DataColumn2(label: Text('Nama')),
-              DataColumn2(label: Text('Status'), size: ColumnSize.S),
-            ],
-            rows: rows.map((u) {
-              return DataRow2(
-                onTap: () {
-                  // TODO: route detail pengguna kalau ada
-                  // context.push('/detail-pengguna', extra: u);
-                },
-                cells: [
-                  DataCell(
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          u['nama']!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          u['email']!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(.7),
+      body: RefreshIndicator(
+        onRefresh: _fetchData,
+        child: _isLoading 
+          ? const Center(child: CircularProgressIndicator()) 
+          : _errorMessage != null
+            ? Center(child: Text(_errorMessage!))
+            : _filteredUsers.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Data tidak ditemukan"),
+                      if (isFiltering)
+                        TextButton(
+                          onPressed: () {
+                             // Reset cepat jika kosong karena filter
+                             setState(() { _queryNama = null; _queryStatus = null; _applyFilter(); });
+                          }, 
+                          child: const Text("Hapus Filter")
+                        )
+                    ],
+                  )
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 80, top: 8),
+                  itemCount: _filteredUsers.length,
+                  itemBuilder: (context, index) {
+                    final u = _filteredUsers[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () async {
+                          await context.pushNamed('detail-pengguna', extra: u);
+                          _fetchData();
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 24,
+                                backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                                child: Text(
+                                  u.nama.isNotEmpty ? u.nama[0].toUpperCase() : '?',
+                                  style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold, fontSize: 20),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      u.nama,
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      u.email,
+                                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: statusBg(u.status),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  u.status,
+                                  style: TextStyle(color: statusFg(u.status), fontWeight: FontWeight.bold, fontSize: 12),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  DataCell(
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: statusBg(u['status']!),
-                        borderRadius: BorderRadius.circular(999),
                       ),
-                      child: Text(
-                        u['status']!,
-                        style: TextStyle(fontWeight: FontWeight.w600, color: statusFg(u['status']!)),
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
-        ),
+                    );
+                  },
+                ),
       ),
     );
   }
