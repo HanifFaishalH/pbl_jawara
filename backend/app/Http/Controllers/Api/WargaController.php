@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\WargaModel;
 use Illuminate\Support\Facades\Validator;
+use App\Services\ActivityLogService;
 
 class WargaController extends Controller
 {
@@ -50,6 +51,17 @@ class WargaController extends Controller
         }
 
         $warga = WargaModel::create($request->all());
+        
+        ActivityLogService::log(
+            'warga',
+            'create',
+            "Menambahkan data warga: {$warga->warga_nama} (NIK: {$warga->warga_nik})",
+            $warga->warga_id,
+            null,
+            $warga->toArray(),
+            $request
+        );
+        
         return response()->json(['message' => 'Data warga berhasil dibuat', 'data' => $warga], 201);
     }
 
@@ -83,7 +95,19 @@ class WargaController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
+        $oldData = $warga->toArray();
         $warga->update($request->all());
+        
+        ActivityLogService::log(
+            'warga',
+            'update',
+            "Mengubah data warga: {$warga->warga_nama} (NIK: {$warga->warga_nik})",
+            $warga->warga_id,
+            $oldData,
+            $warga->fresh()->toArray(),
+            $request
+        );
+        
         return response()->json(['message' => 'Update berhasil', 'data' => $warga]);
     }
 
@@ -96,7 +120,19 @@ class WargaController extends Controller
         $warga = WargaModel::find($id);
         if (!$warga) return response()->json(['message' => 'Data tidak ditemukan'], 404);
 
+        $oldData = $warga->toArray();
         $warga->delete();
+        
+        ActivityLogService::log(
+            'warga',
+            'delete',
+            "Menghapus data warga: {$oldData['warga_nama']} (NIK: {$oldData['warga_nik']})",
+            $id,
+            $oldData,
+            null,
+            $request
+        );
+        
         return response()->json(['message' => 'Data berhasil dihapus']);
     }
 }

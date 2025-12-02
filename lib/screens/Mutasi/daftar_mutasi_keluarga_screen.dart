@@ -5,7 +5,9 @@ import 'package:jawaramobile_1/services/mutasi_keluarga_service.dart';
 import 'package:intl/intl.dart';
 
 class DaftarMutasiKeluargaScreen extends StatefulWidget {
-  const DaftarMutasiKeluargaScreen({super.key});
+  final bool isTabView;
+  
+  const DaftarMutasiKeluargaScreen({super.key, this.isTabView = false});
 
   @override
   State<DaftarMutasiKeluargaScreen> createState() =>
@@ -68,7 +70,7 @@ class _DaftarMutasiKeluargaScreenState
     setState(() {
       _filteredMutasi = _mutasi.where((m) {
         final searchLower = _searchController.text.toLowerCase();
-        final matchSearch = (m['keluarga']?['keluarga_nama_kepala'] ?? '')
+        final matchSearch = (m['keluarga']?['keluarga_no_kk'] ?? '')
                 .toString()
                 .toLowerCase()
                 .contains(searchLower) ||
@@ -86,110 +88,121 @@ class _DaftarMutasiKeluargaScreenState
   }
 
   void _showFilterDialog() {
+    String tempStatus = _selectedStatus;
+    String tempJenis = _selectedJenis;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Filter Mutasi'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Status:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              RadioListTile<String>(
-                title: const Text('Semua'),
-                value: 'semua',
-                groupValue: _selectedStatus,
-                onChanged: (value) {
-                  setState(() => _selectedStatus = value!);
-                  _filterData();
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Pending'),
-                value: 'pending',
-                groupValue: _selectedStatus,
-                onChanged: (value) {
-                  setState(() => _selectedStatus = value!);
-                  _filterData();
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Disetujui'),
-                value: 'disetujui',
-                groupValue: _selectedStatus,
-                onChanged: (value) {
-                  setState(() => _selectedStatus = value!);
-                  _filterData();
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Ditolak'),
-                value: 'ditolak',
-                groupValue: _selectedStatus,
-                onChanged: (value) {
-                  setState(() => _selectedStatus = value!);
-                  _filterData();
-                },
-              ),
-              const Divider(),
-              const Text('Jenis:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              RadioListTile<String>(
-                title: const Text('Semua'),
-                value: 'semua',
-                groupValue: _selectedJenis,
-                onChanged: (value) {
-                  setState(() => _selectedJenis = value!);
-                  _filterData();
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Pindah Rumah'),
-                value: 'pindah_rumah',
-                groupValue: _selectedJenis,
-                onChanged: (value) {
-                  setState(() => _selectedJenis = value!);
-                  _filterData();
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Keluar Wilayah'),
-                value: 'keluar_wilayah',
-                groupValue: _selectedJenis,
-                onChanged: (value) {
-                  setState(() => _selectedJenis = value!);
-                  _filterData();
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Masuk Wilayah'),
-                value: 'masuk_wilayah',
-                groupValue: _selectedJenis,
-                onChanged: (value) {
-                  setState(() => _selectedJenis = value!);
-                  _filterData();
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Pindah RT/RW'),
-                value: 'pindah_rt_rw',
-                groupValue: _selectedJenis,
-                onChanged: (value) {
-                  setState(() => _selectedJenis = value!);
-                  _filterData();
-                },
-              ),
-            ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Filter Mutasi'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Status:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                RadioListTile<String>(
+                  title: const Text('Semua'),
+                  value: 'semua',
+                  groupValue: tempStatus,
+                  onChanged: (value) {
+                    setDialogState(() => tempStatus = value!);
+                  },
+                ),
+                RadioListTile<String>(
+                  title: const Text('Pending'),
+                  value: 'pending',
+                  groupValue: tempStatus,
+                  onChanged: (value) {
+                    setDialogState(() => tempStatus = value!);
+                  },
+                ),
+                RadioListTile<String>(
+                  title: const Text('Disetujui'),
+                  value: 'disetujui',
+                  groupValue: tempStatus,
+                  onChanged: (value) {
+                    setDialogState(() => tempStatus = value!);
+                  },
+                ),
+                RadioListTile<String>(
+                  title: const Text('Ditolak'),
+                  value: 'ditolak',
+                  groupValue: tempStatus,
+                  onChanged: (value) {
+                    setDialogState(() => tempStatus = value!);
+                  },
+                ),
+                const Divider(),
+                const Text('Jenis:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                RadioListTile<String>(
+                  title: const Text('Semua'),
+                  value: 'semua',
+                  groupValue: tempJenis,
+                  onChanged: (value) {
+                    setDialogState(() => tempJenis = value!);
+                  },
+                ),
+                RadioListTile<String>(
+                  title: const Text('Pindah Rumah'),
+                  value: 'pindah_rumah',
+                  groupValue: tempJenis,
+                  onChanged: (value) {
+                    setDialogState(() => tempJenis = value!);
+                  },
+                ),
+                RadioListTile<String>(
+                  title: const Text('Keluar Wilayah'),
+                  value: 'keluar_wilayah',
+                  groupValue: tempJenis,
+                  onChanged: (value) {
+                    setDialogState(() => tempJenis = value!);
+                  },
+                ),
+                RadioListTile<String>(
+                  title: const Text('Masuk Wilayah'),
+                  value: 'masuk_wilayah',
+                  groupValue: tempJenis,
+                  onChanged: (value) {
+                    setDialogState(() => tempJenis = value!);
+                  },
+                ),
+                RadioListTile<String>(
+                  title: const Text('Pindah RT/RW'),
+                  value: 'pindah_rt_rw',
+                  groupValue: tempJenis,
+                  onChanged: (value) {
+                    setDialogState(() => tempJenis = value!);
+                  },
+                ),
+              ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _selectedStatus = tempStatus;
+                  _selectedJenis = tempJenis;
+                });
+                _filterData();
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Terapkan'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Tutup'),
-          ),
-        ],
       ),
     );
   }
@@ -296,15 +309,15 @@ class _DaftarMutasiKeluargaScreenState
   IconData _getJenisIcon(String jenis) {
     switch (jenis) {
       case 'pindah_rumah':
-        return Icons.home_work;
+        return Icons.home;
       case 'keluar_wilayah':
-        return Icons.exit_to_app;
+        return Icons.logout;
       case 'masuk_wilayah':
         return Icons.login;
       case 'pindah_rt_rw':
-        return Icons.swap_horizontal_circle;
-      default:
         return Icons.swap_horiz;
+      default:
+        return Icons.family_restroom;
     }
   }
 
@@ -313,13 +326,13 @@ class _DaftarMutasiKeluargaScreenState
       case 'pindah_rumah':
         return Colors.blue;
       case 'keluar_wilayah':
-        return Colors.red;
+        return Colors.orange;
       case 'masuk_wilayah':
         return Colors.green;
       case 'pindah_rt_rw':
-        return Colors.orange;
-      default:
         return Colors.amber;
+      default:
+        return Colors.deepPurple;
     }
   }
 
@@ -385,12 +398,12 @@ class _DaftarMutasiKeluargaScreenState
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
+      appBar: widget.isTabView ? null : AppBar(
         title: const Text(
           'Mutasi Keluarga',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.amber,
+        backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -400,7 +413,7 @@ class _DaftarMutasiKeluargaScreenState
                 await context.push('/tambah-mutasi-keluarga');
                 _refresh();
               },
-              backgroundColor: Colors.amber,
+              backgroundColor: Colors.deepPurple,
               icon: const Icon(Icons.add),
               label: const Text('Tambah Mutasi'),
             )
@@ -416,7 +429,7 @@ class _DaftarMutasiKeluargaScreenState
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: 'Cari keluarga atau jenis mutasi...',
+                      hintText: 'Cari No KK atau jenis mutasi...',
                       prefixIcon: const Icon(Icons.search),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
@@ -441,7 +454,7 @@ class _DaftarMutasiKeluargaScreenState
                   icon: Icon(
                     Icons.filter_list,
                     color: _selectedStatus != 'semua' || _selectedJenis != 'semua'
-                        ? Colors.amber
+                        ? Colors.deepPurple
                         : Colors.grey,
                   ),
                   onPressed: _showFilterDialog,
@@ -465,7 +478,7 @@ class _DaftarMutasiKeluargaScreenState
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.swap_horiz,
+                              Icon(Icons.family_restroom,
                                   size: 80, color: Colors.grey[400]),
                               const SizedBox(height: 16),
                               Text(
@@ -483,7 +496,7 @@ class _DaftarMutasiKeluargaScreenState
                                   icon: const Icon(Icons.add),
                                   label: const Text('Tambah Mutasi Pertama'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.amber,
+                                    backgroundColor: Colors.deepPurple,
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 24, vertical: 12),
@@ -540,8 +553,7 @@ class _DaftarMutasiKeluargaScreenState
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              m['keluarga']?['keluarga_nama_kepala'] ??
-                                                  '-',
+                                              'KK: ${m['keluarga']?['keluarga_no_kk'] ?? '-'}',
                                               style: theme.textTheme.titleMedium
                                                   ?.copyWith(
                                                 fontWeight: FontWeight.bold,
@@ -563,8 +575,9 @@ class _DaftarMutasiKeluargaScreenState
                                                     color: Colors.grey[600]),
                                                 const SizedBox(width: 4),
                                                 Text(
-                                                  DateFormat('dd MMM yyyy').format(
-                                                      DateTime.parse(tanggal)),
+                                                  DateFormat('dd MMM yyyy')
+                                                      .format(DateTime.parse(
+                                                          tanggal)),
                                                   style: theme.textTheme.bodySmall
                                                       ?.copyWith(
                                                           color: Colors.grey[600]),
@@ -596,8 +609,7 @@ class _DaftarMutasiKeluargaScreenState
                                               value: 'status',
                                               child: Row(
                                                 children: [
-                                                  Icon(Icons.check_circle,
-                                                      size: 20),
+                                                  Icon(Icons.check_circle, size: 20),
                                                   SizedBox(width: 8),
                                                   Text('Ubah Status'),
                                                 ],

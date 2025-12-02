@@ -5,7 +5,9 @@ import 'package:jawaramobile_1/services/mutasi_warga_service.dart';
 import 'package:intl/intl.dart';
 
 class DaftarMutasiWargaScreen extends StatefulWidget {
-  const DaftarMutasiWargaScreen({super.key});
+  final bool isTabView;
+  
+  const DaftarMutasiWargaScreen({super.key, this.isTabView = false});
 
   @override
   State<DaftarMutasiWargaScreen> createState() => _DaftarMutasiWargaScreenState();
@@ -396,7 +398,7 @@ class _DaftarMutasiWargaScreenState extends State<DaftarMutasiWargaScreen> {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
+      appBar: widget.isTabView ? null : AppBar(
         title: const Text(
           'Mutasi Warga',
           style: TextStyle(fontWeight: FontWeight.bold),

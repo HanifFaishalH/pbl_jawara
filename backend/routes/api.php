@@ -15,7 +15,7 @@ use App\Http\Controllers\Api\RumahController;
 use App\Http\Controllers\Api\MutasiKeluargaController;
 use App\Http\Controllers\Api\MutasiWargaController;
 use App\Http\Controllers\Api\AspirasiController;
-use App\Http\Controllers\Api\LogActivityController;
+use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\PesanBroadcastController;
 use App\Http\Controllers\Api\PesanWargaController;
 // --- IMPORT PENTING UNTUK PROXY GAMBAR ---
@@ -110,6 +110,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/aspirasi', [AspirasiController::class, 'store']);
     Route::get('/aspirasi/{id}', [AspirasiController::class, 'show']);
     Route::post('/aspirasi/{id}/konfirmasi', [AspirasiController::class, 'updateStatus']);
+
+    // Activity Log
+    Route::get('/activity-logs/stats', [ActivityLogController::class, 'stats']);
+    Route::get('/activity-logs', [ActivityLogController::class, 'index']);
+    Route::get('/activity-logs/{id}', [ActivityLogController::class, 'show']);
 
     // Broadcast
     Route::get('/pesan-broadcast', [PesanBroadcastController::class, 'index']);

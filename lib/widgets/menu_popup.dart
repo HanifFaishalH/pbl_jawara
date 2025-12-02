@@ -75,6 +75,11 @@ class _MenuPopUpContent extends StatelessWidget {
         'title': 'Log Aktivitas',
         'action': () => context.pushNamed('log-aktivitas'),
       },
+      'activity_log': {
+        'icon': Icons.receipt_long,
+        'title': 'Activity Log',
+        'action': () => context.pushNamed('activity-log'),
+      },
       'marketplace': {
         'icon': Icons.store,
         'title': 'Marketplace',
@@ -108,8 +113,8 @@ class _MenuPopUpContent extends StatelessWidget {
         'action': () => context.pushNamed('penerimaan-warga'),
       },
       'mutasi': {
-        'icon': Icons.switch_account,
-        'title': 'Mutasi Keluarga',
+        'icon': Icons.swap_horiz,
+        'title': 'Mutasi',
         'action': () => context.pushNamed('mutasi'),
       },
       'pemasukan': {
@@ -136,7 +141,7 @@ class _MenuPopUpContent extends StatelessWidget {
       'pesan_warga',
       'broadcast',
       'kegiatan',
-      'log_aktivitas',
+      'activity_log',
       'marketplace',
       'channel',
       'aspirasi',

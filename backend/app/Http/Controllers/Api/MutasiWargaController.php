@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\MutasiWargaModel;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Services\ActivityLogService;
 
 class MutasiWargaController extends Controller
 {
@@ -62,6 +63,17 @@ class MutasiWargaController extends Controller
             'mutasi_dokumen' => $dokumenPath
         ]);
 
+        $mutasi->load('warga');
+        ActivityLogService::log(
+            'mutasi_warga',
+            'create',
+            "Menambahkan mutasi warga {$request->mutasi_jenis}: {$mutasi->warga->warga_nama}",
+            $mutasi->mutasi_id,
+            null,
+            $mutasi->toArray(),
+            $request
+        );
+
         return response()->json(['message' => 'Mutasi berhasil dibuat', 'data' => $mutasi], 201);
     }
 
@@ -98,7 +110,19 @@ class MutasiWargaController extends Controller
             $data['mutasi_dokumen'] = $request->file('dokumen')->store('mutasi_warga', 'public');
         }
 
+        $oldData = $mutasi->toArray();
         $mutasi->update($data);
+
+        $mutasi->load('warga');
+        ActivityLogService::log(
+            'mutasi_warga',
+            'update',
+            "Mengubah mutasi warga {$mutasi->mutasi_jenis}: {$mutasi->warga->warga_nama}",
+            $mutasi->mutasi_id,
+            $oldData,
+            $mutasi->fresh()->toArray(),
+            $request
+        );
 
         return response()->json(['message' => 'Update berhasil', 'data' => $mutasi]);
     }
@@ -116,7 +140,20 @@ class MutasiWargaController extends Controller
             Storage::disk('public')->delete($mutasi->mutasi_dokumen);
         }
 
+        $mutasi->load('warga');
+        $oldData = $mutasi->toArray();
         $mutasi->delete();
+
+        ActivityLogService::log(
+            'mutasi_warga',
+            'delete',
+            "Menghapus mutasi warga {$oldData['mutasi_jenis']}: {$oldData['warga']['warga_nama']}",
+            $id,
+            $oldData,
+            null,
+            $request
+        );
+
         return response()->json(['message' => 'Data berhasil dihapus']);
     }
 
@@ -137,7 +174,19 @@ class MutasiWargaController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
+        $oldStatus = $mutasi->mutasi_status;
         $mutasi->update(['mutasi_status' => $request->mutasi_status]);
+
+        $mutasi->load('warga');
+        ActivityLogService::log(
+            'mutasi_warga',
+            'update',
+            "Mengubah status mutasi warga dari {$oldStatus} menjadi {$request->mutasi_status}: {$mutasi->warga->warga_nama}",
+            $mutasi->mutasi_id,
+            ['mutasi_status' => $oldStatus],
+            ['mutasi_status' => $request->mutasi_status],
+            $request
+        );
 
         return response()->json(['message' => 'Status berhasil diupdate', 'data' => $mutasi]);
     }

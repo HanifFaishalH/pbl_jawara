@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\RumahModel;
 use Illuminate\Support\Facades\Validator;
+use App\Services\ActivityLogService;
 
 class RumahController extends Controller
 {
@@ -49,6 +50,17 @@ class RumahController extends Controller
         }
 
         $rumah = RumahModel::create($request->all());
+
+        ActivityLogService::log(
+            'rumah',
+            'create',
+            "Menambahkan data rumah: {$rumah->rumah_alamat}",
+            $rumah->rumah_id,
+            null,
+            $rumah->toArray(),
+            $request
+        );
+
         return response()->json(['message' => 'Data rumah berhasil dibuat', 'data' => $rumah], 201);
     }
 
@@ -81,7 +93,19 @@ class RumahController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
+        $oldData = $rumah->toArray();
         $rumah->update($request->all());
+
+        ActivityLogService::log(
+            'rumah',
+            'update',
+            "Mengubah data rumah: {$rumah->rumah_alamat}",
+            $rumah->rumah_id,
+            $oldData,
+            $rumah->fresh()->toArray(),
+            $request
+        );
+
         return response()->json(['message' => 'Update berhasil', 'data' => $rumah]);
     }
 
@@ -94,7 +118,19 @@ class RumahController extends Controller
         $rumah = RumahModel::find($id);
         if (!$rumah) return response()->json(['message' => 'Data tidak ditemukan'], 404);
 
+        $oldData = $rumah->toArray();
         $rumah->delete();
+
+        ActivityLogService::log(
+            'rumah',
+            'delete',
+            "Menghapus data rumah: {$oldData['rumah_alamat']}",
+            $id,
+            $oldData,
+            null,
+            $request
+        );
+
         return response()->json(['message' => 'Data berhasil dihapus']);
     }
 }

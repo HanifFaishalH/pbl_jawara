@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\MutasiKeluargaModel;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Services\ActivityLogService;
 
 class MutasiKeluargaController extends Controller
 {
@@ -72,6 +73,17 @@ class MutasiKeluargaController extends Controller
             'mutasi_dokumen' => $dokumenPath
         ]);
 
+        $mutasi->load('keluarga');
+        ActivityLogService::log(
+            'mutasi_keluarga',
+            'create',
+            "Menambahkan mutasi keluarga {$request->mutasi_jenis}: KK {$mutasi->keluarga->keluarga_no_kk}",
+            $mutasi->mutasi_id,
+            null,
+            $mutasi->toArray(),
+            $request
+        );
+
         return response()->json(['message' => 'Mutasi berhasil dibuat', 'data' => $mutasi], 201);
     }
 
@@ -113,7 +125,19 @@ class MutasiKeluargaController extends Controller
             $data['mutasi_dokumen'] = $request->file('dokumen')->store('mutasi_keluarga', 'public');
         }
 
+        $oldData = $mutasi->toArray();
         $mutasi->update($data);
+
+        $mutasi->load('keluarga');
+        ActivityLogService::log(
+            'mutasi_keluarga',
+            'update',
+            "Mengubah mutasi keluarga {$mutasi->mutasi_jenis}: KK {$mutasi->keluarga->keluarga_no_kk}",
+            $mutasi->mutasi_id,
+            $oldData,
+            $mutasi->fresh()->toArray(),
+            $request
+        );
 
         return response()->json(['message' => 'Update berhasil', 'data' => $mutasi]);
     }
@@ -131,7 +155,20 @@ class MutasiKeluargaController extends Controller
             Storage::disk('public')->delete($mutasi->mutasi_dokumen);
         }
 
+        $mutasi->load('keluarga');
+        $oldData = $mutasi->toArray();
         $mutasi->delete();
+
+        ActivityLogService::log(
+            'mutasi_keluarga',
+            'delete',
+            "Menghapus mutasi keluarga {$oldData['mutasi_jenis']}: KK {$oldData['keluarga']['keluarga_no_kk']}",
+            $id,
+            $oldData,
+            null,
+            $request
+        );
+
         return response()->json(['message' => 'Data berhasil dihapus']);
     }
 
@@ -152,7 +189,19 @@ class MutasiKeluargaController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
+        $oldStatus = $mutasi->mutasi_status;
         $mutasi->update(['mutasi_status' => $request->mutasi_status]);
+
+        $mutasi->load('keluarga');
+        ActivityLogService::log(
+            'mutasi_keluarga',
+            'update',
+            "Mengubah status mutasi keluarga dari {$oldStatus} menjadi {$request->mutasi_status}: KK {$mutasi->keluarga->keluarga_no_kk}",
+            $mutasi->mutasi_id,
+            ['mutasi_status' => $oldStatus],
+            ['mutasi_status' => $request->mutasi_status],
+            $request
+        );
 
         return response()->json(['message' => 'Status berhasil diupdate', 'data' => $mutasi]);
     }

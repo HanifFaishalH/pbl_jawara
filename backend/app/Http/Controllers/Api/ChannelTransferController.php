@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\ChannelTransferModel;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Services\ActivityLogService;
 
 class ChannelTransferController extends Controller
 {
@@ -70,6 +71,16 @@ class ChannelTransferController extends Controller
             'channel_status' => $request->channel_status ?? 'aktif'
         ]);
 
+        ActivityLogService::log(
+            'channel',
+            'create',
+            "Menambahkan channel transfer: {$channel->channel_nama} ({$channel->channel_tipe})",
+            $channel->channel_id,
+            null,
+            $channel->toArray(),
+            $request
+        );
+
         return response()->json(['message' => 'Channel berhasil dibuat', 'data' => $channel], 201);
     }
 
@@ -116,7 +127,18 @@ class ChannelTransferController extends Controller
             $data['channel_thumbnail'] = $request->file('thumbnail')->store('channel_transfer/thumbnail', 'public');
         }
 
+        $oldData = $channel->toArray();
         $channel->update($data);
+
+        ActivityLogService::log(
+            'channel',
+            'update',
+            "Mengubah channel transfer: {$channel->channel_nama} ({$channel->channel_tipe})",
+            $channel->channel_id,
+            $oldData,
+            $channel->fresh()->toArray(),
+            $request
+        );
 
         return response()->json(['message' => 'Update berhasil', 'data' => $channel]);
     }
@@ -141,7 +163,19 @@ class ChannelTransferController extends Controller
             Storage::disk('public')->delete($channel->channel_thumbnail);
         }
 
+        $oldData = $channel->toArray();
         $channel->delete();
+
+        ActivityLogService::log(
+            'channel',
+            'delete',
+            "Menghapus channel transfer: {$oldData['channel_nama']} ({$oldData['channel_tipe']})",
+            $id,
+            $oldData,
+            null,
+            $request
+        );
+
         return response()->json(['message' => 'Data berhasil dihapus']);
     }
 }

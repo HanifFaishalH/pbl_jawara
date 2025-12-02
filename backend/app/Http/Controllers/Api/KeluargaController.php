@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\KeluargaModel;
 use Illuminate\Support\Facades\Validator;
+use App\Services\ActivityLogService;
 
 class KeluargaController extends Controller
 {
@@ -41,6 +42,17 @@ class KeluargaController extends Controller
         }
 
         $keluarga = KeluargaModel::create($request->all());
+
+        ActivityLogService::log(
+            'keluarga',
+            'create',
+            "Menambahkan data keluarga: {$keluarga->keluarga_nama_kepala} (KK: {$keluarga->keluarga_no_kk})",
+            $keluarga->keluarga_id,
+            null,
+            $keluarga->toArray(),
+            $request
+        );
+
         return response()->json(['message' => 'Data keluarga berhasil dibuat', 'data' => $keluarga], 201);
     }
 
@@ -65,7 +77,19 @@ class KeluargaController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
+        $oldData = $keluarga->toArray();
         $keluarga->update($request->all());
+
+        ActivityLogService::log(
+            'keluarga',
+            'update',
+            "Mengubah data keluarga: {$keluarga->keluarga_nama_kepala} (KK: {$keluarga->keluarga_no_kk})",
+            $keluarga->keluarga_id,
+            $oldData,
+            $keluarga->fresh()->toArray(),
+            $request
+        );
+
         return response()->json(['message' => 'Update berhasil', 'data' => $keluarga]);
     }
 
@@ -78,7 +102,19 @@ class KeluargaController extends Controller
         $keluarga = KeluargaModel::find($id);
         if (!$keluarga) return response()->json(['message' => 'Data tidak ditemukan'], 404);
 
+        $oldData = $keluarga->toArray();
         $keluarga->delete();
+
+        ActivityLogService::log(
+            'keluarga',
+            'delete',
+            "Menghapus data keluarga: {$oldData['keluarga_nama_kepala']} (KK: {$oldData['keluarga_no_kk']})",
+            $id,
+            $oldData,
+            null,
+            $request
+        );
+
         return response()->json(['message' => 'Data berhasil dihapus']);
     }
 }

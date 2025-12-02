@@ -52,6 +52,10 @@ import 'package:jawaramobile_1/screens/Broadcast/edit_broadcast.dart';
 import 'package:jawaramobile_1/screens/LogActivity/log_activity_screen.dart';
 import 'package:jawaramobile_1/screens/LogActivity/detail_log_activity_screen.dart';
 
+// ====== Activity Log ======
+import 'package:jawaramobile_1/screens/ActivityLog/daftar_activity_log_screen.dart';
+import 'package:jawaramobile_1/screens/ActivityLog/detail_activity_log_screen.dart';
+
 // ====== Manajemen Pengguna ======
 import 'package:jawaramobile_1/screens/ManajemenPengguna/daftar_pengguna_screen.dart';
 import 'package:jawaramobile_1/screens/ManajemenPengguna/tambah_pengguna_screen.dart';
@@ -70,6 +74,7 @@ import 'package:jawaramobile_1/screens/DataWargaRumah/form_rumah_screen.dart';
 import 'package:jawaramobile_1/screens/DataWargaRumah/detail_rumah_screen.dart';
 
 // ====== Mutasi Warga & Keluarga ======
+import 'package:jawaramobile_1/screens/Mutasi/mutasi_screen.dart';
 import 'package:jawaramobile_1/screens/Mutasi/daftar_mutasi_warga_screen.dart';
 import 'package:jawaramobile_1/screens/Mutasi/daftar_mutasi_keluarga_screen.dart';
 import 'package:jawaramobile_1/screens/Mutasi/form_mutasi_warga_screen.dart';
@@ -432,6 +437,21 @@ final appRouter = GoRouter(
       },
     ),
 
+    // ====== Activity Log (New) ======
+    GoRoute(
+      path: '/activity-log',
+      name: 'activity-log',
+      builder: (context, state) => const DaftarActivityLogScreen(),
+    ),
+    GoRoute(
+      path: '/detail-activity-log/:id',
+      name: 'detail-activity-log',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return DetailActivityLogScreen(logId: id);
+      },
+    ),
+
     // ====== Manajemen Pengguna ======
     GoRoute(
       path: '/manajemen-pengguna',
@@ -487,12 +507,14 @@ final appRouter = GoRouter(
       name: 'penerimaan-warga',
       builder: (context, state) => const PenerimaanWargaScreen(),
     ),
-    // Mutasi Lama (deprecated)
+    // ====== Mutasi (Gabungan Warga & Keluarga) ======
     GoRoute(
       path: '/mutasi',
       name: 'mutasi',
-      builder: (context, state) => MutasiPage(),
+      builder: (context, state) => const MutasiScreen(),
     ),
+    
+    // Mutasi Lama (deprecated - untuk backward compatibility)
     GoRoute(
       path: '/mutasi-detail',
       name: 'mutasi-detail',
