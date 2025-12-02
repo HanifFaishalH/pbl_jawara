@@ -18,12 +18,22 @@ class AuthController extends Controller
 
         $user = usersModel::where('email', $request->email)->first();
 
+        // 1. Cek User & Password
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'message' => 'Email atau password salah'
             ], 401);
         }
 
+        // 🔥 2. TAMBAHKAN INI: Cek Status User 🔥
+        // Sesuaikan 'Aktif' dengan value di database Anda untuk user yang sudah diterima
+        if ($user->status !== 'Diterima') { 
+            return response()->json([
+                'message' => 'Akun Anda masih berstatus ' . $user->status . '. Harap tunggu verifikasi Admin.'
+            ], 403); // 403 artinya Forbidden (Dilarang)
+        }
+
+        // 3. Buat Token (Hanya jika lolos pengecekan di atas)
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
