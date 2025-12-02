@@ -1,6 +1,9 @@
+import 'dart:async'; // [PENTING] Untuk StreamController & Timer
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jawaramobile_1/services/barang_service.dart';
+
+// Pastikan import widget di bawah ini sesuai dengan struktur folder Anda
 import '../../widgets/marketplace/promo_banner_beli.dart';
 import '../../widgets/marketplace/product_card_beli.dart';
 
@@ -12,34 +15,71 @@ class DaftarPembelian extends StatefulWidget {
 }
 
 class _DaftarPembelianState extends State<DaftarPembelian> {
+  // Variable Data
   late Future<List<dynamic>> futureBarang;
+  
+  // State Filter
   String selectedCategory = 'Semua';
   String searchQuery = '';
+  
   final TextEditingController _searchController = TextEditingController();
-
   final Color jawaraColor = const Color(0xFF26547C);
+
+  // --- IMPLEMENTASI STREAM & DEBOUNCE (Syarat PBL) ---
+  // 1. Controller untuk mengatur aliran data text pencarian
+  final StreamController<String> _searchStreamController = StreamController<String>();
+  
+  // 2. Subscription untuk mendengarkan perubahan data
+  StreamSubscription<String>? _searchSubscription;
+  
+  // 3. Timer untuk menunda eksekusi (Debounce)
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     futureBarang = BarangService().fetchBarang();
+
+    // Listener TextController: Masukkan setiap ketikan user ke dalam Stream
     _searchController.addListener(() {
-      setState(() {
-        searchQuery = _searchController.text;
+      _searchStreamController.add(_searchController.text);
+    });
+
+    // Listener Stream: Dengarkan data yang masuk
+    _searchSubscription = _searchStreamController.stream.listen((query) {
+      // a. Batalkan timer sebelumnya jika user masih mengetik (Reset waktu)
+      if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+      // b. Mulai timer baru selama 500ms (0.5 detik)
+      _debounce = Timer(const Duration(milliseconds: 500), () {
+        // Cek mounted agar tidak error jika widget sudah ditutup
+        if (mounted) {
+          // c. Update UI hanya setelah user berhenti mengetik
+          setState(() {
+            searchQuery = query;
+          });
+          print("✅ Stream Search Active: Memfilter untuk kata '$query'");
+        }
       });
     });
   }
 
   @override
   void dispose() {
+    // [PENTING] Tutup semua stream dan timer agar memori tidak bocor
+    _searchStreamController.close();
+    _searchSubscription?.cancel();
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
+  // Logika Filter List (Dijalankan lokal untuk efisiensi)
   List<dynamic> _getFilteredBarangList(List<dynamic> allBarang) {
     return allBarang.where((item) {
       final itemMap = item as Map<String, dynamic>;
       
+      // 1. Filter Kategori
       bool matchCategory = true;
       if (selectedCategory != 'Semua') {
         String catName = '';
@@ -51,6 +91,7 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
         matchCategory = catName.toLowerCase().contains(selectedCategory.toLowerCase());
       }
 
+      // 2. Filter Pencarian (Updated by Stream)
       bool matchSearch = true;
       if (searchQuery.isNotEmpty) {
         String namaBarang = itemMap['barang_nama']?.toString().toLowerCase() ?? '';
@@ -63,20 +104,18 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       backgroundColor: Colors.grey[100], 
       appBar: _buildCustomAppBar(context),
       body: FutureBuilder<List<dynamic>>(
         future: futureBarang,
         builder: (context, snapshot) {
-          // 1. Loading
+          // STATE 1: LOADING
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // 2. Error
+          // STATE 2: ERROR
           if (snapshot.hasError) {
             return Center(
               child: Column(
@@ -96,7 +135,7 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
             );
           }
 
-          // 3. Data Ready
+          // STATE 3: DATA READY
           final allBarangList = snapshot.data ?? [];
           final filteredBarangList = _getFilteredBarangList(allBarangList);
 
@@ -111,10 +150,10 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // WIDGET BANNER
+                  // Banner
                   PromoBanner(color: jawaraColor),
-
-                  // WIDGET KATEGORI
+                  
+                  // Kategori Selector
                   Container(
                     color: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -142,14 +181,25 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
                   
                   const SizedBox(height: 8), 
 
-                  // WIDGET GRID PRODUK
+                  // Grid Barang
                   Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         filteredBarangList.isEmpty
-                            ? const EmptyProductState() // Widget Kosong
+                            ? Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 50.0),
+                                  child: Column(
+                                    children: [
+                                      Icon(Icons.search_off, size: 50, color: Colors.grey[300]),
+                                      const SizedBox(height: 10),
+                                      const Text("Barang tidak ditemukan"),
+                                    ],
+                                  ),
+                                ),
+                              )
                             : GridView.builder(
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
@@ -161,7 +211,6 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
                                 ),
                                 itemCount: filteredBarangList.length,
                                 itemBuilder: (context, index) {
-                                  // Widget Kartu Produk
                                   return ProductCard(
                                     item: filteredBarangList[index], 
                                     primaryColor: jawaraColor
@@ -207,6 +256,8 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
                   icon: const Icon(Icons.clear, size: 18, color: Colors.grey),
                   onPressed: () {
                     _searchController.clear();
+                    // Reset Stream juga agar sinkron
+                    _searchStreamController.add(""); 
                     FocusScope.of(context).unfocus();
                   },
                 ) 
