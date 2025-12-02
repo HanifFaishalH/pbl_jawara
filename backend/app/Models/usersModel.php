@@ -24,6 +24,7 @@ class usersModel extends Authenticatable
         'user_tanggal_lahir',
         'user_alamat',
         'foto',
+        'status',
     ];
 
     protected $hidden = [
