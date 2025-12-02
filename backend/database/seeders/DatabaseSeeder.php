@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
             PembayaranSeeder::class,
             KegiatanSeeder::class,
             AspirasiSeeder::class,
+            PemasukanSeeder::class,
+            PengeluaranSeeder::class,
         ]);
     }
 }

@@ -75,6 +75,8 @@ import 'package:jawaramobile_1/screens/Marketplace/detail_pesanan_masuk.dart';
 import 'package:jawaramobile_1/screens/Marketplace/riwayat_pesanan_page.dart';
 import 'package:jawaramobile_1/screens/Marketplace/detail_riwayat_pesanan_page.dart';
 import 'package:jawaramobile_1/screens/Marketplace/keranjang_page.dart';
+import 'package:jawaramobile_1/screens/Camera/take_picture_screen.dart';
+import 'package:jawaramobile_1/screens/Camera/display_picture_screen.dart';
 
 import 'package:jawaramobile_1/screens/Aspirasi/aspirasi_screen.dart';
 import 'package:jawaramobile_1/screens/Aspirasi/tambah_aspirasi_screen.dart';
@@ -480,6 +482,21 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final pesanan = state.extra as Map<String, dynamic>; 
         return DetailRiwayatPesananPage(pesanan: pesanan);
+      },
+    ),
+
+    // ====== CAMERA DEMO ======
+    GoRoute(
+      path: '/camera',
+      name: 'camera',
+      builder: (context, state) => const TakePictureScreen(),
+    ),
+    GoRoute(
+      path: '/camera-preview',
+      name: 'camera-preview',
+      builder: (context, state) {
+        final imagePath = state.extra as String;
+        return DisplayPictureScreen(imagePath: imagePath);
       },
     ),
   ],

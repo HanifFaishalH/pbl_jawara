@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -12,7 +14,7 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
   // State untuk melacak langkah form (0: Ambil Gambar, 1: Isi Form)
   int _currentStep = 0;
   // Placeholder untuk status gambar
-  bool _isImageTaken = false;
+  String? _imagePath;
 
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _hargaController = TextEditingController();
@@ -23,18 +25,16 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
   String _alamatPengguna = "Jl. Mawar No. 5, Jakarta"; // Data Pengguna
 
   // Fungsi placeholder untuk simulasi ambil gambar
-  void _takePicture() {
-    // TODO: Implementasi Camera
-    setState(() {
-      _isImageTaken = true;
-      _currentStep = 1; // Lanjut ke langkah isi form
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Gambar berhasil diambil (simulasi)"),
-        backgroundColor: Colors.blue,
-      ),
-    );
+  Future<void> _takePicture() async {
+    // Buka kamera dan tunggu hasil path
+    final path = await context.push<String>('/camera');
+    if (!mounted) return;
+    if (path != null) {
+      setState(() {
+        _imagePath = path;
+        _currentStep = 1;
+      });
+    }
   }
 
   // Fungsi untuk mengunggah barang
@@ -149,20 +149,31 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Gambar yang sudah diambil (Placeholder)
-                  Container(
-                    height: 150,
-                    decoration: BoxDecoration(
+                  // Preview gambar jika ada
+                  if (_imagePath != null)
+                    ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      color: colorScheme.secondary.withOpacity(0.1),
-                    ),
-                    child: Center(
-                      child: Text(
-                        "Foto Barang Sudah Diambil",
-                        style: theme.textTheme.bodyLarge,
+                      child: Image.file(
+                        File(_imagePath!),
+                        height: 180,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  else
+                    Container(
+                      height: 150,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: colorScheme.secondary.withOpacity(0.1),
+                      ),
+                      child: Center(
+                        child: Text(
+                          "Foto Barang Sudah Diambil",
+                          style: theme.textTheme.bodyLarge,
+                        ),
                       ),
                     ),
-                  ),
                   const SizedBox(height: 20),
                   // Form Input
                   TextFormField(

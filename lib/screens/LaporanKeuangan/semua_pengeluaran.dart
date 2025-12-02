@@ -1,45 +1,46 @@
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:jawaramobile_1/services/finance_service.dart';
 import 'package:jawaramobile_1/widgets/pengeluaran_filter.dart';
-import '../../widgets/bottom_navbar.dart';
 
-class Pengeluaran extends StatelessWidget {
+class Pengeluaran extends StatefulWidget {
   const Pengeluaran({super.key});
 
-  // Data dummy
-  final List<Map<String, String>> _pengeluaranData = const [
-    {
-      "nama": "Beli Sapu",
-      "kategori": "Keamanan & Kebersihan",
-      "tanggal": "22 Oktober 2025",
-      "nominal": "Rp 25.000",
-    },
-    {
-      "nama": "Perbaikan Lampu Jalan",
-      "kategori": "Pemeliharaan Fasilitas",
-      "tanggal": "17 Oktober 2025",
-      "nominal": "Rp 150.000",
-    },
-    {
-      "nama": "Santunan anak Yatim",
-      "kategori": "Kegiatan Sosial",
-      "tanggal": "15 Oktober 2025",
-      "nominal": "Rp 50.000",
-    },
-    {
-      "nama": "Pembangunan Pos RW",
-      "kategori": "Pembangunan",
-      "tanggal": "11 September 2025",
-      "nominal": "Rp 320.000",
-    },
-    {
-      "nama": "Lomba 17an",
-      "kategori": "Kegiatan Warga",
-      "tanggal": "10 Agustus 2025",
-      "nominal": "Rp 500.000",
-    },
-  ];
+  @override
+  State<Pengeluaran> createState() => _PengeluaranState();
+}
+
+class _PengeluaranState extends State<Pengeluaran> {
+  List<dynamic> _rows = [];
+  bool _loading = true;
+  String? _q;
+  String? _from;
+  String? _to;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch();
+  }
+
+  Future<void> _fetch() async {
+    setState(() => _loading = true);
+    try {
+      final res = await FinanceService.listPengeluaran(q: _q, from: _from, to: _to);
+      setState(() {
+        _rows = (res['data'] as List<dynamic>);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat pengeluaran: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   void _showFilterDialog(BuildContext context) {
     showDialog(
@@ -108,40 +109,48 @@ class Pengeluaran extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: DataTable2(
-            columnSpacing: 12,
-            horizontalMargin: 12,
-            headingRowColor: MaterialStateProperty.all(
-              theme.colorScheme.primary.withOpacity(0.1),
-            ),
-            headingTextStyle: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.secondary,
-            ),
-            columns: const [
-              DataColumn2(label: Text('Nama')),
-              DataColumn2(label: Text('Nominal'), numeric: true),
-            ],
-            rows: _pengeluaranData.map((item) {
-              return DataRow2(
-                onTap: () {
-                  context.push('/detail-pengeluaran-all', extra: item);
-                },
-                cells: [
-                  DataCell(Text(item['nama']!)),
-                  DataCell(
-                    Text(
-                      item['nominal']!,
-                      style: TextStyle(
-                        color: theme.colorScheme.error,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : DataTable2(
+                  columnSpacing: 12,
+                  horizontalMargin: 12,
+                  headingRowColor: MaterialStateProperty.all(
+                    theme.colorScheme.primary.withOpacity(0.1),
                   ),
-                ],
-              );
-            }).toList(),
-          ),
+                  headingTextStyle: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.secondary,
+                  ),
+                  columns: const [
+                    DataColumn2(label: Text('Nama')),
+                    DataColumn2(label: Text('Nominal'), numeric: true),
+                  ],
+                  rows: _rows.map((item) {
+                    final judul = (item['judul'] ?? '').toString();
+                    final jumlah = int.tryParse(item['jumlah'].toString()) ?? 0;
+                    final nominal = 'Rp ${NumberFormat.decimalPattern('id').format(jumlah)}';
+                    return DataRow2(
+                      onTap: () {
+                        context.push('/detail-pengeluaran-all', extra: {
+                          'nama': judul,
+                          'nominal': nominal,
+                        });
+                      },
+                      cells: [
+                        DataCell(Text(judul)),
+                        DataCell(
+                          Text(
+                            nominal,
+                            style: TextStyle(
+                              color: theme.colorScheme.error,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
         ),
       ),
     );

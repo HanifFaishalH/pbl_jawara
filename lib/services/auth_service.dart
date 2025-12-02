@@ -1,14 +1,19 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  // Base URL (gunakan IP emulator Android)
-  static const String baseUrl = "http://10.0.2.2:8000/api";
-
-  // Kalau pakai emu web
-  // static const String baseUrl = "http://127.0.0.1:8000/api";
+  // Base URL otomatis sesuai platform
+  static String get baseUrl {
+    // Android emulator maps host loopback to 10.0.2.2
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return "http://10.0.2.2:8000/api";
+    }
+    // iOS simulator and desktop/web use localhost
+    return "http://127.0.0.1:8000/api";
+  }
 
   // 🧠 Variabel global sesi
   static String? token;

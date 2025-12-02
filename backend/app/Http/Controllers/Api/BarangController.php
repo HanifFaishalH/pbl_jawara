@@ -4,73 +4,106 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
-// --- PERBAIKAN PENTING: IMPORT MODEL ---
-use App\Models\BarangModel; 
-// ---------------------------------------
+use Illuminate\Support\Facades\Storage;
+use App\Models\BarangModel;
 
 class BarangController extends Controller
 {
-    public function index()
+    // GET /api/barang
+    public function index(Request $request)
     {
-        // Eager load 'user' untuk mengambil data penjual
-        $barang = BarangModel::with(['kategori', 'user'])->get();
-        
-        $data = $barang->map(function($item) {
-            // Logika pengambilan nama user
-            $namaPenjual = 'Penjual Jawara';
-            if ($item->user) {
-                $namaPenjual = trim(($item->user->user_nama_depan ?? '') . ' ' . ($item->user->user_nama_belakang ?? ''));
-                if (empty($namaPenjual)) $namaPenjual = "User #" . $item->user->user_id;
-            }
-
-            return [
-                'barang_id' => $item->barang_id,
-                'barang_nama' => $item->barang_nama,
-                'barang_harga' => $item->barang_harga,
-                'barang_stok' => $item->barang_stok,
-                'barang_foto' => $item->barang_foto,
-                'kategori' => $item->kategori->kategori_nama,
-                'alamat_penjual' => $item->user ? $item->user->user_alamat : 'Alamat tidak tersedia',
-                // Tambahkan ini:
-                'nama_penjual' => $namaPenjual, 
-                'penjual_id' => $item->user_id,
-            ];
-        });
-
-        return response()->json(['success' => true, 'data' => $data]);
-    }
-
-    public function show($id)
-    {
-        $barang = BarangModel::with(['kategori', 'user'])->find($id);
-        if (!$barang) {
-            return response()->json(['success' => false, 'message' => 'Barang tidak ditemukan'], 404);
+        $q = BarangModel::query()->with('user');
+        if ($request->filled('search')) {
+            $term = (string) $request->get('search');
+            $q->where('barang_nama', 'like', "%{$term}%");
         }
-        return response()->json(['success' => true, 'data' => $barang]);
+        $q->latest('barang_id');
+        return response()->json($q->paginate(10));
     }
 
+    // GET /api/barang/user (auth)
     public function indexUser(Request $request)
     {
-        // Kode indexUser tetap sama
         $user = $request->user();
+        $items = BarangModel::where('user_id', $user->user_id)->orderByDesc('barang_id')->get();
+        return response()->json(['data' => $items]);
+    }
 
-        $barang = BarangModel::with(['kategori'])
-                    ->where('user_id', $user->user_id)
-                    ->orderBy('created_at', 'desc')
-                    ->get();
-        
-        $data = $barang->map(function($item) {
-            return [
-                'barang_id' => $item->barang_id,
-                'barang_nama' => $item->barang_nama,
-                'barang_harga' => $item->barang_harga,
-                'barang_stok' => $item->barang_stok,
-                'barang_foto' => $item->barang_foto,
-                'kategori' => $item->kategori->kategori_nama,
-            ];
-        });
+    // GET /api/barang/{id}
+    public function show($id)
+    {
+        $item = BarangModel::where('barang_id', $id)->firstOrFail();
+        return response()->json($item);
+    }
 
-        return response()->json(['success' => true, 'data' => $data]);
+    // POST /api/barang (auth) - multipart/form-data supported
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'kategori_id' => 'nullable|exists:m_kategori,kategori_id',
+            'barang_nama' => 'required|string|max:150',
+            'barang_deskripsi' => 'nullable|string',
+            'barang_harga' => 'required|integer|min:0',
+            'barang_stok' => 'nullable|integer|min:0',
+            'foto' => 'nullable|image|max:4096',
+        ]);
+
+        $data = $validated;
+        $data['user_id'] = $request->user()->user_id;
+        // generate kode jika tidak dikirim
+        $data['barang_kode'] = 'BRG-' . now()->format('YmdHis') . '-' . random_int(100, 999);
+
+        if ($request->hasFile('foto')) {
+            $path = $request->file('foto')->store('barang', 'public');
+            $data['barang_foto'] = $path;
+        }
+
+        $item = BarangModel::create($data);
+        return response()->json(['message' => 'Barang ditambahkan', 'data' => $item], 201);
+    }
+
+    // PUT/PATCH /api/barang/{id}
+    public function update(Request $request, $id)
+    {
+        $item = BarangModel::where('barang_id', $id)->firstOrFail();
+        $this->authorizeOwner($request->user()->user_id, $item->user_id);
+
+        $validated = $request->validate([
+            'kategori_id' => 'nullable|exists:m_kategori,kategori_id',
+            'barang_nama' => 'sometimes|required|string|max:150',
+            'barang_deskripsi' => 'nullable|string',
+            'barang_harga' => 'sometimes|required|integer|min:0',
+            'barang_stok' => 'nullable|integer|min:0',
+            'foto' => 'nullable|image|max:4096',
+        ]);
+
+        $data = $validated;
+        if ($request->hasFile('foto')) {
+            if ($item->barang_foto) {
+                Storage::disk('public')->delete($item->barang_foto);
+            }
+            $path = $request->file('foto')->store('barang', 'public');
+            $data['barang_foto'] = $path;
+        }
+
+        $item->update($data);
+        return response()->json(['message' => 'Barang diperbarui', 'data' => $item]);
+    }
+
+    // DELETE /api/barang/{id}
+    public function destroy(Request $request, $id)
+    {
+        $item = BarangModel::where('barang_id', $id)->firstOrFail();
+        $this->authorizeOwner($request->user()->user_id, $item->user_id);
+        if ($item->barang_foto) {
+            Storage::disk('public')->delete($item->barang_foto);
+        }
+        $item->delete();
+        return response()->json(['message' => 'Barang dihapus']);
+    }
+
+    private function authorizeOwner($currentUserId, $ownerId)
+    {
+        abort_if($currentUserId !== $ownerId, 403, 'Tidak diizinkan');
     }
 }

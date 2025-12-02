@@ -1,45 +1,46 @@
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:jawaramobile_1/services/finance_service.dart';
 import 'package:jawaramobile_1/widgets/Pemasukan_filter.dart';
-import '../../widgets/bottom_navbar.dart';
 
-class Pemasukan extends StatelessWidget {
+class Pemasukan extends StatefulWidget {
   const Pemasukan({super.key});
 
-  // Data dummy
-  final List<Map<String, String>> _pemasukanData = const [
-    {
-      "nama": "Iuran Bulanan",
-      "jenis": "Iuran Warga",
-      "tanggal": "15 Oktober 2025",
-      "nominal": "Rp 500.000",
-    },
-    {
-      "nama": "Sumbangan Acara",
-      "jenis": "Donasi",
-      "tanggal": "10 Oktober 2025",
-      "nominal": "Rp 750.000",
-    },
-    {
-      "nama": "Sewa Lapangan",
-      "jenis": "Hasil Usaha Kampung",
-      "tanggal": "12 Okt 2025",
-      "nominal": "Rp 300.000",
-    },
-    {
-      "nama": "Sewa Lapangan",
-      "jenis": "Hasil Usaha Kampung",
-      "tanggal": "12 Okt 2025",
-      "nominal": "Rp 300.000",
-    },
-    {
-      "nama": "Bantuan Pemerintah",
-      "jenis": "Dana Bantuan Pemerintah",
-      "tanggal": "12 Okt 2025",
-      "nominal": "Rp 5.000.000",
-    },
-  ];
+  @override
+  State<Pemasukan> createState() => _PemasukanState();
+}
+
+class _PemasukanState extends State<Pemasukan> {
+  List<dynamic> _rows = [];
+  bool _loading = true;
+  String? _q;
+  String? _from;
+  String? _to;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch();
+  }
+
+  Future<void> _fetch() async {
+    setState(() => _loading = true);
+    try {
+      final res = await FinanceService.listPemasukan(q: _q, from: _from, to: _to);
+      setState(() {
+        _rows = (res['data'] as List<dynamic>);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat pemasukan: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   void _showFilterDialog(BuildContext context) {
     showDialog(
@@ -106,43 +107,50 @@ class Pemasukan extends StatelessWidget {
             ),
           ],
         ),
-        // Body sekarang hanya berisi tabel
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: DataTable2(
-            columnSpacing: 12,
-            horizontalMargin: 12,
-            headingRowColor: MaterialStateProperty.all(
-              theme.colorScheme.primary.withOpacity(0.1),
-            ),
-            headingTextStyle: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.secondary,
-            ),
-            columns: const [
-              DataColumn2(label: Text('Nama')),
-              DataColumn2(label: Text('Nominal'), numeric: true),
-            ],
-            rows: _pemasukanData.map((item) {
-              return DataRow2(
-                onTap: () {
-                  context.push('/detail-pemasukan-all', extra: item);
-                },
-                cells: [
-                  DataCell(Text(item['nama']!)),
-                  DataCell(
-                    Text(
-                      item['nominal']!,
-                      style: TextStyle(
-                        color: Colors.green[700],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : DataTable2(
+                  columnSpacing: 12,
+                  horizontalMargin: 12,
+                  headingRowColor: MaterialStateProperty.all(
+                    theme.colorScheme.primary.withOpacity(0.1),
                   ),
-                ],
-              );
-            }).toList(),
-          ),
+                  headingTextStyle: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.secondary,
+                  ),
+                  columns: const [
+                    DataColumn2(label: Text('Nama')),
+                    DataColumn2(label: Text('Nominal'), numeric: true),
+                  ],
+                  rows: _rows.map((item) {
+                    final judul = (item['judul'] ?? '').toString();
+                    final jumlah = int.tryParse(item['jumlah'].toString()) ?? 0;
+                    final nominal = 'Rp ${NumberFormat.decimalPattern('id').format(jumlah)}';
+                    return DataRow2(
+                      onTap: () {
+                        context.push('/detail-pemasukan-all', extra: {
+                          'nama': judul,
+                          'nominal': nominal,
+                        });
+                      },
+                      cells: [
+                        DataCell(Text(judul)),
+                        DataCell(
+                          Text(
+                            nominal,
+                            style: TextStyle(
+                              color: Colors.green[700],
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
         ),
       ),
     );
