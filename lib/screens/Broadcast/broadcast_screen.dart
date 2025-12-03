@@ -213,7 +213,7 @@ class _BroadcastScreenState extends State<BroadcastScreen> {
           const SizedBox(height: 12),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: colorScheme.tertiary,
+              backgroundColor: colorScheme.primary,
               foregroundColor: Colors.white,
             ),
             onPressed: _loadBroadcast,

@@ -51,7 +51,14 @@ class _DetailBroadcastScreenState extends State<DetailBroadcastScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Flexible(
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );
@@ -65,45 +72,73 @@ class _DetailBroadcastScreenState extends State<DetailBroadcastScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: color.primary,
-        title: const Text("Detail Broadcast", style: TextStyle(color: Colors.white)),
+        title: const Text(
+          "Detail Broadcast",
+          style: TextStyle(color: Colors.white),
+        ),
         iconTheme: IconThemeData(color: color.onPrimary),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildDetailRow("Judul", data['judul'] ?? '-'),
-            _buildDetailRow("Pengirim", data['admin']?['user_nama_depan'] ?? '-'),
-            _buildDetailRow("Tanggal", data['tanggal'] ?? '-'),
-            const SizedBox(height: 20),
-            Text(data['isi_pesan'] ?? '-', style: const TextStyle(fontSize: 16)),
-            const Spacer(),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.delete_outline),
-                    label: const Text("Hapus"),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: color.error,
-                      side: BorderSide(color: color.error),
-                    ),
-                    onPressed: () => _confirmDelete(context),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildDetailRow("Judul", data['judul'] ?? '-'),
+              _buildDetailRow("Pengirim", data['admin']?['user_nama_depan'] ?? '-'),
+              _buildDetailRow("Tanggal", data['tanggal'] ?? '-'),
+              const SizedBox(height: 20),
+              Text(
+                data['isi_pesan'] ?? '-',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const Spacer(),
+
+              // ======= Tombol di bagian bawah =======
+              SafeArea(
+                top: false, // biar nggak menambah padding atas
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0, top: 8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.delete_outline),
+                          label: const Text("Hapus"),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: color.error,
+                            side: BorderSide(color: color.error),
+                            minimumSize: const Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => _confirmDelete(context),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.edit_outlined),
+                          label: const Text("Edit"),
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => context.push(
+                            '/edit-broadcast',
+                            extra: data,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.edit_outlined),
-                    label: const Text("Edit"),
-                    onPressed: () =>
-                        context.push('/edit-broadcast', extra: data),
-                  ),
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
