@@ -150,18 +150,20 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::get('/log-activity/statistics', [LogActivityController::class, 'statistics']);
     // Route::delete('/log-activity/cleanup', [LogActivityController::class, 'cleanup']);
 
-    // Laporan Keuangan
-    Route::get('/pemasukan', [LaporanKeuanganController::class, 'pemasukanIndex']);
-    Route::post('/pemasukan', [LaporanKeuanganController::class, 'pemasukanStore']);
-    Route::put('/pemasukan/{id}', [LaporanKeuanganController::class, 'pemasukanUpdate']);
-    Route::delete('/pemasukan/{id}', [LaporanKeuanganController::class, 'pemasukanDestroy']);
+    // Laporan Keuangan (Hanya Admin dan Bendahara)
+    Route::middleware('role:1,5')->group(function () {
+        Route::get('/pemasukan', [LaporanKeuanganController::class, 'pemasukanIndex']);
+        Route::post('/pemasukan', [LaporanKeuanganController::class, 'pemasukanStore']);
+        Route::put('/pemasukan/{id}', [LaporanKeuanganController::class, 'pemasukanUpdate']);
+        Route::delete('/pemasukan/{id}', [LaporanKeuanganController::class, 'pemasukanDestroy']);
 
-    Route::get('/pengeluaran', [LaporanKeuanganController::class, 'pengeluaranIndex']);
-    Route::post('/pengeluaran', [LaporanKeuanganController::class, 'pengeluaranStore']);
-    Route::put('/pengeluaran/{id}', [LaporanKeuanganController::class, 'pengeluaranUpdate']);
-    Route::delete('/pengeluaran/{id}', [LaporanKeuanganController::class, 'pengeluaranDestroy']);
+        Route::get('/pengeluaran', [LaporanKeuanganController::class, 'pengeluaranIndex']);
+        Route::post('/pengeluaran', [LaporanKeuanganController::class, 'pengeluaranStore']);
+        Route::put('/pengeluaran/{id}', [LaporanKeuanganController::class, 'pengeluaranUpdate']);
+        Route::delete('/pengeluaran/{id}', [LaporanKeuanganController::class, 'pengeluaranDestroy']);
 
-    Route::get('/laporan/ringkasan', [LaporanKeuanganController::class, 'ringkasan']);
+        Route::get('/laporan/ringkasan', [LaporanKeuanganController::class, 'ringkasan']);
+    });
 });
 
 // =========================================================================

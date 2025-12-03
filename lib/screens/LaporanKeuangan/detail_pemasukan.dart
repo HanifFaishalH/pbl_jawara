@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import '../../services/finance_service.dart';
 
-class DetailPemasukan extends StatelessWidget {
+class DetailPemasukan extends StatefulWidget {
   // Data Pemasukan akan diterima melalui constructor
-  final Map<String, String> pemasukanData;
+  final Map<String, dynamic> pemasukanData;
 
   const DetailPemasukan({super.key, required this.pemasukanData});
+
+  @override
+  State<DetailPemasukan> createState() => _DetailPemasukanState();
+}
+
+class _DetailPemasukanState extends State<DetailPemasukan> {
 
   // Widget helper untuk membuat baris detail (Label: Value)
   Widget _buildDetailRow(
@@ -42,6 +51,48 @@ class DetailPemasukan extends StatelessWidget {
     );
   }
 
+  Future<void> _confirmDelete() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Hapus'),
+        content: const Text('Yakin ingin menghapus pemasukan ini?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    try {
+      final id = widget.pemasukanData['pemasukan_id'] as int;
+      await FinanceService.deletePemasukan(id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pemasukan berhasil dihapus'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.pop(true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -59,6 +110,19 @@ class DetailPemasukan extends StatelessWidget {
           ),
         ),
         iconTheme: IconThemeData(color: theme.colorScheme.onPrimary),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              final result = await context.push('/form-pemasukan', extra: widget.pemasukanData);
+              if (result == true && mounted) context.pop(true);
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: _confirmDelete,
+          ),
+        ],
       ),
       body: Container(
         height: double.infinity,
@@ -81,26 +145,26 @@ class DetailPemasukan extends StatelessWidget {
                       _buildDetailRow(
                         context,
                         "Nama Pemasukan",
-                        pemasukanData['nama'] ?? '-',
-                      ),
-                      const Divider(height: 1),
-                      _buildDetailRow(
-                        context,
-                        "Jenis Pemasukan",
-                        pemasukanData['jenis'] ?? '-',
-                      ),
-                      const Divider(height: 1),
-                      _buildDetailRow(
-                        context,
-                        "Nominal",
-                        pemasukanData['nominal'] ?? 'Rp 0',
-                        isNominal: true,
+                        widget.pemasukanData['judul']?.toString() ?? '-',
                       ),
                       const Divider(height: 1),
                       _buildDetailRow(
                         context,
                         "Tanggal",
-                        pemasukanData['tanggal'] ?? '-',
+                        widget.pemasukanData['tanggal']?.toString() ?? '-',
+                      ),
+                      const Divider(height: 1),
+                      _buildDetailRow(
+                        context,
+                        "Nominal",
+                        'Rp ${NumberFormat.decimalPattern('id').format(int.tryParse(widget.pemasukanData['jumlah']?.toString() ?? '0') ?? 0)}',
+                        isNominal: true,
+                      ),
+                      const Divider(height: 1),
+                      _buildDetailRow(
+                        context,
+                        "Deskripsi",
+                        widget.pemasukanData['deskripsi']?.toString() ?? '-',
                       ),
                     ],
                   ),

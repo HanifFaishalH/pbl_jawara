@@ -1,10 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../widgets/dashboard_header.dart';
 import '../../widgets/bottom_navbar.dart';
+import '../../services/finance_service.dart';
 
-class DashboardBendaharaScreen extends StatelessWidget {
+class DashboardBendaharaScreen extends StatefulWidget {
   const DashboardBendaharaScreen({super.key});
+
+  @override
+  State<DashboardBendaharaScreen> createState() => _DashboardBendaharaScreenState();
+}
+
+class _DashboardBendaharaScreenState extends State<DashboardBendaharaScreen> {
+  Map<String, dynamic>? _ringkasan;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRingkasan();
+  }
+
+  Future<void> _loadRingkasan() async {
+    setState(() => _loading = true);
+    try {
+      final data = await FinanceService.ringkasan();
+      if (mounted) {
+        setState(() => _ringkasan = data);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat data: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,56 +133,76 @@ class DashboardBendaharaScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            "Ringkasan Keuangan RW",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Ringkasan Keuangan RW",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              if (!_loading)
+                                IconButton(
+                                  icon: const Icon(Icons.refresh, size: 20),
+                                  onPressed: _loadRingkasan,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                ),
+                            ],
                           ),
                           const SizedBox(height: 14),
 
-                          IntrinsicHeight(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                // 💵 Saldo
-                                _buildFinanceCard(
-                                  context,
-                                  icon: Icons.account_balance_wallet_rounded,
-                                  title: "Saldo",
-                                  amount: "Rp 2.450.000",
-                                  color: colors.primaryContainer.withOpacity(0.95),
-                                  iconColor: colors.onPrimaryContainer,
-                                  textColor: colors.onPrimaryContainer,
-                                ),
-                                const SizedBox(width: 12),
+                          if (_loading)
+                            const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(20),
+                                child: CircularProgressIndicator(),
+                              ),
+                            )
+                          else
+                            IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  // 💵 Saldo
+                                  _buildFinanceCard(
+                                    context,
+                                    icon: Icons.account_balance_wallet_rounded,
+                                    title: "Saldo",
+                                    amount: "Rp ${NumberFormat.decimalPattern('id').format(_ringkasan?['saldo'] ?? 0)}",
+                                    color: colors.primaryContainer.withOpacity(0.95),
+                                    iconColor: colors.onPrimaryContainer,
+                                    textColor: colors.onPrimaryContainer,
+                                  ),
+                                  const SizedBox(width: 12),
 
-                                // 📥 Pemasukan
-                                _buildFinanceCard(
-                                  context,
-                                  icon: Icons.arrow_downward_rounded,
-                                  title: "Pemasukan",
-                                  amount: "Rp 750.000",
-                                  color: Colors.green.withOpacity(0.1),
-                                  iconColor: Colors.green,
-                                  textColor: Colors.green,
-                                ),
-                                const SizedBox(width: 12),
+                                  // 📥 Pemasukan
+                                  _buildFinanceCard(
+                                    context,
+                                    icon: Icons.arrow_downward_rounded,
+                                    title: "Pemasukan",
+                                    amount: "Rp ${NumberFormat.decimalPattern('id').format(_ringkasan?['pemasukan'] ?? 0)}",
+                                    color: Colors.green.withOpacity(0.1),
+                                    iconColor: Colors.green,
+                                    textColor: Colors.green,
+                                  ),
+                                  const SizedBox(width: 12),
 
-                                // 📤 Pengeluaran
-                                _buildFinanceCard(
-                                  context,
-                                  icon: Icons.arrow_upward_rounded,
-                                  title: "Pengeluaran",
-                                  amount: "Rp 300.000",
-                                  color: Colors.red.withOpacity(0.1),
-                                  iconColor: Colors.redAccent,
-                                  textColor: Colors.redAccent,
-                                ),
-                              ],
+                                  // 📤 Pengeluaran
+                                  _buildFinanceCard(
+                                    context,
+                                    icon: Icons.arrow_upward_rounded,
+                                    title: "Pengeluaran",
+                                    amount: "Rp ${NumberFormat.decimalPattern('id').format(_ringkasan?['pengeluaran'] ?? 0)}",
+                                    color: Colors.red.withOpacity(0.1),
+                                    iconColor: Colors.redAccent,
+                                    textColor: Colors.redAccent,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
                         ],
                       ),
 
@@ -159,9 +213,7 @@ class DashboardBendaharaScreen extends StatelessWidget {
                     // 📊 Tombol laporan keuangan
                     ElevatedButton.icon(
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Laporan keuangan coming soon")),
-                        );
+                        context.push('/laporan-keuangan');
                       },
                       icon: const Icon(Icons.insert_chart_outlined),
                       label: const Text("Lihat Laporan Keuangan"),

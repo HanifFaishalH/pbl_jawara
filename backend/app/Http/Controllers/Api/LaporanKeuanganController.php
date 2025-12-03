@@ -12,9 +12,7 @@ class LaporanKeuanganController extends Controller
     // Semua pemasukan - list + filter
     public function pemasukanIndex(Request $request)
     {
-        $user = $request->user();
-        $q = PemasukanModel::with('kategori')
-            ->where('user_id', $user->user_id);
+        $q = PemasukanModel::with('kategori');
 
         if ($request->filled('q')) {
             $term = (string) $request->get('q');
@@ -33,9 +31,7 @@ class LaporanKeuanganController extends Controller
     // Semua pengeluaran - list + filter
     public function pengeluaranIndex(Request $request)
     {
-        $user = $request->user();
-        $q = PengeluaranModel::with('kategori')
-            ->where('user_id', $user->user_id);
+        $q = PengeluaranModel::with('kategori');
 
         if ($request->filled('q')) {
             $term = (string) $request->get('q');
@@ -69,8 +65,7 @@ class LaporanKeuanganController extends Controller
 
     public function pemasukanUpdate(Request $request, $id)
     {
-        $user = $request->user();
-        $row = PemasukanModel::where('pemasukan_id', $id)->where('user_id', $user->user_id)->firstOrFail();
+        $row = PemasukanModel::where('pemasukan_id', $id)->firstOrFail();
         $data = $request->validate([
             'judul' => 'sometimes|required|string|max:150',
             'deskripsi' => 'nullable|string',
@@ -84,8 +79,7 @@ class LaporanKeuanganController extends Controller
 
     public function pemasukanDestroy(Request $request, $id)
     {
-        $user = $request->user();
-        $row = PemasukanModel::where('pemasukan_id', $id)->where('user_id', $user->user_id)->firstOrFail();
+        $row = PemasukanModel::where('pemasukan_id', $id)->firstOrFail();
         $row->delete();
         return response()->json(['message' => 'Pemasukan dihapus']);
     }
@@ -108,8 +102,7 @@ class LaporanKeuanganController extends Controller
 
     public function pengeluaranUpdate(Request $request, $id)
     {
-        $user = $request->user();
-        $row = PengeluaranModel::where('pengeluaran_id', $id)->where('user_id', $user->user_id)->firstOrFail();
+        $row = PengeluaranModel::where('pengeluaran_id', $id)->firstOrFail();
         $data = $request->validate([
             'judul' => 'sometimes|required|string|max:150',
             'deskripsi' => 'nullable|string',
@@ -123,8 +116,7 @@ class LaporanKeuanganController extends Controller
 
     public function pengeluaranDestroy(Request $request, $id)
     {
-        $user = $request->user();
-        $row = PengeluaranModel::where('pengeluaran_id', $id)->where('user_id', $user->user_id)->firstOrFail();
+        $row = PengeluaranModel::where('pengeluaran_id', $id)->firstOrFail();
         $row->delete();
         return response()->json(['message' => 'Pengeluaran dihapus']);
     }
@@ -132,16 +124,15 @@ class LaporanKeuanganController extends Controller
     // Ringkasan laporan: total pemasukan/pengeluaran & saldo periode
     public function ringkasan(Request $request)
     {
-        $user = $request->user();
         $from = $request->get('from');
         $to = $request->get('to');
 
-        $pemasukan = PemasukanModel::where('user_id', $user->user_id)
+        $pemasukan = PemasukanModel::query()
             ->when($from, fn($q) => $q->where('tanggal', '>=', $from))
             ->when($to, fn($q) => $q->where('tanggal', '<=', $to))
             ->sum('jumlah');
 
-        $pengeluaran = PengeluaranModel::where('user_id', $user->user_id)
+        $pengeluaran = PengeluaranModel::query()
             ->when($from, fn($q) => $q->where('tanggal', '>=', $from))
             ->when($to, fn($q) => $q->where('tanggal', '<=', $to))
             ->sum('jumlah');

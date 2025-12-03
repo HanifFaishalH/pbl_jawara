@@ -34,6 +34,8 @@ import 'package:jawaramobile_1/screens/LaporanKeuangan/semua_pengeluaran.dart';
 import 'package:jawaramobile_1/screens/LaporanKeuangan/detail_pengeluaran.dart';
 import 'package:jawaramobile_1/screens/LaporanKeuangan/semua_pemasukan.dart';
 import 'package:jawaramobile_1/screens/LaporanKeuangan/detail_pemasukan.dart';
+import 'package:jawaramobile_1/screens/LaporanKeuangan/form_pemasukan.dart';
+import 'package:jawaramobile_1/screens/LaporanKeuangan/form_pengeluaran.dart';
 import 'package:jawaramobile_1/screens/LaporanKeuangan/cetak_laporan_screen.dart';
 import 'package:jawaramobile_1/screens/LaporanKeuangan/menu_laporan_keuangan.dart';
 
@@ -316,7 +318,7 @@ final appRouter = GoRouter(
       path: '/detail-pengeluaran-all',
       name: 'detail-pengeluaran-all',
       builder: (context, state) {
-        final data = state.extra as Map<String, String>;
+        final data = state.extra as Map<String, dynamic>;
         return DetailPengeluaran(pengeluaranData: data);
       },
     ),
@@ -329,8 +331,24 @@ final appRouter = GoRouter(
       path: '/detail-pemasukan-all',
       name: 'detail-pemasukan-all',
       builder: (context, state) {
-        final data = state.extra as Map<String, String>;
+        final data = state.extra as Map<String, dynamic>;
         return DetailPemasukan(pemasukanData: data);
+      },
+    ),
+    GoRoute(
+      path: '/form-pemasukan',
+      name: 'form-pemasukan',
+      builder: (context, state) {
+        final data = state.extra as Map<String, dynamic>?;
+        return FormPemasukan(data: data);
+      },
+    ),
+    GoRoute(
+      path: '/form-pengeluaran',
+      name: 'form-pengeluaran',
+      builder: (context, state) {
+        final data = state.extra as Map<String, dynamic>?;
+        return FormPengeluaran(data: data);
       },
     ),
     GoRoute(

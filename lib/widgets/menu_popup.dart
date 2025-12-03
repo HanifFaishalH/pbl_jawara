@@ -136,7 +136,9 @@ class _MenuPopUpContent extends StatelessWidget {
 
     // === Susunan Menu Dasar ===
     final List<Map<String, dynamic>> menuItems = [];
-    final baseKeys = [
+    
+    // Menu base untuk semua role kecuali bendahara
+    final baseKeys = roleId != 5 ? [
       'dashboard',
       'pesan_warga',
       'broadcast',
@@ -145,7 +147,7 @@ class _MenuPopUpContent extends StatelessWidget {
       'marketplace',
       'channel',
       'aspirasi',
-    ];
+    ] : <String>[];
 
     for (final key in baseKeys) {
       if (menuLibrary.containsKey(key)) {
@@ -192,12 +194,16 @@ class _MenuPopUpContent extends StatelessWidget {
     } else if (roleId == 5) {
       // === BENDAHARA ===
       final bendaharaKeys = [
+        'dashboard',
+        'kegiatan',
+        'channel',
         'pemasukan',
-        'pengeluaran',
         'laporan_keuangan',
       ];
       for (final key in bendaharaKeys) {
-        menuItems.add(menuLibrary[key]!);
+        if (menuLibrary.containsKey(key)) {
+          menuItems.add(menuLibrary[key]!);
+        }
       }
     }
 

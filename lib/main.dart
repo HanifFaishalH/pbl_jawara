@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:jawaramobile_1/services/auth_service.dart'; // Pastikan import ini ada
 import 'theme/AppTheme.dart';
 import 'app_router.dart';
@@ -7,10 +9,14 @@ void main() async {
   // 1. Wajib dipanggil jika main() menjadi async
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. Load Token dari penyimpanan HP ke variabel static aplikasi
+  // 2. Initialize locale for intl
+  await initializeDateFormatting('id', null);
+  Intl.defaultLocale = 'id';
+
+  // 3. Load Token dari penyimpanan HP ke variabel static aplikasi
   await AuthService.loadSession(); 
 
-  // 3. Jalankan aplikasi setelah sesi dimuat
+  // 4. Jalankan aplikasi setelah sesi dimuat
   runApp(const MyApp());
 }
 
