@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+// SESUAIKAN IMPORT INI
+import 'kegiatan/kegiatan_card.dart'; 
 
 class KegiatanSection extends StatelessWidget {
-  final bool showAddButton; // apakah ada tombol tambah
-  final String? roleFilter; // RW, RT, Warga, dll
-  final String? title;      // judul utama
-  final String? subtitle;   // deskripsi tambahan
+  final bool showAddButton;
+  final String? roleFilter;
+  final String? title;
+  final String? subtitle;
+  
+  // Parameter tambahan untuk data
+  final List<dynamic>? dataList;
+  final bool isLoading;
 
   const KegiatanSection({
     super.key,
@@ -13,112 +20,118 @@ class KegiatanSection extends StatelessWidget {
     this.roleFilter,
     this.title,
     this.subtitle,
+    this.dataList,
+    this.isLoading = false,
   });
-
-  String _getRoleMessage() {
-    switch (roleFilter) {
-      case "RW":
-        return "Lihat dan kelola kegiatan seluruh RT di wilayah RW Anda.";
-      case "RT":
-        return "Kegiatan terbaru yang diadakan oleh RT Anda.";
-      case "Warga":
-        return "Ikuti kegiatan lingkungan dan gotong royong di sekitar Anda.";
-      case "Admin":
-        return "Pantau semua kegiatan di tingkat RW dan RT.";
-      default:
-        return "Belum ada kegiatan untuk ditampilkan.";
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = theme.colorScheme;
 
+    final list = dataList ?? [];
+    // Batasi 5 item saja untuk dashboard
+    final displayList = list.length > 5 ? list.sublist(0, 5) : list;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 🏷️ Judul
+        // --- HEADER ---
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-              title ?? 'Kegiatan Warga',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color.onSurface,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title ?? 'Kegiatan Warga',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: color.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle ?? 'Kegiatan terbaru minggu ini',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: color.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ),
             if (showAddButton)
-              IconButton(
+               IconButton(
                 icon: const Icon(FontAwesomeIcons.plusCircle),
                 color: color.primary,
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Tambah kegiatan coming soon!'),
-                    ),
-                  );
-                },
+                onPressed: () { /* Logic Tambah */ },
+              )
+            else
+              TextButton(
+                onPressed: () => context.push('/kegiatan'),
+                child: const Text("Lihat Semua"),
               ),
           ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          subtitle ?? 'Kegiatan terbaru minggu ini',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: color.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 12),
+        
+        const SizedBox(height: 16),
 
-        // 🧱 Kartu kegiatan
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: color.primaryContainer,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: color.shadow.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(
-                FontAwesomeIcons.peopleGroup,
-                size: 30,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                _getRoleMessage(),
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: color.onPrimaryContainer,
+        // --- BODY ---
+        
+        // 1. Loading
+        if (isLoading)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: CircularProgressIndicator(color: color.primary),
+            ),
+          )
+        
+        // 2. Kosong
+        else if (displayList.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: color.surfaceVariant.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: color.outline.withOpacity(0.1)),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  FontAwesomeIcons.clipboardList,
+                  size: 40,
+                  color: color.onSurfaceVariant.withOpacity(0.5),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: color.surface.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Belum ada kegiatan terdaftar.',
+                const SizedBox(height: 12),
+                Text(
+                  "Belum ada kegiatan saat ini.",
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: color.onSurfaceVariant,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
+          )
+        
+        // 3. Ada Data
+        else
+          ListView.separated(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true, // Wajib agar tidak error layout
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: displayList.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              return KegiatanCard(
+                item: displayList[index],
+                onRefreshNeeded: () {}, 
+              );
+            },
           ),
-        ),
       ],
     );
   }
