@@ -78,13 +78,38 @@ class PenggunaService {
   // 5. UPDATE STATUS
   Future<bool> updateStatus(int id, String status) async {
     try {
+      print('=== UPDATE STATUS START ===');
+      print('User ID: $id');
+      print('New Status: $status');
+      print('Base URL: $baseUrl');
+      print('Full URL: $baseUrl/pengguna/$id/status');
+      print('Token: ${AuthService.token?.substring(0, 20)}...');
+      print('Headers: $headers');
+      
+      final body = jsonEncode({'status': status});
+      print('Request Body: $body');
+      
       final response = await http.post(
         Uri.parse('$baseUrl/pengguna/$id/status'),
         headers: headers,
-        body: jsonEncode({'status': status}),
-      );
-      return response.statusCode == 200;
-    } catch (e) {
+        body: body,
+      ).timeout(const Duration(seconds: 10));
+      
+      print('Response Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+      print('=== UPDATE STATUS END ===');
+      
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return json['success'] == true;
+      }
+      
+      // Log jika status code bukan 200
+      print('ERROR: Status code ${response.statusCode}');
+      return false;
+    } catch (e, stackTrace) {
+      print("ERROR Update Status: $e");
+      print("Stack Trace: $stackTrace");
       return false;
     }
   }

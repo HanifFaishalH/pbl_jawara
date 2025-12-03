@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import '../../services/auth_service.dart';
+import '../../services/kategori_service.dart';
 
 class AddBarangScreen extends StatefulWidget {
   const AddBarangScreen({super.key});
@@ -27,24 +28,42 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
   String _alamatPengguna = "(memuat alamat...)"; // Akan diisi dari /me
   int? _kategoriId; // Jika nanti ML memetakan ke ID kategori
   bool _loadingUpload = false;
+  List<Map<String, dynamic>> _kategoriList = [];
+  bool _loadingKategori = false;
 
   @override
   void initState() {
     super.initState();
     _loadUserAddress();
+    _loadKategori();
   }
 
   Future<void> _loadUserAddress() async {
     try {
       await AuthService.loadSession();
       final data = await AuthService().me();
-      setState(() {
-        _alamatPengguna = (data['user_alamat'] ?? 'Alamat belum diisi') as String;
-      });
+      // data['user'] mungkin dikembalikan tergantung implementasi
+      final user = data['user']??data; 
+      final alamat = user['user_alamat'] ?? user['alamat'] ?? 'Alamat belum diisi';
+      setState(() { _alamatPengguna = alamat.toString(); });
     } catch (e) {
       setState(() {
         _alamatPengguna = 'Gagal memuat alamat';
       });
+    }
+  }
+
+  Future<void> _loadKategori() async {
+    setState(() { _loadingKategori = true; });
+    try {
+      final items = await KategoriService.fetchKategori();
+      setState(() { _kategoriList = items; });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat kategori: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() { _loadingKategori = false; });
     }
   }
 
@@ -263,18 +282,47 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
                       border: OutlineInputBorder(),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  // Dropdown Kategori dari database
+                  InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'Kategori',
+                      border: OutlineInputBorder(),
+                    ),
+                    child: _loadingKategori
+                        ? const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12.0),
+                            child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                          )
+                        : DropdownButtonHideUnderline(
+                            child: DropdownButton<int?> (
+                              isExpanded: true,
+                              value: _kategoriId,
+                              hint: const Text('Pilih kategori'),
+                              items: _kategoriList.map((k) {
+                                return DropdownMenuItem<int?>(
+                                  value: k['kategori_id'] as int?,
+                                  child: Text(k['kategori_nama']?.toString() ?? 'Tidak diketahui'),
+                                );
+                              }).toList(),
+                              onChanged: (val) {
+                                setState(() { _kategoriId = val; });
+                              },
+                            ),
+                          ),
+                  ),
                   const SizedBox(height: 20),
-                  // Kategori Otomatis
-                  Text(
-                    "Kategori (Identifikasi ML):",
-                    style: theme.textTheme.bodyLarge,
-                  ),
-                  Text(
-                    _kategoriOtomatis,
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(color: Colors.green.shade700),
-                  ),
-                  const SizedBox(height: 10),
+                  // // Kategori Otomatis
+                  // Text(
+                  //   "Kategori (Identifikasi ML):",
+                  //   style: theme.textTheme.bodyLarge,
+                  // ),
+                  // Text(
+                  //   _kategoriOtomatis,
+                  //   style: theme.textTheme.titleMedium
+                  //       ?.copyWith(color: Colors.green.shade700),
+                  // ),
+                  // const SizedBox(height: 10),
                   // Alamat Otomatis
                   Text(
                     "Alamat Penjual (Data Pengguna):",

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\TransaksiController;
 use App\Http\Controllers\Api\PembayaranController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\Api\KegiatanController;
+use App\Http\Controllers\Api\KategoriController;
 use App\Http\Controllers\Api\ChannelTransferController;
 use App\Http\Controllers\Api\WargaController;
 use App\Http\Controllers\Api\KeluargaController;
@@ -31,6 +32,8 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::get('/barang', [BarangController::class, 'index']);
 Route::get('/barang/{id}', [BarangController::class, 'show'])->whereNumber('id');
+// Kategori (untuk dropdown)
+Route::get('/kategori', [KategoriController::class, 'index']);
 
 // === PROTECTED ROUTES (BUTUH LOGIN) ===
 Route::middleware('auth:sanctum')->group(function () {
