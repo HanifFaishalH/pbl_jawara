@@ -10,26 +10,10 @@ class BarangService {
   // --- KONFIGURASI SERVER OTOMATIS (Auto-Detect) ---
   
   // 1. Base URL API
-  static String get baseUrl {
-    if (kIsWeb) {
-      return "http://localhost:8000/api"; // Web Browser
-    } else if (Platform.isAndroid) {
-      return "http://10.0.2.2:8000/api"; // Android Emulator
-    } else {
-      return "http://localhost:8000/api"; // iOS Simulator / Lainnya
-    }
-  }
+  static String get baseUrl => "http://localhost:8000/api";
 
   // 2. Base URL Gambar
-  static String get baseImageUrl {
-    if (kIsWeb) {
-      return "http://localhost:8000/api/image-proxy/";
-    } else if (Platform.isAndroid) {
-      return "http://10.0.2.2:8000/api/image-proxy/";
-    } else {
-      return "http://localhost:8000/api/image-proxy/";
-    }
-  }
+  static String get baseImageUrl => "http://localhost:8000/api/image-proxy/";
 
   // --- HELPER TOKEN ---
   Future<String?> _getToken() async {
