@@ -26,13 +26,8 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
   final Color jawaraColor = const Color(0xFF26547C);
 
   // --- IMPLEMENTASI STREAM & DEBOUNCE (Syarat PBL) ---
-  // 1. Controller untuk mengatur aliran data text pencarian
   final StreamController<String> _searchStreamController = StreamController<String>();
-  
-  // 2. Subscription untuk mendengarkan perubahan data
   StreamSubscription<String>? _searchSubscription;
-  
-  // 3. Timer untuk menunda eksekusi (Debounce)
   Timer? _debounce;
 
   @override
@@ -40,21 +35,15 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
     super.initState();
     futureBarang = BarangService().fetchBarang();
 
-    // Listener TextController: Masukkan setiap ketikan user ke dalam Stream
     _searchController.addListener(() {
       _searchStreamController.add(_searchController.text);
     });
 
-    // Listener Stream: Dengarkan data yang masuk
     _searchSubscription = _searchStreamController.stream.listen((query) {
-      // a. Batalkan timer sebelumnya jika user masih mengetik (Reset waktu)
       if (_debounce?.isActive ?? false) _debounce!.cancel();
 
-      // b. Mulai timer baru selama 500ms (0.5 detik)
       _debounce = Timer(const Duration(milliseconds: 500), () {
-        // Cek mounted agar tidak error jika widget sudah ditutup
         if (mounted) {
-          // c. Update UI hanya setelah user berhenti mengetik
           setState(() {
             searchQuery = query;
           });
@@ -66,7 +55,6 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
 
   @override
   void dispose() {
-    // [PENTING] Tutup semua stream dan timer agar memori tidak bocor
     _searchStreamController.close();
     _searchSubscription?.cancel();
     _debounce?.cancel();
@@ -74,7 +62,7 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
     super.dispose();
   }
 
-  // Logika Filter List (Dijalankan lokal untuk efisiensi)
+  // Logika Filter List
   List<dynamic> _getFilteredBarangList(List<dynamic> allBarang) {
     return allBarang.where((item) {
       final itemMap = item as Map<String, dynamic>;
@@ -91,7 +79,7 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
         matchCategory = catName.toLowerCase().contains(selectedCategory.toLowerCase());
       }
 
-      // 2. Filter Pencarian (Updated by Stream)
+      // 2. Filter Pencarian
       bool matchSearch = true;
       if (searchQuery.isNotEmpty) {
         String namaBarang = itemMap['barang_nama']?.toString().toLowerCase() ?? '';
@@ -247,23 +235,28 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
         ),
         child: TextField(
           controller: _searchController,
+          // 🔥 PERBAIKAN DI SINI:
+          // textAlignVertical: center memastikan teks sejajar vertikal dengan icon
+          textAlignVertical: TextAlignVertical.center, 
           decoration: InputDecoration(
             hintText: "Cari barang...",
             hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+            // isDense: true menghilangkan padding bawaan yang berlebih
+            isDense: true, 
+            // contentPadding: EdgeInsets.zero agar alignment center bekerja maksimal
+            contentPadding: EdgeInsets.zero, 
             prefixIcon: Icon(Icons.search, color: Colors.grey[500], size: 20),
             suffixIcon: searchQuery.isNotEmpty 
               ? IconButton(
                   icon: const Icon(Icons.clear, size: 18, color: Colors.grey),
                   onPressed: () {
                     _searchController.clear();
-                    // Reset Stream juga agar sinkron
                     _searchStreamController.add(""); 
                     FocusScope.of(context).unfocus();
                   },
                 ) 
               : null,
             border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(vertical: 10),
           ),
         ),
       ),

@@ -51,7 +51,7 @@ class _DetailAspirasiScreenState extends State<DetailAspirasiScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle, color: AppTheme.secondary, size: 60),
+              const Icon(Icons.check_circle, color: Color(0xFF06D6A0), size: 60),
               const SizedBox(height: 16),
               const Text(
                 "Berhasil Disimpan!",
