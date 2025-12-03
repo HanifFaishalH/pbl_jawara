@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import '../../services/auth_service.dart';
 
 class AddBarangScreen extends StatefulWidget {
   const AddBarangScreen({super.key});
@@ -12,56 +16,114 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
   // State untuk melacak langkah form (0: Ambil Gambar, 1: Isi Form)
   int _currentStep = 0;
   // Placeholder untuk status gambar
-  bool _isImageTaken = false;
+  String? _imagePath;
 
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _hargaController = TextEditingController();
   final TextEditingController _stokController = TextEditingController();
 
   // Data dummy yang akan diisi otomatis
-  String _kategoriOtomatis = "Perabotan"; // Hasil Machine Learning
-  String _alamatPengguna = "Jl. Mawar No. 5, Jakarta"; // Data Pengguna
+  String _kategoriOtomatis = "Perabotan"; // Placeholder hasil ML (belum mapping ke kategori_id)
+  String _alamatPengguna = "(memuat alamat...)"; // Akan diisi dari /me
+  int? _kategoriId; // Jika nanti ML memetakan ke ID kategori
+  bool _loadingUpload = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserAddress();
+  }
+
+  Future<void> _loadUserAddress() async {
+    try {
+      await AuthService.loadSession();
+      final data = await AuthService().me();
+      setState(() {
+        _alamatPengguna = (data['user_alamat'] ?? 'Alamat belum diisi') as String;
+      });
+    } catch (e) {
+      setState(() {
+        _alamatPengguna = 'Gagal memuat alamat';
+      });
+    }
+  }
 
   // Fungsi placeholder untuk simulasi ambil gambar
-  void _takePicture() {
-    // TODO: Implementasi Camera
-    setState(() {
-      _isImageTaken = true;
-      _currentStep = 1; // Lanjut ke langkah isi form
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Gambar berhasil diambil (simulasi)"),
-        backgroundColor: Colors.blue,
-      ),
-    );
+  Future<void> _takePicture() async {
+    // Buka kamera dan tunggu hasil path
+    final path = await context.push<String>('/camera');
+    if (!mounted) return;
+    if (path != null) {
+      setState(() {
+        _imagePath = path;
+        _currentStep = 1;
+      });
+    }
   }
 
   // Fungsi untuk mengunggah barang
-  void _uploadBarang() {
+  Future<void> _uploadBarang() async {
+    if (_loadingUpload) return;
     if (_namaController.text.isEmpty ||
         _hargaController.text.isEmpty ||
-        _stokController.text.isEmpty) {
+        _stokController.text.isEmpty ||
+        _imagePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Semua field harus diisi"),
+          content: Text("Semua field & foto harus diisi"),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
-    // TODO: Implementasi logika upload ke database
+    setState(() => _loadingUpload = true);
+    try {
+      await AuthService.loadSession();
+      final token = AuthService.token;
+      if (token == null) throw Exception('Token tidak ada, silakan login ulang');
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Barang ${_namaController.text} berhasil diunggah!"),
-        backgroundColor: Colors.green,
-      ),
-    );
+      final uri = Uri.parse('${AuthService.baseUrl}/barang');
+      final request = http.MultipartRequest('POST', uri)
+        ..headers['Accept'] = 'application/json'
+        ..headers['Authorization'] = 'Bearer $token'
+        ..fields['barang_nama'] = _namaController.text
+        ..fields['barang_harga'] = _hargaController.text
+        ..fields['barang_stok'] = _stokController.text
+        ..fields['barang_deskripsi'] = '';
+      if (_kategoriId != null) {
+        request.fields['kategori_id'] = _kategoriId.toString();
+      }
+      request.files.add(await http.MultipartFile.fromPath('foto', _imagePath!));
 
-    // Kembali ke Daftar Barang
-    context.pop();
+      final streamed = await request.send();
+      final responseBody = await streamed.stream.bytesToString();
+      if (streamed.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Barang ${_namaController.text} berhasil diunggah!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+        if (mounted) context.pop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Gagal upload (${streamed.statusCode}): $responseBody"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _loadingUpload = false);
+    }
   }
 
   @override
@@ -149,20 +211,31 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Gambar yang sudah diambil (Placeholder)
-                  Container(
-                    height: 150,
-                    decoration: BoxDecoration(
+                  // Preview gambar jika ada
+                  if (_imagePath != null)
+                    ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      color: colorScheme.secondary.withOpacity(0.1),
-                    ),
-                    child: Center(
-                      child: Text(
-                        "Foto Barang Sudah Diambil",
-                        style: theme.textTheme.bodyLarge,
+                      child: Image.file(
+                        File(_imagePath!),
+                        height: 180,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  else
+                    Container(
+                      height: 150,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: colorScheme.secondary.withOpacity(0.1),
+                      ),
+                      child: Center(
+                        child: Text(
+                          "Foto Barang Sudah Diambil",
+                          style: theme.textTheme.bodyLarge,
+                        ),
                       ),
                     ),
-                  ),
                   const SizedBox(height: 20),
                   // Form Input
                   TextFormField(
@@ -214,9 +287,15 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
                   const SizedBox(height: 30),
                   // Button Upload
                   ElevatedButton.icon(
-                    onPressed: _uploadBarang,
-                    icon: const Icon(Icons.cloud_upload, color: Colors.white),
-                    label: const Text("Upload Barang"),
+                    onPressed: _loadingUpload ? null : _uploadBarang,
+                    icon: _loadingUpload
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Icon(Icons.cloud_upload, color: Colors.white),
+                    label: Text(_loadingUpload ? "Mengunggah..." : "Upload Barang"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.secondary,
                       foregroundColor: Colors.white,

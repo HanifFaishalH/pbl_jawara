@@ -1,45 +1,45 @@
-import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:jawaramobile_1/services/finance_service.dart';
 import 'package:jawaramobile_1/widgets/pengeluaran_filter.dart';
-import '../../widgets/bottom_navbar.dart';
 
-class Pengeluaran extends StatelessWidget {
+class Pengeluaran extends StatefulWidget {
   const Pengeluaran({super.key});
 
-  // Data dummy
-  final List<Map<String, String>> _pengeluaranData = const [
-    {
-      "nama": "Beli Sapu",
-      "kategori": "Keamanan & Kebersihan",
-      "tanggal": "22 Oktober 2025",
-      "nominal": "Rp 25.000",
-    },
-    {
-      "nama": "Perbaikan Lampu Jalan",
-      "kategori": "Pemeliharaan Fasilitas",
-      "tanggal": "17 Oktober 2025",
-      "nominal": "Rp 150.000",
-    },
-    {
-      "nama": "Santunan anak Yatim",
-      "kategori": "Kegiatan Sosial",
-      "tanggal": "15 Oktober 2025",
-      "nominal": "Rp 50.000",
-    },
-    {
-      "nama": "Pembangunan Pos RW",
-      "kategori": "Pembangunan",
-      "tanggal": "11 September 2025",
-      "nominal": "Rp 320.000",
-    },
-    {
-      "nama": "Lomba 17an",
-      "kategori": "Kegiatan Warga",
-      "tanggal": "10 Agustus 2025",
-      "nominal": "Rp 500.000",
-    },
-  ];
+  @override
+  State<Pengeluaran> createState() => _PengeluaranState();
+}
+
+class _PengeluaranState extends State<Pengeluaran> {
+  List<dynamic> _rows = [];
+  bool _loading = true;
+  String? _q;
+  String? _from;
+  String? _to;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch();
+  }
+
+  Future<void> _fetch() async {
+    setState(() => _loading = true);
+    try {
+      final res = await FinanceService.listPengeluaran(q: _q, from: _from, to: _to);
+      setState(() {
+        _rows = (res['data'] as List<dynamic>);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat pengeluaran: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   void _showFilterDialog(BuildContext context) {
     showDialog(
@@ -91,58 +91,148 @@ class Pengeluaran extends StatelessWidget {
           ),
         ],
       ),
-      body: Container(
-        margin: const EdgeInsets.all(16),
-        height: double.infinity,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.95),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: DataTable2(
-            columnSpacing: 12,
-            horizontalMargin: 12,
-            headingRowColor: MaterialStateProperty.all(
-              theme.colorScheme.primary.withOpacity(0.1),
-            ),
-            headingTextStyle: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.secondary,
-            ),
-            columns: const [
-              DataColumn2(label: Text('Nama')),
-              DataColumn2(label: Text('Nominal'), numeric: true),
-            ],
-            rows: _pengeluaranData.map((item) {
-              return DataRow2(
-                onTap: () {
-                  context.push('/detail-pengeluaran-all', extra: item);
-                },
-                cells: [
-                  DataCell(Text(item['nama']!)),
-                  DataCell(
-                    Text(
-                      item['nominal']!,
-                      style: TextStyle(
-                        color: theme.colorScheme.error,
-                        fontWeight: FontWeight.bold,
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _rows.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[400]),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Belum ada data pengeluaran',
+                        style: theme.textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              );
-            }).toList(),
-          ),
-        ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _fetch,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _rows.length,
+                    itemBuilder: (context, index) {
+                      final item = _rows[index];
+                      final judul = (item['judul'] ?? '').toString();
+                      final jumlah = int.tryParse(item['jumlah'].toString()) ?? 0;
+                      final nominal = NumberFormat.currency(
+                        locale: 'id',
+                        symbol: 'Rp ',
+                        decimalDigits: 0,
+                      ).format(jumlah);
+                      final tanggal = item['tanggal']?.toString() ?? '-';
+                      final deskripsi = item['deskripsi']?.toString() ?? '';
+
+                      return Card(
+                        elevation: 2,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.red.withOpacity(0.2), width: 1),
+                        ),
+                        child: InkWell(
+                          onTap: () async {
+                            final result = await context.push('/detail-pengeluaran-all', extra: item);
+                            if (result == true) _fetch();
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(
+                                        Icons.arrow_upward,
+                                        color: Colors.red[700],
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            judul,
+                                            style: theme.textTheme.titleMedium?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              Icon(Icons.calendar_today, size: 14, color: Colors.grey[600]),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                tanggal,
+                                                style: theme.textTheme.bodySmall?.copyWith(
+                                                  color: Colors.grey[600],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (deskripsi.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    deskripsi,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: Colors.grey[700],
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                                const Divider(height: 20),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Nominal',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    Text(
+                                      nominal,
+                                      style: theme.textTheme.titleLarge?.copyWith(
+                                        color: Colors.red[700],
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final result = await context.push('/form-pengeluaran');
+          if (result == true) _fetch();
+        },
+        backgroundColor: Colors.red,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('Tambah', style: TextStyle(color: Colors.white)),
       ),
     );
   }

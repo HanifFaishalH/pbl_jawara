@@ -45,5 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Camera & Microphone permissions for camera plugin -->
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is required to take batik photos.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone access may be used while recording videos.</string>
 </dict>
 </plist>

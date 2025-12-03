@@ -33,7 +33,9 @@ class DatabaseSeeder extends Seeder
             AspirasiSeeder::class,
 
             PesanWargaSeeder::class,
-            PesanBroadcastSeeder::class
+            PesanBroadcastSeeder::class,
+            PemasukanSeeder::class,
+            PengeluaranSeeder::class,
         ]);
     }
 }

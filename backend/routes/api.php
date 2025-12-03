@@ -20,6 +20,8 @@ use App\Http\Controllers\Api\PesanBroadcastController;
 use App\Http\Controllers\Api\PesanWargaController;
 use App\Http\Controllers\Api\PenggunaController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\LaporanKeuanganController;
+
 // --- IMPORT PENTING UNTUK PROXY GAMBAR ---
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
@@ -43,6 +45,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Barang User (Penjual)
     Route::get('/barang/user', [BarangController::class, 'indexUser']);
+    Route::post('/barang', [BarangController::class, 'store']);
+    Route::put('/barang/{id}', [BarangController::class, 'update'])->whereNumber('id');
+    Route::delete('/barang/{id}', [BarangController::class, 'destroy'])->whereNumber('id');
 
     // Transaksi
     Route::get('/transaksi', [TransaksiController::class, 'index']);
@@ -144,6 +149,21 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::get('/log-activity/{id}', [LogActivityController::class, 'show']);
     // Route::get('/log-activity/statistics', [LogActivityController::class, 'statistics']);
     // Route::delete('/log-activity/cleanup', [LogActivityController::class, 'cleanup']);
+
+    // Laporan Keuangan (Hanya Admin dan Bendahara)
+    Route::middleware('role:1,5')->group(function () {
+        Route::get('/pemasukan', [LaporanKeuanganController::class, 'pemasukanIndex']);
+        Route::post('/pemasukan', [LaporanKeuanganController::class, 'pemasukanStore']);
+        Route::put('/pemasukan/{id}', [LaporanKeuanganController::class, 'pemasukanUpdate']);
+        Route::delete('/pemasukan/{id}', [LaporanKeuanganController::class, 'pemasukanDestroy']);
+
+        Route::get('/pengeluaran', [LaporanKeuanganController::class, 'pengeluaranIndex']);
+        Route::post('/pengeluaran', [LaporanKeuanganController::class, 'pengeluaranStore']);
+        Route::put('/pengeluaran/{id}', [LaporanKeuanganController::class, 'pengeluaranUpdate']);
+        Route::delete('/pengeluaran/{id}', [LaporanKeuanganController::class, 'pengeluaranDestroy']);
+
+        Route::get('/laporan/ringkasan', [LaporanKeuanganController::class, 'ringkasan']);
+    });
 });
 
 // =========================================================================

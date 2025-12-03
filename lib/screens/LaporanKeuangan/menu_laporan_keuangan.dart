@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl/intl.dart';
+import '../../services/finance_service.dart';
 
 class MenuLaporanKeuangan extends StatefulWidget {
   const MenuLaporanKeuangan({super.key});
@@ -10,6 +12,146 @@ class MenuLaporanKeuangan extends StatefulWidget {
 }
 
 class _MenuLaporanKeuanganState extends State<MenuLaporanKeuangan> {
+  Map<String, dynamic>? _ringkasan;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRingkasan();
+  }
+
+  Future<void> _loadRingkasan() async {
+    setState(() => _loading = true);
+    try {
+      final data = await FinanceService.ringkasan();
+      setState(() => _ringkasan = data);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat ringkasan: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Widget _buildRingkasanCard() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    if (_loading) {
+      return Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: const Padding(
+          padding: EdgeInsets.all(24),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    final totalPemasukan = _ringkasan?['pemasukan'] ?? 0;
+    final totalPengeluaran = _ringkasan?['pengeluaran'] ?? 0;
+    final saldo = _ringkasan?['saldo'] ?? 0;
+
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.7)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Ringkasan Keuangan',
+                  style: textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.refresh, color: Colors.white),
+                  onPressed: _loadRingkasan,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            _buildSummaryRow(
+              'Total Pemasukan',
+              totalPemasukan,
+              Icons.arrow_downward,
+              Colors.green[300]!,
+            ),
+            const SizedBox(height: 12),
+            _buildSummaryRow(
+              'Total Pengeluaran',
+              totalPengeluaran,
+              Icons.arrow_upward,
+              Colors.red[300]!,
+            ),
+            const Divider(height: 24, color: Colors.white54, thickness: 1),
+            _buildSummaryRow(
+              'Saldo',
+              saldo,
+              Icons.account_balance_wallet,
+              Colors.white,
+              isBold: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow(String label, int amount, IconData icon, Color color, {bool isBold = false}) {
+    final textTheme = Theme.of(context).textTheme;
+    final formatted = 'Rp ${NumberFormat.decimalPattern('id').format(amount)}';
+
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white24,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: textTheme.bodySmall?.copyWith(color: Colors.white70),
+              ),
+              Text(
+                formatted,
+                style: textTheme.titleMedium?.copyWith(
+                  color: color,
+                  fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -30,11 +172,13 @@ class _MenuLaporanKeuanganState extends State<MenuLaporanKeuangan> {
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: const EdgeInsets.only(top: 24, right: 16, left: 16),
+              padding: const EdgeInsets.only(top: 24, right: 16, left: 16, bottom: 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  MenuLaporanKeuanganHeader(), // beri jarak agar konten tak tertutup nav
+                children: [
+                  _buildRingkasanCard(),
+                  const SizedBox(height: 16),
+                  const MenuLaporanKeuanganHeader(),
                 ],
               ),
             ),

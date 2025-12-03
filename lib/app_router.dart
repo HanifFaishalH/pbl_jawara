@@ -34,6 +34,8 @@ import 'package:jawaramobile_1/screens/LaporanKeuangan/semua_pengeluaran.dart';
 import 'package:jawaramobile_1/screens/LaporanKeuangan/detail_pengeluaran.dart';
 import 'package:jawaramobile_1/screens/LaporanKeuangan/semua_pemasukan.dart';
 import 'package:jawaramobile_1/screens/LaporanKeuangan/detail_pemasukan.dart';
+import 'package:jawaramobile_1/screens/LaporanKeuangan/form_pemasukan.dart';
+import 'package:jawaramobile_1/screens/LaporanKeuangan/form_pengeluaran.dart';
 import 'package:jawaramobile_1/screens/LaporanKeuangan/cetak_laporan_screen.dart';
 import 'package:jawaramobile_1/screens/LaporanKeuangan/menu_laporan_keuangan.dart';
 
@@ -101,6 +103,8 @@ import 'package:jawaramobile_1/screens/Marketplace/detail_pesanan_masuk.dart';
 import 'package:jawaramobile_1/screens/Marketplace/riwayat_pesanan_page.dart';
 import 'package:jawaramobile_1/screens/Marketplace/detail_riwayat_pesanan_page.dart';
 import 'package:jawaramobile_1/screens/Marketplace/keranjang_page.dart';
+import 'package:jawaramobile_1/screens/Camera/take_picture_screen.dart';
+import 'package:jawaramobile_1/screens/Camera/display_picture_screen.dart';
 
 import 'package:jawaramobile_1/screens/Aspirasi/aspirasi_screen.dart';
 import 'package:jawaramobile_1/screens/Aspirasi/tambah_aspirasi_screen.dart';
@@ -314,7 +318,7 @@ final appRouter = GoRouter(
       path: '/detail-pengeluaran-all',
       name: 'detail-pengeluaran-all',
       builder: (context, state) {
-        final data = state.extra as Map<String, String>;
+        final data = state.extra as Map<String, dynamic>;
         return DetailPengeluaran(pengeluaranData: data);
       },
     ),
@@ -327,8 +331,24 @@ final appRouter = GoRouter(
       path: '/detail-pemasukan-all',
       name: 'detail-pemasukan-all',
       builder: (context, state) {
-        final data = state.extra as Map<String, String>;
+        final data = state.extra as Map<String, dynamic>;
         return DetailPemasukan(pemasukanData: data);
+      },
+    ),
+    GoRoute(
+      path: '/form-pemasukan',
+      name: 'form-pemasukan',
+      builder: (context, state) {
+        final data = state.extra as Map<String, dynamic>?;
+        return FormPemasukan(data: data);
+      },
+    ),
+    GoRoute(
+      path: '/form-pengeluaran',
+      name: 'form-pengeluaran',
+      builder: (context, state) {
+        final data = state.extra as Map<String, dynamic>?;
+        return FormPengeluaran(data: data);
       },
     ),
     GoRoute(
@@ -698,5 +718,20 @@ final appRouter = GoRouter(
       },
     ),
 
+
+    // ====== CAMERA DEMO ======
+    GoRoute(
+      path: '/camera',
+      name: 'camera',
+      builder: (context, state) => const TakePictureScreen(),
+    ),
+    GoRoute(
+      path: '/camera-preview',
+      name: 'camera-preview',
+      builder: (context, state) {
+        final imagePath = state.extra as String;
+        return DisplayPictureScreen(imagePath: imagePath);
+      },
+    ),
   ],
 );
