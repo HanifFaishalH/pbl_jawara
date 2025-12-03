@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:jawaramobile_1/screens/Broadcast/broadcast_screen.dart';
+import 'package:jawaramobile_1/screens/PesanWarga/chat_pesan_warga_screen.dart';
+import 'package:jawaramobile_1/screens/PesanWarga/pesan_warga_screen.dart';
 import 'package:jawaramobile_1/services/auth_service.dart'; // 1. IMPORT AUTH SERVICE
 
 // ====== Screens Auth & Dashboard ======
@@ -41,7 +44,6 @@ import 'package:jawaramobile_1/screens/Kegiatan/detail_kegiatan_screen.dart';
 // import 'package:jawaramobile_1/screens/Kegiatan/edit_kegiatan.dart'; // Tidak dipakai karena reuse form
 
 // ====== Broadcast ======
-import 'package:jawaramobile_1/screens/Broadcast/daftar_broadcast.dart';
 import 'package:jawaramobile_1/screens/Broadcast/tambah_broadcast.dart';
 import 'package:jawaramobile_1/screens/Broadcast/detail_broadcast.dart';
 import 'package:jawaramobile_1/screens/Broadcast/edit_broadcast.dart';
@@ -50,13 +52,37 @@ import 'package:jawaramobile_1/screens/Broadcast/edit_broadcast.dart';
 import 'package:jawaramobile_1/screens/LogActivity/log_activity_screen.dart';
 import 'package:jawaramobile_1/screens/LogActivity/detail_log_activity_screen.dart';
 
+// ====== Activity Log ======
+import 'package:jawaramobile_1/screens/ActivityLog/daftar_activity_log_screen.dart';
+import 'package:jawaramobile_1/screens/ActivityLog/detail_activity_log_screen.dart';
+
 // ====== Manajemen Pengguna ======
 import 'package:jawaramobile_1/screens/ManajemenPengguna/daftar_pengguna_screen.dart';
 import 'package:jawaramobile_1/screens/ManajemenPengguna/tambah_pengguna_screen.dart';
+import 'package:jawaramobile_1/screens/ManajemenPengguna/detail_pengguna.dart';
+import 'package:jawaramobile_1/models/pengguna_model.dart';
 
 // ====== Channel Transfer ======
 import 'package:jawaramobile_1/screens/ChannelTransfer/daftar_channel_screen.dart';
 import 'package:jawaramobile_1/screens/ChannelTransfer/tambah_channel_screen.dart';
+import 'package:jawaramobile_1/screens/ChannelTransfer/detail_channel_screen.dart';
+
+// ====== Data Warga ======
+import 'package:jawaramobile_1/screens/DataWargaRumah/form_warga_screen.dart';
+import 'package:jawaramobile_1/screens/DataWargaRumah/detail_warga_screen.dart';
+import 'package:jawaramobile_1/screens/DataWargaRumah/form_keluarga_screen.dart';
+import 'package:jawaramobile_1/screens/DataWargaRumah/detail_keluarga_screen.dart';
+import 'package:jawaramobile_1/screens/DataWargaRumah/form_rumah_screen.dart';
+import 'package:jawaramobile_1/screens/DataWargaRumah/detail_rumah_screen.dart';
+
+// ====== Mutasi Warga & Keluarga ======
+import 'package:jawaramobile_1/screens/Mutasi/mutasi_screen.dart';
+import 'package:jawaramobile_1/screens/Mutasi/daftar_mutasi_warga_screen.dart';
+import 'package:jawaramobile_1/screens/Mutasi/daftar_mutasi_keluarga_screen.dart';
+import 'package:jawaramobile_1/screens/Mutasi/form_mutasi_warga_screen.dart';
+import 'package:jawaramobile_1/screens/Mutasi/form_mutasi_keluarga_screen.dart';
+import 'package:jawaramobile_1/screens/Mutasi/detail_mutasi_warga_screen.dart';
+import 'package:jawaramobile_1/screens/Mutasi/detail_mutasi_keluarga_screen.dart';
 
 // ====== Lainnya ======
 import 'package:jawaramobile_1/screens/penerimaan_warga_screen.dart';
@@ -144,6 +170,72 @@ final appRouter = GoRouter(
       path: '/data-warga-rumah',
       name: 'data-warga-rumah',
       builder: (context, state) => const DataWargaPage(),
+    ),
+    // Warga
+    GoRoute(
+      path: '/tambah-warga',
+      name: 'tambah-warga',
+      builder: (context, state) => const FormWargaScreen(),
+    ),
+    GoRoute(
+      path: '/edit-warga/:id',
+      name: 'edit-warga',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return FormWargaScreen(wargaId: id);
+      },
+    ),
+    GoRoute(
+      path: '/detail-warga/:id',
+      name: 'detail-warga',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return DetailWargaScreen(wargaId: id);
+      },
+    ),
+    // Keluarga
+    GoRoute(
+      path: '/tambah-keluarga',
+      name: 'tambah-keluarga',
+      builder: (context, state) => const FormKeluargaScreen(),
+    ),
+    GoRoute(
+      path: '/edit-keluarga/:id',
+      name: 'edit-keluarga',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return FormKeluargaScreen(keluargaId: id);
+      },
+    ),
+    GoRoute(
+      path: '/detail-keluarga/:id',
+      name: 'detail-keluarga',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return DetailKeluargaScreen(keluargaId: id);
+      },
+    ),
+    // Rumah
+    GoRoute(
+      path: '/tambah-rumah',
+      name: 'tambah-rumah',
+      builder: (context, state) => const FormRumahScreen(),
+    ),
+    GoRoute(
+      path: '/edit-rumah/:id',
+      name: 'edit-rumah',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return FormRumahScreen(rumahId: id);
+      },
+    ),
+    GoRoute(
+      path: '/detail-rumah/:id',
+      name: 'detail-rumah',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return DetailRumahScreen(rumahId: id);
+      },
     ),
 
     // ====== Pemasukan ======
@@ -306,27 +398,33 @@ final appRouter = GoRouter(
       name: 'broadcast',
       builder: (context, state) => const BroadcastScreen(),
     ),
+
     GoRoute(
       path: '/tambah-broadcast',
       name: 'tambah-broadcast',
       builder: (context, state) => const TambahBroadcastScreen(),
     ),
+
     GoRoute(
       path: '/detail-broadcast',
       name: 'detail-broadcast',
       builder: (context, state) {
-        final data = state.extra as Map<String, String>;
+        // gunakan dynamic agar tidak crash jika data bukan Map<String, String>
+        final data = state.extra as Map<String, dynamic>;
         return DetailBroadcastScreen(broadcastData: data);
       },
     ),
+
     GoRoute(
       path: '/edit-broadcast',
       name: 'edit-broadcast',
       builder: (context, state) {
-        final data = state.extra as Map<String, String>;
+        // gunakan dynamic juga
+        final data = state.extra as Map<String, dynamic>;
         return EditBroadcastScreen(broadcastData: data);
       },
     ),
+
 
     // ====== LogActivity ======
     GoRoute(
@@ -340,6 +438,21 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final data = state.extra as Map<String, String>;
         return DetailLogActivityScreen(logData: data);
+      },
+    ),
+
+    // ====== Activity Log (New) ======
+    GoRoute(
+      path: '/activity-log',
+      name: 'activity-log',
+      builder: (context, state) => const DaftarActivityLogScreen(),
+    ),
+    GoRoute(
+      path: '/detail-activity-log/:id',
+      name: 'detail-activity-log',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return DetailActivityLogScreen(logId: id);
       },
     ),
 
@@ -358,6 +471,15 @@ final appRouter = GoRouter(
       path: '/pengguna',
       redirect: (context, state) => '/pengguna',
     ),
+    GoRoute(
+      path: '/detail-pengguna',
+      name: 'detail-pengguna',
+      builder: (context, state) {
+        // Ambil objek pengguna yang dikirim via extra
+        final user = state.extra as PenggunaModel; 
+        return DetailPenggunaScreen(user: user);
+      },
+    ),
 
     // ====== Channel Transfer ======
     GoRoute(
@@ -371,6 +493,22 @@ final appRouter = GoRouter(
       builder: (context, state) => const TambahChannelScreen(),
     ),
     GoRoute(
+      path: '/edit-channel/:id',
+      name: 'edit-channel',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return TambahChannelScreen(channelId: id);
+      },
+    ),
+    GoRoute(
+      path: '/detail-channel/:id',
+      name: 'detail-channel',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return DetailChannelScreen(channelId: id);
+      },
+    ),
+    GoRoute(
       path: '/channel-transfer',
       name: 'channel-transfer',
       builder: (context, state) => const DaftarChannelScreen(),
@@ -382,17 +520,76 @@ final appRouter = GoRouter(
       name: 'penerimaan-warga',
       builder: (context, state) => const PenerimaanWargaScreen(),
     ),
+    // ====== Mutasi (Gabungan Warga & Keluarga) ======
     GoRoute(
       path: '/mutasi',
       name: 'mutasi',
-      builder: (context, state) => MutasiPage(),
+      builder: (context, state) => const MutasiScreen(),
     ),
+    
+    // Mutasi Lama (deprecated - untuk backward compatibility)
     GoRoute(
       path: '/mutasi-detail',
       name: 'mutasi-detail',
       builder: (context, state) {
         final data = state.extra as Map<String, dynamic>;
         return MutasiDetailPage(data: data);
+      },
+    ),
+
+    // ====== Mutasi Warga (Baru) ======
+    GoRoute(
+      path: '/daftar-mutasi-warga',
+      name: 'daftar-mutasi-warga',
+      builder: (context, state) => const DaftarMutasiWargaScreen(),
+    ),
+    GoRoute(
+      path: '/tambah-mutasi-warga',
+      name: 'tambah-mutasi-warga',
+      builder: (context, state) => const FormMutasiWargaScreen(),
+    ),
+    GoRoute(
+      path: '/edit-mutasi-warga/:id',
+      name: 'edit-mutasi-warga',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return FormMutasiWargaScreen(mutasiId: id);
+      },
+    ),
+    GoRoute(
+      path: '/detail-mutasi-warga/:id',
+      name: 'detail-mutasi-warga',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return DetailMutasiWargaScreen(mutasiId: id);
+      },
+    ),
+
+    // ====== Mutasi Keluarga (Baru) ======
+    GoRoute(
+      path: '/daftar-mutasi-keluarga',
+      name: 'daftar-mutasi-keluarga',
+      builder: (context, state) => const DaftarMutasiKeluargaScreen(),
+    ),
+    GoRoute(
+      path: '/tambah-mutasi-keluarga',
+      name: 'tambah-mutasi-keluarga',
+      builder: (context, state) => const FormMutasiKeluargaScreen(),
+    ),
+    GoRoute(
+      path: '/edit-mutasi-keluarga/:id',
+      name: 'edit-mutasi-keluarga',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return FormMutasiKeluargaScreen(mutasiId: id);
+      },
+    ),
+    GoRoute(
+      path: '/detail-mutasi-keluarga/:id',
+      name: 'detail-mutasi-keluarga',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return DetailMutasiKeluargaScreen(mutasiId: id);
       },
     ),
     GoRoute(
@@ -484,6 +681,25 @@ final appRouter = GoRouter(
         return DetailRiwayatPesananPage(pesanan: pesanan);
       },
     ),
+    // ====== Pesan Warga ======
+    GoRoute(
+      path: '/pesan-warga',
+      name: 'pesan-warga',
+      builder: (context, state) => const PesanWargaScreen(),
+    ),
+
+    GoRoute(
+      path: '/chat-pesan-warga',
+      name: 'chat-pesan-warga',
+      builder: (context, state) {
+        final args = state.extra as Map<String, dynamic>;
+        return ChatPesanWargaScreen(
+          penerimaId: args['penerimaId'],
+          penerimaNama: args['penerimaNama'],
+        );
+      },
+    ),
+
 
     // ====== CAMERA DEMO ======
     GoRoute(

@@ -84,12 +84,7 @@ class _BottomNavbarState extends State<BottomNavbar>
           break;
 
         case 1:
-          // Jika route tidak ditemukan, tampilkan pesan
-          try {
-            context.go('/laporan');
-          } catch (_) {
-            _showUnderDevelopment();
-          }
+          _showUnderDevelopment();
           break;
 
         case 2:

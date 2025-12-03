@@ -51,7 +51,44 @@ class _LoginPageState extends State<LoginPage>
     super.dispose();
   }
 
-  // --- LOGIKA LOGIN OTOMATIS ---
+  // 🔹 FUNGSI BARU: Menampilkan Popup Pending
+  void _showPendingDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Column(
+            children: [
+              const Icon(Icons.info_outline, color: Colors.orange, size: 50),
+              const SizedBox(height: 10),
+              const Text("Status Pending", style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: Text(
+            message, // Pesan dari backend (Laravel)
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 14),
+          ),
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: jawaraColor,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () => Navigator.of(context).pop(), // Tutup dialog
+                child: const Text("OK, SAYA MENGERTI"),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // --- LOGIKA LOGIN ---
   void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       // 1. Tampilkan Loading Indicator
@@ -68,101 +105,107 @@ class _LoginPageState extends State<LoginPage>
           _passwordController.text,
         );
 
-        // 2. Tutup Loading Indicator
-        if (mounted) Navigator.pop(context);
+        if (mounted) Navigator.pop(context); // tutup loading
 
-        // 3. Simpan Token & User
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        String token = result['token'] ?? ''; 
-        await prefs.setString('token', token);
-        
-        String namaUser = 'User';
-        if (result['user'] != null) {
-           namaUser = result['user']['user_nama_depan'] ?? 'User';
-        }
-        await prefs.setString('user_nama', namaUser);
+        if (result['success'] == true) {
+          // --- KODE SUKSES (TIDAK BERUBAH) ---
+          final data = result['data'];
+          final user = data['user'];
+          final prefs = await SharedPreferences.getInstance();
 
-        if (!mounted) return;
+          final token = data['token'] ?? '';
+          await prefs.setString('auth_token', token);
+          await prefs.setInt('auth_user_id', user['user_id']);
+          await prefs.setInt('auth_role_id', user['role_id']);
+          await prefs.setString('user_nama_depan', user['user_nama_depan'] ?? 'User');
+          await prefs.setString('user_nama_belakang', user['user_nama_belakang'] ?? '');
 
-        // 4. TAMPILKAN POP UP SUKSES (Tanpa Tombol)
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              elevation: 0,
-              backgroundColor: Colors.transparent,
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [const BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        shape: BoxShape.circle,
+          AuthService.token = token;
+          AuthService.userId = user['user_id'];
+          AuthService.currentRoleId = user['role_id'];
+
+          final namaUser = user['user_nama_depan'] ?? 'User';
+
+          // Popup Sukses Login
+          if (!mounted) return;
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return Dialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                elevation: 0,
+                backgroundColor: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10, offset: const Offset(0, 4))],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(color: Colors.green.shade50, shape: BoxShape.circle),
+                        child: Icon(Icons.check_circle, color: Colors.green.shade600, size: 60),
                       ),
-                      child: Icon(Icons.check_circle, color: Colors.green.shade600, size: 60),
-                    ),
-                    const SizedBox(height: 20),
-                    
-                    const Text(
-                      "Login Berhasil!",
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
-                    ),
-                    const SizedBox(height: 10),
-                    
-                    Text(
-                      "Selamat datang kembali, $namaUser",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                    ),
-                    const SizedBox(height: 24),
-                    
-                    // Indikator sedang mengalihkan
-                    const SizedBox(
-                      height: 20, width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text("Mengalihkan ke Dashboard...", style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  ],
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Login Berhasil!",
+                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        "Selamat datang kembali, $namaUser",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      ),
+                      const SizedBox(height: 24),
+                      const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                      const SizedBox(height: 8),
+                      const Text("Mengalihkan ke Dashboard...", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    ],
+                  ),
                 ),
+              );
+            },
+          );
+
+          await Future.delayed(const Duration(seconds: 2));
+          if (!mounted) return;
+          Navigator.pop(context); 
+          context.go('/dashboard');
+
+        } else {
+          // ❌ GAGAL LOGIN
+          String message = result['message'] ?? 'Login gagal';
+          
+          // 🔥 DETEKSI STATUS PENDING 🔥
+          // Kita cek apakah pesannya mengandung kata "Pending" atau "Status"
+          // (Pastikan pesan ini sesuai dengan return dari Laravel AuthController)
+          if (message.toLowerCase().contains('pending') || 
+              message.toLowerCase().contains('status')) {
+            
+            _showPendingDialog(message); // TAMPILKAN POPUP
+
+          } else {
+            // Jika error lain (Password salah, dll), tampilkan SnackBar biasa
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(message),
+                backgroundColor: Colors.red.shade600,
               ),
             );
-          },
-        );
-
-        // 5. DELAY 2 DETIK LALU PINDAH
-        await Future.delayed(const Duration(seconds: 2));
-
-        if (!mounted) return;
-        Navigator.pop(context); // Tutup Dialog Sukses
-        context.go('/dashboard'); // Pindah Halaman
-
+          }
+        }
       } catch (e) {
-        // Tutup Loading jika error
         if (mounted && Navigator.canPop(context)) Navigator.pop(context);
-        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.white),
-                const SizedBox(width: 10),
-                Expanded(child: Text("Gagal Login: ${e.toString()}")),
-              ],
-            ),
+            content: Text("Gagal Login: ${e.toString()}"),
             backgroundColor: Colors.red.shade600,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
         );
       }
@@ -183,6 +226,7 @@ class _LoginPageState extends State<LoginPage>
 
   @override
   Widget build(BuildContext context) {
+    // ... UI Build tidak berubah ...
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: colorScheme.onPrimary,

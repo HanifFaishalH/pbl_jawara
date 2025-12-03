@@ -1,14 +1,52 @@
 import 'package:flutter/material.dart';
 
 class ManajemenPenggunaFilter extends StatefulWidget {
-  const ManajemenPenggunaFilter({super.key});
+  // Terima data awal agar filter tidak kosong saat dibuka kembali
+  final String? initialNama;
+  final String? initialStatus;
+
+  const ManajemenPenggunaFilter({
+    super.key,
+    this.initialNama,
+    this.initialStatus,
+  });
+
   @override
   State<ManajemenPenggunaFilter> createState() => _ManajemenPenggunaFilterState();
 }
 
 class _ManajemenPenggunaFilterState extends State<ManajemenPenggunaFilter> {
-  final _namaCtrl = TextEditingController();
-  String? _status; // Diterima / Pending / Ditolak
+  late TextEditingController _namaCtrl;
+  String? _status;
+
+  @override
+  void initState() {
+    super.initState();
+    // Isi controller dengan data dari parent (jika ada)
+    _namaCtrl = TextEditingController(text: widget.initialNama ?? '');
+    _status = widget.initialStatus;
+  }
+
+  @override
+  void dispose() {
+    _namaCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onApply() {
+    // Kirim data kembali ke screen utama dalam bentuk Map
+    Navigator.pop(context, {
+      'nama': _namaCtrl.text.trim(),
+      'status': _status,
+    });
+  }
+
+  void _onReset() {
+    setState(() {
+      _namaCtrl.clear();
+      _status = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,17 +70,28 @@ class _ManajemenPenggunaFilterState extends State<ManajemenPenggunaFilter> {
         DropdownButtonFormField<String>(
           value: _status,
           hint: const Text('-- Pilih Status --'),
-          items: const ['Diterima','Pending','Ditolak']
+          items: const ['Diterima', 'Pending', 'Ditolak']
               .map((s) => DropdownMenuItem(value: s, child: Text(s)))
               .toList(),
           onChanged: (v) => setState(() => _status = v),
           decoration: const InputDecoration(border: OutlineInputBorder()),
         ),
-        const SizedBox(height: 12),
-        Text(
-          "Catatan: tombol Terapkan di dialog akan memanggil logika filter di screen.",
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-        ),
+        const SizedBox(height: 24),
+        // Tombol kita pindah ke sini agar bisa akses _namaCtrl dan _status
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              onPressed: _onReset,
+              child: const Text("Reset Form"),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: _onApply,
+              child: const Text("Terapkan"),
+            ),
+          ],
+        )
       ],
     );
   }

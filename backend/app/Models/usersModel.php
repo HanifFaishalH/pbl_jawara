@@ -3,16 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 
 class usersModel extends Authenticatable
 {
-    use HasApiTokens, HasFactory;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $table = 'm_user';
     protected $primaryKey = 'user_id';
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $fillable = [
         'role_id',
@@ -23,6 +24,7 @@ class usersModel extends Authenticatable
         'user_tanggal_lahir',
         'user_alamat',
         'foto',
+        'status',
     ];
 
     protected $hidden = [

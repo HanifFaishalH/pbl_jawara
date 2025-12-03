@@ -3,11 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:jawaramobile_1/services/broadcast_service.dart'; // pastikan path ini benar
 
 class TambahBroadcastForm extends StatefulWidget {
-  // Tambahkan parameter opsional untuk menerima data awal (untuk mode edit)
-  final Map<String, String>? initialData;
-
+  final Map<String, dynamic>? initialData; // null kalau tambah, ada data kalau edit
   const TambahBroadcastForm({super.key, this.initialData});
 
   @override
@@ -17,61 +16,50 @@ class TambahBroadcastForm extends StatefulWidget {
 class _TambahBroadcastFormState extends State<TambahBroadcastForm> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers untuk setiap field
-  late TextEditingController _judulBroadcast;
-  late TextEditingController _isiBroadcast;
+  late TextEditingController _judulController;
+  late TextEditingController _pengirimController;
   late TextEditingController _tanggalController;
-  late TextEditingController _pengirim;
-  File? _photo;
-  PlatformFile? _document; // file_picker uses PlatformFile
+  late TextEditingController _isiController;
 
-  final ImagePicker _imagePicker = ImagePicker();
+  File? _photo;
+  PlatformFile? _document;
+  final ImagePicker _picker = ImagePicker();
+
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    // Inisialisasi controller dengan data awal jika ada (mode edit)
-    final data = widget.initialData;
-    _judulBroadcast = TextEditingController(text: data?['judul']);
-    _isiBroadcast = TextEditingController(text: data?['isi']);
-    _tanggalController = TextEditingController(text: data?['tanggal']);
-    _pengirim = TextEditingController(text: data?['pengirim']);
+    final data = widget.initialData ?? {};
+
+    _judulController = TextEditingController(text: data['judul']?.toString() ?? '');
+    _pengirimController = TextEditingController(text: data['pengirim']?.toString() ?? '');
+    _tanggalController = TextEditingController(
+      text: data['tanggal'] != null ? data['tanggal'].toString() : '',
+    );
+    _isiController = TextEditingController(text: data['isi_pesan']?.toString() ?? '');
   }
 
   @override
   void dispose() {
-    _judulBroadcast.dispose();
+    _judulController.dispose();
+    _pengirimController.dispose();
     _tanggalController.dispose();
-    _pengirim.dispose();
-    _isiBroadcast.dispose();
+    _isiController.dispose();
     super.dispose();
   }
 
   Future<void> _pickImage() async {
-    final XFile? pickedImage = await _imagePicker.pickImage(
-      source: ImageSource.gallery,
-    );
-    if (pickedImage != null) {
-      setState(() {
-        _photo = File(pickedImage.path);
-      });
-    }
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) setState(() => _photo = File(image.path));
   }
 
   Future<void> _pickDocument() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: [
-        'pdf',
-        'doc',
-        'docx',
-      ], // Allow specific document types
+      allowedExtensions: ['pdf', 'doc', 'docx'],
     );
-    if (result != null) {
-      setState(() {
-        _document = result.files.first;
-      });
-    }
+    if (result != null) setState(() => _document = result.files.first);
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -82,107 +70,154 @@ class _TambahBroadcastFormState extends State<TambahBroadcastForm> {
       lastDate: DateTime(2030),
     );
     if (picked != null) {
-      String formattedDate = DateFormat('dd MMM yyyy').format(picked);
-      setState(() {
-        _tanggalController.text = formattedDate;
-      });
+      _tanggalController.text = DateFormat('dd MMM yyyy').format(picked);
+      setState(() {});
     }
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Menyimpan data broadcast...')),
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final isEdit = widget.initialData != null;
+    setState(() => _isLoading = true);
+
+    final data = {
+      'judul': _judulController.text.trim(),
+      'pengirim': _pengirimController.text.trim(),
+      'tanggal': _tanggalController.text.trim(),
+      'isi_pesan': _isiController.text.trim(),
+    };
+
+    try {
+      // 🔹 Panggil service dan dapatkan pesan hasilnya
+      final message = await BroadcastService().createBroadcast(
+        data: data,
+        photo: _photo,
+        document: _document,
       );
+
+      if (!mounted) return;
+
+      // 🔸 Kalau pesan dari backend adalah "Hanya admin ..."
+      if (message.contains('Hanya admin')) {
+        _showAlertDialog(
+          context,
+          title: 'Akses Ditolak',
+          message: 'Hanya admin yang dapat mengirim broadcast.',
+        );
+      } else if (message.contains('berhasil')) {
+        // 🔹 Kalau sukses
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        Navigator.pop(context, true);
+      } else {
+        // 🔸 Pesan error lain dari server
+        _showAlertDialog(
+          context,
+          title: 'Gagal Menyimpan',
+          message: message,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _showAlertDialog(
+        context,
+        title: 'Kesalahan',
+        message: 'Terjadi kesalahan tak terduga. Periksa koneksi Anda.',
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
+
+  void _showAlertDialog(BuildContext context, {required String title, required String message}) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK', style: TextStyle(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final fillColor = theme.colorScheme.primary.withOpacity(0.05);
+    final color = Theme.of(context).colorScheme;
+    final fillColor = color.primary.withOpacity(0.05);
 
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextFormField(
-            controller: _judulBroadcast,
-            decoration: InputDecoration(
-              labelText: 'Judul Broadcast',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+    return AbsorbPointer(
+      absorbing: _isLoading,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildTextField(_judulController, 'Judul Broadcast', fillColor),
+            const SizedBox(height: 16),
+            _buildTextField(_pengirimController, 'Pengirim', fillColor),
+            const SizedBox(height: 16),
+            _buildDateField(context, fillColor),
+            const SizedBox(height: 16),
+            _buildTextField(_isiController, 'Isi Broadcast', fillColor, maxLines: 4),
+            const SizedBox(height: 24),
+            _buildImagePicker(context),
+            const SizedBox(height: 16),
+            _buildDocumentPicker(context),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: _isLoading ? null : _submitForm,
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+                backgroundColor: color.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              filled: true,
-              fillColor: fillColor,
+              child: Text(_isLoading ? 'Menyimpan...' : 'Simpan'),
             ),
-            validator: (value) => value == null || value.trim().isEmpty
-                ? 'Nama broadcast tidak boleh kosong'
-                : null,
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            controller: _isiBroadcast,
-            decoration: InputDecoration(
-              labelText: 'Pengirim',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: fillColor,
-            ),
-            validator: (value) => value == null || value.trim().isEmpty
-                ? 'Pengirim tidak boleh kosong'
-                : null,
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            controller: _tanggalController,
-            decoration: InputDecoration(
-              labelText: 'Tanggal Pelaksanaan',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              suffixIcon: const Icon(Icons.calendar_today_outlined),
-              filled: true,
-              fillColor: fillColor,
-            ),
-            readOnly: true,
-            onTap: () => _selectDate(context),
-            validator: (value) =>
-                value == null || value.isEmpty ? 'Tanggal harus diisi' : null,
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            controller: _isiBroadcast,
-            decoration: InputDecoration(
-              labelText: 'Isi Broadcast',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: fillColor,
-            ),
-            maxLines: 4,
-            validator: (value) => value == null || value.trim().isEmpty
-                ? 'Isi broadcast tidak boleh kosong'
-                : null,
-          ),
-          const SizedBox(height: 20),
-          Text('Upload Foto (Opsional)', style: theme.textTheme.titleMedium),
-          const SizedBox(height: 8),
-          _buildImagePicker(context),
-          const SizedBox(height: 20),
-
-          Text('Upload Dokumen (Opsional)', style: theme.textTheme.titleMedium),
-          const SizedBox(height: 8),
-          _buildDocumentPicker(context),
-          const SizedBox(height: 40),
-
-          ElevatedButton(onPressed: _submitForm, child: const Text('Simpan')),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label, Color fillColor, {int maxLines = 1}) {
+    return TextFormField(
+      controller: controller,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: fillColor,
+      ),
+      validator: (value) => value == null || value.trim().isEmpty ? '$label tidak boleh kosong' : null,
+    );
+  }
+
+  Widget _buildDateField(BuildContext context, Color fillColor) {
+    return TextFormField(
+      controller: _tanggalController,
+      decoration: InputDecoration(
+        labelText: 'Tanggal Broadcast',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        suffixIcon: const Icon(Icons.calendar_today_outlined),
+        filled: true,
+        fillColor: fillColor,
+      ),
+      readOnly: true,
+      onTap: () => _selectDate(context),
+      validator: (value) => value == null || value.isEmpty ? 'Tanggal harus diisi' : null,
     );
   }
 
@@ -192,13 +227,15 @@ class _TambahBroadcastFormState extends State<TambahBroadcastForm> {
       child: Container(
         height: 150,
         decoration: BoxDecoration(
-          /* ... styling ... */ color: Colors.grey.shade100,
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300),
         ),
         child: _photo == null
-            ? Center(
+            ? const Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Icon(Icons.add_a_photo_outlined),
                     Text('Tap untuk tambah foto'),
                   ],
@@ -206,11 +243,7 @@ class _TambahBroadcastFormState extends State<TambahBroadcastForm> {
               )
             : ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.file(
-                  _photo!,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                ),
+                child: Image.file(_photo!, fit: BoxFit.cover, width: double.infinity),
               ),
       ),
     );
@@ -219,14 +252,8 @@ class _TambahBroadcastFormState extends State<TambahBroadcastForm> {
   Widget _buildDocumentPicker(BuildContext context) {
     return OutlinedButton.icon(
       icon: const Icon(Icons.attach_file),
-      label: Text(
-        _document == null ? 'Pilih Dokumen (PDF/DOC)' : _document!.name,
-      ),
+      label: Text(_document == null ? 'Pilih Dokumen (PDF/DOC)' : _document!.name),
       onPressed: _pickDocument,
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        textStyle: Theme.of(context).textTheme.bodyLarge,
-      ),
     );
   }
 }

@@ -1,37 +1,44 @@
 import 'dart:convert';
+import 'dart:io'; // Untuk Platform.isAndroid
+import 'package:flutter/foundation.dart'; // Untuk kIsWeb
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jawaramobile_1/services/auth_service.dart';
 
 class BarangService {
   
-  // --- KONFIGURASI SERVER (LOCALHOST) ---
+  // --- KONFIGURASI SERVER OTOMATIS (Auto-Detect) ---
   
   // 1. Base URL API
-    // <-- Pakai Emu Web -->
-  // Pastikan Anda sudah menjalankan 'adb reverse tcp:8000 tcp:8000' di terminal
-  // static String get baseUrl {
-  //   return "http://localhost:8000/api";
-  // }
   static String get baseUrl {
-    return "http://10.0.2.2:8000/api";
+    if (kIsWeb) {
+      return "http://localhost:8000/api"; // Web Browser
+    } else if (Platform.isAndroid) {
+      return "http://10.0.2.2:8000/api"; // Android Emulator
+    } else {
+      return "http://localhost:8000/api"; // iOS Simulator / Lainnya
+    }
   }
 
   // 2. Base URL Gambar
-  // <-- Pakai Emu Web -->
-  // static String get baseImageUrl {
-  //   return "http://localhost:8000/api/image-proxy/";
-  // }
   static String get baseImageUrl {
-    return "http://10.0.2.2:8000/api/image-proxy/";
+    if (kIsWeb) {
+      return "http://localhost:8000/api/image-proxy/";
+    } else if (Platform.isAndroid) {
+      return "http://10.0.2.2:8000/api/image-proxy/";
+    } else {
+      return "http://localhost:8000/api/image-proxy/";
+    }
   }
 
   // --- HELPER TOKEN ---
   Future<String?> _getToken() async {
+    // Cek token di memori static dulu
     if (AuthService.token != null && AuthService.token!.isNotEmpty) {
       return AuthService.token;
     }
     
+    // Jika tidak ada, ambil dari storage HP
     final prefs = await SharedPreferences.getInstance();
     String? storedToken = prefs.getString('auth_token');
     
@@ -55,13 +62,18 @@ class BarangService {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    final response = await http.get(url, headers: headers);
-    
-    if (response.statusCode == 200) {
-      final body = jsonDecode(response.body);
-      return body['data'];      
-    } else {
-      throw Exception('Gagal load barang: ${response.statusCode}');
+    try {
+      final response = await http.get(url, headers: headers);
+      
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['data'];      
+      } else {
+        throw Exception('Gagal load barang: ${response.statusCode}');
+      }
+    } catch (e) {
+      print("Error Fetch Barang: $e");
+      throw Exception('Gagal terhubung ke server');
     }
   }
 
@@ -75,20 +87,25 @@ class BarangService {
       throw Exception('Sesi habis. Silakan logout dan login lagi.');
     }
 
-    final response = await http.get(
-      url,
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token'
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token'
+        }
+      );
+      
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['data'];      
+      } else {
+        print("Gagal Fetch User Barang: ${response.body}");
+        throw Exception('Gagal load barang saya');
       }
-    );
-    
-    if (response.statusCode == 200) {
-      final body = jsonDecode(response.body);
-      return body['data'];      
-    } else {
-      print("Gagal Fetch User Barang: ${response.body}");
-      throw Exception('Gagal load barang saya');
+    } catch (e) {
+       print("Error User Barang: $e");
+       throw Exception('Error koneksi');
     }
   }
 }
