@@ -117,6 +117,51 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/aspirasi', [AspirasiController::class, 'store']);
     Route::get('/aspirasi/{id}', [AspirasiController::class, 'show']);
     Route::post('/aspirasi/{id}/konfirmasi', [AspirasiController::class, 'updateStatus']);
+
+    // Activity Log
+    Route::get('/activity-logs/stats', [ActivityLogController::class, 'stats']);
+    Route::get('/activity-logs', [ActivityLogController::class, 'index']);
+    Route::get('/activity-logs/{id}', [ActivityLogController::class, 'show']);
+
+    // Broadcast
+    Route::get('/pesan-broadcast', [PesanBroadcastController::class, 'index']);
+    Route::post('/pesan-broadcast', [PesanBroadcastController::class, 'store']);
+    Route::put('/pesan-broadcast/{id}', [PesanBroadcastController::class, 'update']);
+    Route::delete('/pesan-broadcast/{id}', [PesanBroadcastController::class, 'destroy']);
+
+    // === Pesan Warga ===
+    Route::get('/pesan-warga', [PesanWargaController::class, 'index']);
+    Route::post('/pesan-warga', [PesanWargaController::class, 'store']);
+    Route::get('/pesan-warga/{id}', [PesanWargaController::class, 'show']);
+    Route::delete('/pesan-warga/{id}', [PesanWargaController::class, 'destroy']);
+
+    Route::get('/roles', [RoleController::class, 'index']);
+
+    // === Manajemen Pengguna ===
+    Route::get('/pengguna', [PenggunaController::class, 'index']);
+    Route::post('/pengguna', [PenggunaController::class, 'store']); 
+    Route::put('/pengguna/{id}', [PenggunaController::class, 'update']); 
+    Route::delete('/pengguna/{id}', [PenggunaController::class, 'destroy']); 
+    Route::post('/pengguna/{id}/status', [PenggunaController::class, 'updateStatus']);
+
+    // Log Activity
+    // Route::get('/log-activity', [LogActivityController::class, 'index']);
+    // Route::get('/log-activity/{id}', [LogActivityController::class, 'show']);
+    // Route::get('/log-activity/statistics', [LogActivityController::class, 'statistics']);
+    // Route::delete('/log-activity/cleanup', [LogActivityController::class, 'cleanup']);
+
+    // Laporan Keuangan
+    Route::get('/pemasukan', [LaporanKeuanganController::class, 'pemasukanIndex']);
+    Route::post('/pemasukan', [LaporanKeuanganController::class, 'pemasukanStore']);
+    Route::put('/pemasukan/{id}', [LaporanKeuanganController::class, 'pemasukanUpdate']);
+    Route::delete('/pemasukan/{id}', [LaporanKeuanganController::class, 'pemasukanDestroy']);
+
+    Route::get('/pengeluaran', [LaporanKeuanganController::class, 'pengeluaranIndex']);
+    Route::post('/pengeluaran', [LaporanKeuanganController::class, 'pengeluaranStore']);
+    Route::put('/pengeluaran/{id}', [LaporanKeuanganController::class, 'pengeluaranUpdate']);
+    Route::delete('/pengeluaran/{id}', [LaporanKeuanganController::class, 'pengeluaranDestroy']);
+
+    Route::get('/laporan/ringkasan', [LaporanKeuanganController::class, 'ringkasan']);
 });
 
 // =========================================================================
