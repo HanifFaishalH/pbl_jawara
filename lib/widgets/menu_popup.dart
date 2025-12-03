@@ -164,7 +164,6 @@ class _MenuPopUpContent extends StatelessWidget {
         'penerimaan_warga',
         'mutasi',
         'pemasukan',
-        'pengeluaran',
         'manajemen_pengguna',
       ];
       for (final key in adminKeys) {

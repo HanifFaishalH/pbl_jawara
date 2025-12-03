@@ -23,6 +23,7 @@ class _RegisterScreensState extends State<RegisterScreens> {
   final _passwordCtrl = TextEditingController();
   final _confirmPasswordCtrl = TextEditingController();
 
+  String? _jenisKelamin; // L atau P
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
@@ -101,6 +102,7 @@ class _RegisterScreensState extends State<RegisterScreens> {
       'user_nama_depan': _namaDepanCtrl.text,
       'user_nama_belakang': _namaBelakangCtrl.text,
       'user_tanggal_lahir': _tglLahirCtrl.text,
+      'user_jenis_kelamin': _jenisKelamin, // L atau P
       'user_alamat': _alamatCtrl.text,
       'email': _emailCtrl.text,
       'password': _passwordCtrl.text,
@@ -336,6 +338,55 @@ class _RegisterScreensState extends State<RegisterScreens> {
                           readOnly: true,
                           onTap: _selectDate,
                           validator: (v) => (v == null || v.isEmpty) ? "Wajib diisi" : null,
+                        ),
+                        // Dropdown Jenis Kelamin
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Jenis Kelamin",
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            DropdownButtonFormField<String>(
+                              value: _jenisKelamin,
+                              decoration: InputDecoration(
+                                hintText: "Pilih Jenis Kelamin",
+                                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+                                prefixIcon: Icon(Icons.person_outline, color: _primaryColor.withOpacity(0.7), size: 20),
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: Colors.grey.shade300),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: _primaryColor, width: 1.5),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Colors.red),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                                ),
+                              ),
+                              items: const [
+                                DropdownMenuItem(value: 'L', child: Text('Laki-laki')),
+                                DropdownMenuItem(value: 'P', child: Text('Perempuan')),
+                              ],
+                              onChanged: (value) => setState(() => _jenisKelamin = value),
+                              validator: (v) => (v == null || v.isEmpty) ? "Wajib diisi" : null,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
                         ),
                         _buildTextField(
                           controller: _alamatCtrl,

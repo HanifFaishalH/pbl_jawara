@@ -38,14 +38,15 @@ class PenggunaController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'user_nama_depan'    => 'required|string|max:100',
-            'user_nama_belakang' => 'nullable|string|max:100',
-            'email'              => 'required|email|unique:m_user,email',
-            'password'           => 'required|string|min:6',
-            'role_id'            => 'required|integer', 
-            'status'             => 'in:Pending,Diterima,Ditolak',
-            'user_tanggal_lahir' => 'required|date', 
-            'user_alamat'        => 'required|string', 
+            'user_nama_depan'      => 'required|string|max:100',
+            'user_nama_belakang'   => 'nullable|string|max:100',
+            'email'                => 'required|email|unique:m_user,email',
+            'password'             => 'required|string|min:6',
+            'role_id'              => 'required|integer', 
+            'status'               => 'in:Pending,Diterima,Ditolak',
+            'user_tanggal_lahir'   => 'required|date', 
+            'user_jenis_kelamin'   => 'required|in:L,P',
+            'user_alamat'          => 'required|string', 
         ]);
 
         if ($validator->fails()) {
@@ -54,15 +55,16 @@ class PenggunaController extends Controller
 
         try {
             $user = usersModel::create([
-                'user_nama_depan'    => $request->user_nama_depan,
-                'user_nama_belakang' => $request->user_nama_belakang,
-                'email'              => $request->email,
-                'password'           => Hash::make($request->password),
-                'role_id'            => $request->role_id,
-                'status'             => $request->status ?? 'Pending',
-                'user_tanggal_lahir' => $request->user_tanggal_lahir,
-                'user_alamat'        => $request->user_alamat,
-                'foto'               => null, 
+                'user_nama_depan'      => $request->user_nama_depan,
+                'user_nama_belakang'   => $request->user_nama_belakang,
+                'email'                => $request->email,
+                'password'             => Hash::make($request->password),
+                'role_id'              => $request->role_id,
+                'status'               => $request->status ?? 'Pending',
+                'user_tanggal_lahir'   => $request->user_tanggal_lahir,
+                'user_jenis_kelamin'   => $request->user_jenis_kelamin,
+                'user_alamat'          => $request->user_alamat,
+                'foto'                 => null, 
             ]);
 
             return response()->json([
@@ -82,15 +84,16 @@ class PenggunaController extends Controller
         if (!$user) return response()->json(['success' => false, 'message' => 'User tidak ditemukan'], 404);
 
         $validator = Validator::make($request->all(), [
-            'user_nama_depan'    => 'required|string|max:100',
-            'user_nama_belakang' => 'nullable|string|max:100',
+            'user_nama_depan'      => 'required|string|max:100',
+            'user_nama_belakang'   => 'nullable|string|max:100',
             // Ignore unique check untuk user ini sendiri
-            'email'              => 'required|email|unique:m_user,email,'.$id.',user_id',
-            'role_id'            => 'required|integer',
-            'status'             => 'in:Pending,Diterima,Ditolak',
-            'user_tanggal_lahir' => 'required|date',
-            'user_alamat'        => 'required|string',
-            'password'           => 'nullable|string|min:6', // Password opsional
+            'email'                => 'required|email|unique:m_user,email,'.$id.',user_id',
+            'role_id'              => 'required|integer',
+            'status'               => 'in:Pending,Diterima,Ditolak',
+            'user_tanggal_lahir'   => 'required|date',
+            'user_jenis_kelamin'   => 'nullable|in:L,P',
+            'user_alamat'          => 'required|string',
+            'password'             => 'nullable|string|min:6', // Password opsional
         ]);
 
         if ($validator->fails()) {
@@ -98,13 +101,14 @@ class PenggunaController extends Controller
         }
 
         try {
-            $user->user_nama_depan    = $request->user_nama_depan;
-            $user->user_nama_belakang = $request->user_nama_belakang;
-            $user->email              = $request->email;
-            $user->role_id            = $request->role_id;
-            $user->status             = $request->status;
-            $user->user_tanggal_lahir = $request->user_tanggal_lahir;
-            $user->user_alamat        = $request->user_alamat;
+            $user->user_nama_depan      = $request->user_nama_depan;
+            $user->user_nama_belakang   = $request->user_nama_belakang;
+            $user->email                = $request->email;
+            $user->role_id              = $request->role_id;
+            $user->status               = $request->status;
+            $user->user_tanggal_lahir   = $request->user_tanggal_lahir;
+            $user->user_jenis_kelamin   = $request->user_jenis_kelamin;
+            $user->user_alamat          = $request->user_alamat;
 
             if ($request->filled('password')) {
                 $user->password = Hash::make($request->password);
@@ -131,6 +135,36 @@ class PenggunaController extends Controller
             return response()->json(['success' => true, 'message' => 'Pengguna berhasil dihapus']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Gagal menghapus: Data sedang digunakan sistem.'], 500);
+        }
+    }
+
+    // 5. Update Status (untuk Penerimaan Warga)
+    public function updateStatus(Request $request, $id)
+    {
+        $user = usersModel::find($id);
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'User tidak ditemukan'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|in:Diterima,Ditolak,Pending'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 400);
+        }
+
+        try {
+            $user->status = $request->status;
+            $user->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status berhasil diperbarui',
+                'data' => ['status' => $user->status]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
 }

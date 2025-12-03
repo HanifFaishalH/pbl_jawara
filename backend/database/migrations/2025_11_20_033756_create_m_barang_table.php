@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::create('m_barang', function (Blueprint $table) {
             $table->id('barang_id');
-            $table->unsignedBigInteger('kategori_id');
+            $table->unsignedBigInteger('kategori_id')->nullable();
 
-            $table->string('barang_kode', 20)->unique();
+            $table->string('barang_kode', 50)->unique(); // Diperbesar dari 20 ke 50 karakter
             $table->string('barang_nama', 150);
             $table->text('barang_deskripsi')->nullable();
             $table->integer('barang_harga');

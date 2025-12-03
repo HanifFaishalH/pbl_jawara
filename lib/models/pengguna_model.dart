@@ -4,6 +4,9 @@ class PenggunaModel {
   final String email;
   final String status;
   final int roleId;
+  final String? nik;
+  final String? jenisKelamin;
+  final String? fotoIdentitasUrl;
   
   // Field tambahan untuk keperluan Edit Form
   final String namaDepan;
@@ -17,6 +20,9 @@ class PenggunaModel {
     required this.email,
     required this.status,
     required this.roleId,
+    this.nik,
+    this.jenisKelamin,
+    this.fotoIdentitasUrl,
     required this.namaDepan,
     required this.namaBelakang,
     required this.tglLahir,
@@ -40,6 +46,9 @@ class PenggunaModel {
       email: json['email'] ?? '-',
       status: json['status'] ?? 'Pending',
       roleId: int.tryParse(json['role_id'].toString()) ?? 0,
+      nik: json['user_nik'] ?? json['nik'],
+      jenisKelamin: json['user_jenis_kelamin'] ?? json['jenis_kelamin'],
+      fotoIdentitasUrl: json['foto_ktp'] ?? json['foto_identitas'] ?? json['foto'],
       
       // Data mentah untuk form edit
       namaDepan: json['user_nama_depan'] ?? '',

@@ -7,13 +7,16 @@ import 'package:jawaramobile_1/services/auth_service.dart';
 
 class BarangService {
   
-  // --- KONFIGURASI SERVER OTOMATIS (Auto-Detect) ---
+  // --- KONFIGURASI SERVER ---
+  // GANTI MANUAL SESUAI KEBUTUHAN:
+  // - "http://10.0.2.2:8000/api" untuk Android Emulator
+  // - "http://192.168.1.3:8000/api" untuk HP Fisik via WiFi
   
   // 1. Base URL API
-  static String get baseUrl => "http://localhost:8000/api";
+  static String get baseUrl => "http://192.168.1.3:8000/api"; // 🔥 HP FISIK
 
   // 2. Base URL Gambar
-  static String get baseImageUrl => "http://localhost:8000/api/image-proxy/";
+  static String get baseImageUrl => "http://192.168.1.3:8000/api/image-proxy/"; // 🔥 HP FISIK
 
   // --- HELPER TOKEN ---
   Future<String?> _getToken() async {
