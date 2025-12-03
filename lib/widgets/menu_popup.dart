@@ -93,7 +93,7 @@ class _MenuPopUpContent extends StatelessWidget {
       'aspirasi': {
         'icon': Icons.lightbulb,
         'title': 'Aspirasi',
-        'action': () => context.pushNamed('dashboard-aspirasi'),
+        'action': () => context.pushNamed('aspirasi-screen'),
       },
 
       // ---- Menu Khusus Pengurus ----
