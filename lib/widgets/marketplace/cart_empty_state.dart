@@ -19,7 +19,7 @@ class CartEmptyState extends StatelessWidget {
           Text("Yuk, isi keranjangmu dengan barang impian!", style: TextStyle(color: Colors.grey[500])),
           const SizedBox(height: 24),
           OutlinedButton(
-            onPressed: () => context.go('/menu-marketplace'),
+            onPressed: () => context.go('/daftar-pembelian'),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: primaryColor),
               foregroundColor: primaryColor,

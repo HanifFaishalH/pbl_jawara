@@ -18,8 +18,8 @@ class _BottomNavbarState extends State<BottomNavbar>
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300));
   }
 
   @override
@@ -31,9 +31,9 @@ class _BottomNavbarState extends State<BottomNavbar>
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).uri.toString();
     if (location.startsWith('/dashboard')) return 0;
-    if (location.startsWith('/laporan')) return 1;
+    if (location.startsWith('/broadcast')) return 1;
     if (location.startsWith('/menu-popup')) return 2;
-    if (location.startsWith('/pengguna')) return 3;
+    if (location.startsWith('/marketplace')) return 3;
     return 0;
   }
 
@@ -84,7 +84,11 @@ class _BottomNavbarState extends State<BottomNavbar>
           break;
 
         case 1:
-          _showUnderDevelopment();
+          try {
+            context.push('/broadcast'); 
+          } catch (_) {
+            _showUnderDevelopment();
+          }
           break;
 
         case 2:
@@ -96,7 +100,7 @@ class _BottomNavbarState extends State<BottomNavbar>
 
         case 3:
           try {
-            context.go('/pengguna');
+            context.go('/menu-marketplace');
           } catch (_) {
             _showUnderDevelopment();
           }
@@ -120,9 +124,9 @@ class _BottomNavbarState extends State<BottomNavbar>
 
     final items = const [
       {'icon': FontAwesomeIcons.house, 'label': 'Home'},
-      {'icon': FontAwesomeIcons.fileLines, 'label': 'Laporan'},
+      {'icon': FontAwesomeIcons.bullhorn, 'label': 'Broadcast'}, 
       {'icon': FontAwesomeIcons.bars, 'label': 'Menu'},
-      {'icon': FontAwesomeIcons.userGroup, 'label': 'Pengguna'},
+      {'icon': FontAwesomeIcons.store, 'label': 'Market'},
       {'icon': FontAwesomeIcons.rightFromBracket, 'label': 'Logout'},
     ];
 
@@ -131,7 +135,7 @@ class _BottomNavbarState extends State<BottomNavbar>
       onTap: _onItemTapped,
       type: BottomNavigationBarType.fixed,
       selectedItemColor: colorScheme.primary,
-      unselectedItemColor: colorScheme.onSurface.withValues(alpha: 0.5), // ✅ fixed
+      unselectedItemColor: colorScheme.onSurface.withOpacity(0.5),
       backgroundColor: colorScheme.surface,
       items: items
           .map((e) => BottomNavigationBarItem(

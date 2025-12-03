@@ -134,7 +134,7 @@ class _DashboardAspirasiState extends State<DashboardAspirasi> {
         },
         label: const Text('Tulis Aspirasi'),
         icon: const Icon(Icons.add),
-        backgroundColor: AppTheme.secondary,
+        backgroundColor: Color(0xFF06D6A0),
       ) : null,
       
       body: _isLoading 
