@@ -9,7 +9,9 @@ import 'package:jawaramobile_1/services/auth_service.dart';
 class BarangService {
   // 🌐 Base URL API (ubah sesuai jaringan kamu)
   static String get baseUrl => "http://127.0.0.1:8000/api";
+
   static String get baseImageUrl => "http://127.0.0.1:8000/storage/";
+  //static String get baseImageUrl => "http://127.0.0.1:8000/api/image-proxy/"; 
 
   // 🧾 Logger instance (gunakan pretty printer untuk console)
   static final _logger = Logger(

@@ -11,30 +11,31 @@ class _TambahPenggunaScreenState extends State<TambahPenggunaScreen> {
   final _formKey = GlobalKey<FormState>();
   final _service = PenggunaService();
   
-  // Controller untuk semua field yang ada di usersModel
   final _namaDepanCtrl = TextEditingController();
   final _namaBelakangCtrl = TextEditingController();
-  final _tglLahirCtrl = TextEditingController(); // Untuk user_tanggal_lahir
-  final _alamatCtrl = TextEditingController();   // Untuk user_alamat
+  final _tglLahirCtrl = TextEditingController(); 
+  final _alamatCtrl = TextEditingController();      
   final _emailCtrl = TextEditingController();
   final _pwdCtrl = TextEditingController();
   
   // Default values
   String _status = 'Pending';
   int _roleId = 6; // Default Warga
+  
+  // 1. Tambahan Variabel Jenis Kelamin
+  String? _jenisKelamin; 
+
   bool _isSubmitting = false;
 
-  // Fungsi Date Picker
   Future<void> _selectDate() async {
     DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime(2000), // Default tahun
+      initialDate: DateTime(2000), 
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
 
     if (picked != null) {
-      // Format YYYY-MM-DD sesuai format MySQL Date
       String formattedDate = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
       setState(() {
         _tglLahirCtrl.text = formattedDate;
@@ -46,11 +47,12 @@ class _TambahPenggunaScreenState extends State<TambahPenggunaScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isSubmitting = true);
 
-      // KUNCI JSON DISESUAIKAN PERSIS DENGAN usersModel
       final body = {
         'user_nama_depan': _namaDepanCtrl.text,
         'user_nama_belakang': _namaBelakangCtrl.text,
         'user_tanggal_lahir': _tglLahirCtrl.text, 
+        // 2. Kirim data ke backend
+        'user_jenis_kelamin': _jenisKelamin, 
         'user_alamat': _alamatCtrl.text,          
         'email': _emailCtrl.text,
         'password': _pwdCtrl.text,
@@ -59,16 +61,15 @@ class _TambahPenggunaScreenState extends State<TambahPenggunaScreen> {
       };
 
       try {
-        print("Sending Data: $body"); 
+        // print("Sending Data: $body"); 
         final success = await _service.tambahPengguna(body);
 
-        setState(() => _isSubmitting = false); // Stop loading sebelum tampil dialog
+        setState(() => _isSubmitting = false);
 
         if (success && mounted) {
-          // --- UBAH DISINI: TAMPILKAN POP-UP (DIALOG) ---
           await showDialog(
             context: context,
-            barrierDismissible: false, // User harus tekan tombol OK
+            barrierDismissible: false, 
             builder: (ctx) => AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               title: const Column(
@@ -85,8 +86,8 @@ class _TambahPenggunaScreenState extends State<TambahPenggunaScreen> {
               actions: [
                 TextButton(
                   onPressed: () {
-                    Navigator.of(ctx).pop(); // Tutup Dialog
-                    Navigator.of(context).pop(); // Kembali ke halaman List
+                    Navigator.of(ctx).pop(); 
+                    Navigator.of(context).pop(); 
                   },
                   child: const Text("OK, KEMBALI"),
                 ),
@@ -94,7 +95,6 @@ class _TambahPenggunaScreenState extends State<TambahPenggunaScreen> {
             ),
           );
         } else if (mounted) {
-          // Jika gagal, tetap pakai SnackBar merah agar user bisa coba lagi tanpa menutup layar
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Gagal menambah pengguna. Cek validasi backend / email duplikat.'),
@@ -135,7 +135,6 @@ class _TambahPenggunaScreenState extends State<TambahPenggunaScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Nama Depan
               TextFormField(
                 controller: _namaDepanCtrl,
                 decoration: const InputDecoration(labelText: "Nama Depan", border: OutlineInputBorder()),
@@ -143,14 +142,12 @@ class _TambahPenggunaScreenState extends State<TambahPenggunaScreen> {
               ),
               const SizedBox(height: 16),
               
-              // 2. Nama Belakang
               TextFormField(
                 controller: _namaBelakangCtrl,
                 decoration: const InputDecoration(labelText: "Nama Belakang", border: OutlineInputBorder()),
               ),
               const SizedBox(height: 16),
 
-              // 3. Tanggal Lahir
               TextFormField(
                 controller: _tglLahirCtrl,
                 readOnly: true,
@@ -164,7 +161,19 @@ class _TambahPenggunaScreenState extends State<TambahPenggunaScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 4. Alamat
+              // 3. Widget Dropdown Jenis Kelamin
+              DropdownButtonFormField<String>(
+                value: _jenisKelamin,
+                decoration: const InputDecoration(labelText: "Jenis Kelamin", border: OutlineInputBorder()),
+                items: const [
+                  DropdownMenuItem(value: 'L', child: Text("Laki-laki")),
+                  DropdownMenuItem(value: 'P', child: Text("Perempuan")),
+                ],
+                onChanged: (v) => setState(() => _jenisKelamin = v),
+                validator: (v) => v == null ? "Wajib dipilih" : null,
+              ),
+              const SizedBox(height: 16),
+
               TextFormField(
                 controller: _alamatCtrl,
                 decoration: const InputDecoration(labelText: "Alamat", border: OutlineInputBorder()),
@@ -173,7 +182,6 @@ class _TambahPenggunaScreenState extends State<TambahPenggunaScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 5. Email
               TextFormField(
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
@@ -182,7 +190,6 @@ class _TambahPenggunaScreenState extends State<TambahPenggunaScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 6. Password
               TextFormField(
                 controller: _pwdCtrl,
                 obscureText: true,
@@ -191,7 +198,6 @@ class _TambahPenggunaScreenState extends State<TambahPenggunaScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 7. Status
               DropdownButtonFormField<String>(
                 value: _status,
                 decoration: const InputDecoration(labelText: "Status", border: OutlineInputBorder()),
@@ -201,7 +207,6 @@ class _TambahPenggunaScreenState extends State<TambahPenggunaScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 8. Role (Sesuai Seeder)
               DropdownButtonFormField<int>(
                 value: _roleId,
                 decoration: const InputDecoration(labelText: "Role", border: OutlineInputBorder()),

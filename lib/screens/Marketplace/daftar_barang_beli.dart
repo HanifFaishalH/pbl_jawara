@@ -1,11 +1,11 @@
-import 'dart:async'; // [PENTING] Untuk StreamController & Timer
+import 'dart:async'; 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jawaramobile_1/services/barang_service.dart';
 
-// Pastikan import widget di bawah ini sesuai dengan struktur folder Anda
+// Import Widget ProductCard yang baru diperbaiki
+import '../../widgets/marketplace/product_card_beli.dart'; 
 import '../../widgets/marketplace/promo_banner_beli.dart';
-import '../../widgets/marketplace/product_card_beli.dart';
 
 class DaftarPembelian extends StatefulWidget {
   const DaftarPembelian({super.key});
@@ -47,7 +47,6 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
           setState(() {
             searchQuery = query;
           });
-          print("✅ Stream Search Active: Memfilter untuk kata '$query'");
         }
       });
     });
@@ -62,19 +61,30 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
     super.dispose();
   }
 
-  // Logika Filter List
+  // Logika Filter List (SUDAH DIPERBAIKI UNTUK NESTED JSON)
   List<dynamic> _getFilteredBarangList(List<dynamic> allBarang) {
     return allBarang.where((item) {
+      // Pastikan item adalah Map, cast jika perlu
+      if (item is! Map<String, dynamic>) {
+          // Jika dynamic, coba cast manual
+          try {
+             item = item as Map<String, dynamic>;
+          } catch (e) {
+             return false; 
+          }
+      }
+      
       final itemMap = item as Map<String, dynamic>;
       
       // 1. Filter Kategori
       bool matchCategory = true;
       if (selectedCategory != 'Semua') {
         String catName = '';
-        if (itemMap['kategori'] is Map) {
+        // Cek nested object kategori
+        if (itemMap['kategori'] != null && itemMap['kategori'] is Map) {
           catName = itemMap['kategori']['kategori_nama'] ?? '';
-        } else {
-          catName = itemMap['kategori']?.toString() ?? '';
+        } else if (itemMap['kategori'] is String) {
+          catName = itemMap['kategori'];
         }
         matchCategory = catName.toLowerCase().contains(selectedCategory.toLowerCase());
       }
@@ -199,8 +209,10 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
                                 ),
                                 itemCount: filteredBarangList.length,
                                 itemBuilder: (context, index) {
+                                  // Cast item ke Map<String, dynamic> agar aman
+                                  final item = filteredBarangList[index] as Map<String, dynamic>;
                                   return ProductCard(
-                                    item: filteredBarangList[index], 
+                                    item: item, 
                                     primaryColor: jawaraColor
                                   );
                                 },
@@ -235,15 +247,11 @@ class _DaftarPembelianState extends State<DaftarPembelian> {
         ),
         child: TextField(
           controller: _searchController,
-          // 🔥 PERBAIKAN DI SINI:
-          // textAlignVertical: center memastikan teks sejajar vertikal dengan icon
           textAlignVertical: TextAlignVertical.center, 
           decoration: InputDecoration(
             hintText: "Cari barang...",
             hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-            // isDense: true menghilangkan padding bawaan yang berlebih
             isDense: true, 
-            // contentPadding: EdgeInsets.zero agar alignment center bekerja maksimal
             contentPadding: EdgeInsets.zero, 
             prefixIcon: Icon(Icons.search, color: Colors.grey[500], size: 20),
             suffixIcon: searchQuery.isNotEmpty 

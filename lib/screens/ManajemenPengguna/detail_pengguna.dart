@@ -24,6 +24,10 @@ class _DetailPenggunaScreenState extends State<DetailPenggunaScreen> {
 
   late String _status;
   late int _roleId;
+  
+  // Variabel untuk menampung jenis kelamin
+  String? _jenisKelamin; 
+
   bool _isSubmitting = false;
 
   @override
@@ -39,14 +43,18 @@ class _DetailPenggunaScreenState extends State<DetailPenggunaScreen> {
 
     _status = widget.user.status;
     _roleId = widget.user.roleId == 0 ? 6 : widget.user.roleId; 
+
+    // --- BAGIAN PENTING ---
+    // Mengambil data dari model dan memasukkan ke variabel state
+    // Pastikan value 'L' atau 'P' sesuai dengan value di DropdownMenuItem
+    _jenisKelamin = widget.user.jenisKelamin; 
   }
 
   // --- HELPER: POP-UP SUKSES ---
-  // Fungsi ini dipanggil saat Edit Sukses atau Hapus Sukses
   Future<void> _showSuccessDialog(String message) async {
     await showDialog(
       context: context,
-      barrierDismissible: false, // User wajib tekan tombol OK
+      barrierDismissible: false, 
       builder: (ctx) => AlertDialog(
         title: const Column(
           children: [
@@ -59,8 +67,8 @@ class _DetailPenggunaScreenState extends State<DetailPenggunaScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(ctx); // 1. Tutup Dialog
-              Navigator.pop(context, true); // 2. Kembali ke List & Refresh
+              Navigator.pop(ctx); 
+              Navigator.pop(context, true); 
             },
             child: const Text("OK"),
           )
@@ -82,6 +90,8 @@ class _DetailPenggunaScreenState extends State<DetailPenggunaScreen> {
         'status': _status,
         'user_tanggal_lahir': _tglLahirCtrl.text,
         'user_alamat': _alamatCtrl.text,
+        // Kirim data jenis kelamin yang terpilih ke backend
+        'user_jenis_kelamin': _jenisKelamin, 
       };
 
       if (_pwdCtrl.text.isNotEmpty) {
@@ -93,7 +103,6 @@ class _DetailPenggunaScreenState extends State<DetailPenggunaScreen> {
       setState(() => _isSubmitting = false);
 
       if (success && mounted) {
-        // UPDATE: Sekarang pakai Pop-up juga
         await _showSuccessDialog("Data pengguna berhasil diperbarui.");
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -105,7 +114,6 @@ class _DetailPenggunaScreenState extends State<DetailPenggunaScreen> {
 
   // --- LOGIKA HAPUS (DELETE) ---
   Future<void> _confirmDelete() async {
-    // 1. Dialog Konfirmasi Awal (Yakin?)
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -125,14 +133,12 @@ class _DetailPenggunaScreenState extends State<DetailPenggunaScreen> {
       ),
     );
 
-    // 2. Jika User Pilih YA
     if (confirm == true) {
       setState(() => _isSubmitting = true);
       final success = await _service.hapusPengguna(widget.user.userId);
       setState(() => _isSubmitting = false);
 
       if (success && mounted) {
-        // Panggil Pop-up Sukses Hapus
         await _showSuccessDialog("Data pengguna berhasil dihapus dari sistem.");
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -164,7 +170,6 @@ class _DetailPenggunaScreenState extends State<DetailPenggunaScreen> {
       appBar: AppBar(
         title: const Text("Detail & Edit Pengguna"),
         actions: [
-          // TOMBOL HAPUS (SAMPAH)
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.red),
             onPressed: _isSubmitting ? null : _confirmDelete,
@@ -185,11 +190,13 @@ class _DetailPenggunaScreenState extends State<DetailPenggunaScreen> {
                 validator: (v) => v!.isEmpty ? "Wajib" : null,
               ),
               const SizedBox(height: 16),
+              
               TextFormField(
                 controller: _namaBelakangCtrl,
                 decoration: const InputDecoration(labelText: "Nama Belakang", border: OutlineInputBorder()),
               ),
               const SizedBox(height: 16),
+              
               TextFormField(
                 controller: _tglLahirCtrl,
                 readOnly: true,
@@ -197,7 +204,21 @@ class _DetailPenggunaScreenState extends State<DetailPenggunaScreen> {
                 decoration: const InputDecoration(labelText: "Tgl Lahir", border: OutlineInputBorder(), suffixIcon: Icon(Icons.calendar_today)),
                 validator: (v) => v!.isEmpty ? "Wajib" : null,
               ),
-               const SizedBox(height: 16),
+              const SizedBox(height: 16),
+
+              // --- DROPDOWN JENIS KELAMIN ---
+              DropdownButtonFormField<String>(
+                value: _jenisKelamin, // Value ini sekarang sudah terisi dari API
+                decoration: const InputDecoration(labelText: "Jenis Kelamin", border: OutlineInputBorder()),
+                items: const [
+                  DropdownMenuItem(value: 'L', child: Text("Laki-laki")),
+                  DropdownMenuItem(value: 'P', child: Text("Perempuan")),
+                ],
+                onChanged: (v) => setState(() => _jenisKelamin = v),
+                validator: (v) => v == null ? "Wajib dipilih" : null,
+              ),
+              const SizedBox(height: 16),
+
               TextFormField(
                 controller: _alamatCtrl,
                 decoration: const InputDecoration(labelText: "Alamat", border: OutlineInputBorder()),
@@ -205,12 +226,14 @@ class _DetailPenggunaScreenState extends State<DetailPenggunaScreen> {
                 validator: (v) => v!.isEmpty ? "Wajib" : null,
               ),
               const SizedBox(height: 16),
+              
               TextFormField(
                 controller: _emailCtrl,
                 decoration: const InputDecoration(labelText: "Email", border: OutlineInputBorder()),
                 validator: (v) => v!.contains('@') ? null : "Email tidak valid",
               ),
               const SizedBox(height: 16),
+              
               TextFormField(
                 controller: _pwdCtrl,
                 obscureText: true,
@@ -221,6 +244,7 @@ class _DetailPenggunaScreenState extends State<DetailPenggunaScreen> {
                 ),
               ),
               const SizedBox(height: 16),
+              
               DropdownButtonFormField<String>(
                 value: _status,
                 decoration: const InputDecoration(labelText: "Status", border: OutlineInputBorder()),
@@ -228,6 +252,7 @@ class _DetailPenggunaScreenState extends State<DetailPenggunaScreen> {
                 onChanged: (v) => setState(() => _status = v!),
               ),
               const SizedBox(height: 16),
+              
               DropdownButtonFormField<int>(
                 value: _roleId,
                 decoration: const InputDecoration(labelText: "Role", border: OutlineInputBorder()),
@@ -242,6 +267,7 @@ class _DetailPenggunaScreenState extends State<DetailPenggunaScreen> {
                 onChanged: (v) => setState(() => _roleId = v!),
               ),
               const SizedBox(height: 24),
+              
               SizedBox(
                 width: double.infinity,
                 height: 50,

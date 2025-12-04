@@ -6,18 +6,24 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\BarangModel;
+use App\Models\usersModel; // Pastikan import ini ada
 
 class BarangController extends Controller
 {
     // GET /api/barang
     public function index(Request $request)
     {
-        $q = BarangModel::query()->with('user');
+        // 1. EAGER LOADING: Load relasi 'user' dan 'kategori'
+        // Ini wajib agar flutter menerima data { "user": { ... }, "kategori": { ... } }
+        $q = BarangModel::query()->with(['user', 'kategori']); 
+        
         if ($request->filled('search')) {
             $term = (string) $request->get('search');
             $q->where('barang_nama', 'like', "%{$term}%");
         }
+        
         $q->latest('barang_id');
+        
         return response()->json($q->paginate(10));
     }
 
@@ -25,18 +31,27 @@ class BarangController extends Controller
     public function indexUser(Request $request)
     {
         $user = $request->user();
-        $items = BarangModel::where('user_id', $user->user_id)->orderByDesc('barang_id')->get();
+        // Load relasi kategori juga untuk list barang milik user
+        $items = BarangModel::with('kategori')
+            ->where('user_id', $user->user_id)
+            ->orderByDesc('barang_id')
+            ->get();
+            
         return response()->json(['data' => $items]);
     }
 
     // GET /api/barang/{id}
     public function show($id)
     {
-        $item = BarangModel::where('barang_id', $id)->firstOrFail();
+        // Load relasi user dan kategori untuk detail
+        $item = BarangModel::with(['user', 'kategori'])
+            ->where('barang_id', $id)
+            ->firstOrFail();
+            
         return response()->json($item);
     }
 
-    // POST /api/barang (auth) - multipart/form-data supported
+    // POST /api/barang (auth)
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -50,7 +65,6 @@ class BarangController extends Controller
 
         $data = $validated;
         $data['user_id'] = $request->user()->user_id;
-        // generate kode jika tidak dikirim
         $data['barang_kode'] = 'BRG-' . now()->format('YmdHis') . '-' . random_int(100, 999);
 
         if ($request->hasFile('foto')) {

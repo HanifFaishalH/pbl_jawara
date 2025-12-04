@@ -9,7 +9,9 @@ class DetailHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Setup URL Proxy
-    const String baseImageUrl = "http://localhost:8000/api/image-proxy/";
+    //const String baseImageUrl = "http://localhost:8000/api/image-proxy/";
+    const String baseImageUrl = "http://127.0.0.1:8000/storage/";
+    
     
     String finalUrl = "";
     if (fotoPath != null && fotoPath!.isNotEmpty) {
