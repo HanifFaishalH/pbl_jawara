@@ -15,6 +15,10 @@ class BarangModel extends Model
         'kategori_id', 'user_id', 'barang_kode', 'barang_nama', 
         'barang_deskripsi', 'barang_harga', 'barang_stok', 'barang_foto'
     ];
+    protected $casts = [
+        'barang_harga' => 'integer',
+        'barang_stok' => 'integer'
+    ];
 
     // Relasi ke kategori
     public function kategori()
