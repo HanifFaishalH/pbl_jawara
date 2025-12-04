@@ -20,10 +20,14 @@ class PenggunaController extends Controller
                 'user_id'            => $user->user_id,
                 'user_nama_depan'    => $user->user_nama_depan,
                 'user_nama_belakang' => $user->user_nama_belakang,
-                // 'nama' digunakan untuk tampilan list di Flutter
                 'nama'               => trim($user->user_nama_depan . ' ' . $user->user_nama_belakang),
                 'email'              => $user->email,
                 'user_tanggal_lahir' => $user->user_tanggal_lahir,
+                
+                // --- PERBAIKAN DI SINI: Tambahkan baris ini ---
+                'user_jenis_kelamin' => $user->user_jenis_kelamin, 
+                // ----------------------------------------------
+
                 'user_alamat'        => $user->user_alamat,
                 'status'             => $user->status ?? 'Pending',
                 'role_id'            => $user->role_id,
@@ -86,14 +90,13 @@ class PenggunaController extends Controller
         $validator = Validator::make($request->all(), [
             'user_nama_depan'      => 'required|string|max:100',
             'user_nama_belakang'   => 'nullable|string|max:100',
-            // Ignore unique check untuk user ini sendiri
             'email'                => 'required|email|unique:m_user,email,'.$id.',user_id',
             'role_id'              => 'required|integer',
             'status'               => 'in:Pending,Diterima,Ditolak',
             'user_tanggal_lahir'   => 'required|date',
             'user_jenis_kelamin'   => 'nullable|in:L,P',
             'user_alamat'          => 'required|string',
-            'password'             => 'nullable|string|min:6', // Password opsional
+            'password'             => 'nullable|string|min:6', 
         ]);
 
         if ($validator->fails()) {
@@ -125,7 +128,6 @@ class PenggunaController extends Controller
     public function destroy($id)
     {
         $user = usersModel::find($id);
-
         if (!$user) {
             return response()->json(['success' => false, 'message' => 'User tidak ditemukan'], 404);
         }
@@ -138,7 +140,6 @@ class PenggunaController extends Controller
         }
     }
 
-    // 5. Update Status (untuk Penerimaan Warga)
     public function updateStatus(Request $request, $id)
     {
         $user = usersModel::find($id);

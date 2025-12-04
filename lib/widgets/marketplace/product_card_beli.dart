@@ -13,13 +13,7 @@ class ProductCard extends StatelessWidget {
     required this.primaryColor
   });
 
-  // --- Helper Internal ---
-  String _safeGet(Map<String, dynamic> data, String key, [String defaultValue = '-']) {
-    final value = data[key];
-    if (value == null) return defaultValue;
-    return value.toString();
-  }
-
+  // Helper untuk format rupiah
   String _formatRupiah(dynamic harga) {
     int price = int.tryParse(harga.toString()) ?? 0;
     return NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(price);
@@ -27,15 +21,14 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String nama = _safeGet(item, 'barang_nama');
-    final String hargaRaw = _safeGet(item, 'barang_harga', '0');
+    // 1. Parsing Data Dasar
+    final String nama = item['barang_nama']?.toString() ?? '-';
+    final String hargaRaw = item['barang_harga']?.toString() ?? '0';
     final String hargaFormat = _formatRupiah(hargaRaw);
-    final String alamat = _safeGet(item, 'alamat_penjual', 'Kota Malang');
-    final String stok = _safeGet(item, 'barang_stok', '0');
-    final String idBarang = _safeGet(item, 'barang_id');
-    final String namaPenjual = _safeGet(item, 'nama_penjual', 'Penjual Jawara');
+    final String stok = item['barang_stok']?.toString() ?? '0';
+    final String idBarang = item['barang_id']?.toString() ?? '0';
 
-    // Logic Gambar
+    // 2. Parsing Foto
     String rawFoto = item['barang_foto']?.toString() ?? "";
     String finalFotoUrl = "";
     if (rawFoto.isNotEmpty) {
@@ -46,28 +39,43 @@ class ProductCard extends StatelessWidget {
       }
     }
 
-    // Logic Kategori
+    // 3. Parsing Nested Object: USER (Penjual)
+    String namaPenjual = 'Penjual Jawara';
+    String alamatPenjual = 'Kota Malang';
+
+    if (item['user'] != null && item['user'] is Map) {
+      String d = item['user']['user_nama_depan'] ?? '';
+      String b = item['user']['user_nama_belakang'] ?? '';
+      namaPenjual = "$d $b".trim();
+      alamatPenjual = item['user']['user_alamat'] ?? 'Indonesia';
+    }
+
+    // 4. Parsing Nested Object: KATEGORI
     String kategoriBersih = '-';
-    if (item['kategori'] != null) {
-      if (item['kategori'] is Map) {
+    if (item['kategori'] != null && item['kategori'] is Map) {
         kategoriBersih = item['kategori']['kategori_nama'] ?? '-';
-      } else {
-        kategoriBersih = item['kategori'].toString();
-      }
+    } else if (item['kategori'] is String) {
+        kategoriBersih = item['kategori'];
     }
 
     return InkWell(
       onTap: () {
+        // PERSIAPAN DATA FLAT UNTUK DETAIL SCREEN
+        // Detail screen mengharapkan Map<String, String> tanpa object bersarang
         final Map<String, String> dataDetail = {
           'id': idBarang,
           'nama': nama,
           'kategori': kategoriBersih,
           'harga': hargaRaw,
           'stok': stok,
-          'alamat_penjual': alamat,
+          'deskripsi': item['barang_deskripsi']?.toString() ?? '-',
           'foto': finalFotoUrl,
+          
+          // Data Penjual yang sudah di-extract
           'nama_penjual': namaPenjual,
+          'alamat_penjual': alamatPenjual,
         };
+        
         context.push('/detail-barang-beli', extra: dataDetail);
       },
       child: Container(
@@ -86,7 +94,7 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Gambar
+            // BAGIAN GAMBAR
             Expanded(
               flex: 6,
               child: ClipRRect(
@@ -102,7 +110,7 @@ class ProductCard extends StatelessWidget {
                               fit: BoxFit.cover,
                               errorBuilder: (ctx, err, _) => Container(
                                 color: Colors.grey[100],
-                                child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                                child: const Icon(Icons.broken_image, color: Colors.grey),
                               ),
                             )
                           : Container(color: Colors.grey[200]),
@@ -124,7 +132,7 @@ class ProductCard extends StatelessWidget {
               ),
             ),
             
-            // Info Text
+            // BAGIAN INFO TEKS
             Expanded(
               flex: 5,
               child: Padding(
@@ -162,7 +170,7 @@ class ProductCard extends StatelessWidget {
                             const SizedBox(width: 2),
                             Expanded(
                               child: Text(
-                                alamat,
+                                alamatPenjual, // Menggunakan alamat yang sudah diparsing
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(fontSize: 10, color: Colors.grey),
@@ -185,26 +193,6 @@ class ProductCard extends StatelessWidget {
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class EmptyProductState extends StatelessWidget {
-  const EmptyProductState({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.only(top: 50.0),
-        child: Column(
-          children: [
-            Icon(Icons.search_off, size: 60, color: Colors.grey[300]),
-            const SizedBox(height: 10),
-            Text("Barang tidak ditemukan", style: TextStyle(color: Colors.grey[500])),
           ],
         ),
       ),

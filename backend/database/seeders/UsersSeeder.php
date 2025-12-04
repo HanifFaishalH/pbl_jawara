@@ -18,6 +18,7 @@ class UsersSeeder extends Seeder
                 'user_nama_depan' => 'User',
                 'user_nama_belakang' => 'Admin',
                 'user_tanggal_lahir' => '1990-01-01',
+                'user_jenis_kelamin' => 'L', // Laki-laki
                 'user_alamat' => 'Jl. Kenanga',
                 'foto' => null,
                 'status' => 'Diterima',
@@ -31,6 +32,7 @@ class UsersSeeder extends Seeder
                 'user_nama_depan' => 'Ketua',
                 'user_nama_belakang' => 'RW',
                 'user_tanggal_lahir' => '1991-02-01',
+                'user_jenis_kelamin' => 'L', // Laki-laki
                 'user_alamat' => 'Jl. Melati',
                 'foto' => null,
                 'status' => 'Diterima',
@@ -44,6 +46,7 @@ class UsersSeeder extends Seeder
                 'user_nama_depan' => 'Ketua',
                 'user_nama_belakang' => 'RT',
                 'user_tanggal_lahir' => '1992-03-01',
+                'user_jenis_kelamin' => 'L', // Laki-laki
                 'user_alamat' => 'Jl. Mawar',
                 'foto' => null,
                 'status' => 'Diterima',
@@ -57,6 +60,7 @@ class UsersSeeder extends Seeder
                 'user_nama_depan' => 'Sekretaris',
                 'user_nama_belakang' => '',
                 'user_tanggal_lahir' => '1993-04-01',
+                'user_jenis_kelamin' => 'P', // Perempuan
                 'user_alamat' => 'Jl. Kenanga',
                 'foto' => null,
                 'status' => 'Diterima',
@@ -70,6 +74,7 @@ class UsersSeeder extends Seeder
                 'user_nama_depan' => 'Bendahara',
                 'user_nama_belakang' => '',
                 'user_tanggal_lahir' => '1994-05-01',
+                'user_jenis_kelamin' => 'P', // Perempuan
                 'user_alamat' => 'Jl. Lily',
                 'foto' => null,
                 'status' => 'Diterima',
@@ -83,6 +88,7 @@ class UsersSeeder extends Seeder
                 'user_nama_depan' => 'Warga',
                 'user_nama_belakang' => '',
                 'user_tanggal_lahir' => '1995-06-01',
+                'user_jenis_kelamin' => 'L', // Laki-laki
                 'user_alamat' => 'Jl. Matahari',
                 'foto' => null,
                 'status' => 'Diterima',
@@ -96,6 +102,7 @@ class UsersSeeder extends Seeder
                 'user_nama_depan' => 'Yanto',
                 'user_nama_belakang' => 'Sudarsono',
                 'user_tanggal_lahir' => '1995-07-12',
+                'user_jenis_kelamin' => 'L', // Laki-laki
                 'user_alamat' => 'Jl. Kenanga',
                 'foto' => null,
                 'status' => 'Diterima',
