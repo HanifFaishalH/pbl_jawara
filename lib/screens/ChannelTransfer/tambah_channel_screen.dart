@@ -181,9 +181,13 @@ class _TambahChannelScreenState extends State<TambahChannelScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEdit ? "Edit Channel Transfer" : "Tambah Channel Transfer"),
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: Colors.white,
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())

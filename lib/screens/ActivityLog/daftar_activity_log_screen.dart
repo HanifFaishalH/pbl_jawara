@@ -206,7 +206,7 @@ class _DaftarActivityLogScreenState extends State<DaftarActivityLogScreen> {
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo,
+                backgroundColor: Theme.of(context).colorScheme.tertiary,
                 foregroundColor: Colors.white,
               ),
               child: const Text('Terapkan'),
@@ -294,7 +294,7 @@ class _DaftarActivityLogScreenState extends State<DaftarActivityLogScreen> {
           'Log Activity',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.indigo,
+        backgroundColor: theme.colorScheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -335,7 +335,7 @@ class _DaftarActivityLogScreenState extends State<DaftarActivityLogScreen> {
                     Icons.filter_list,
                     color: _selectedType != 'semua' ||
                             _selectedAction != 'semua'
-                        ? Colors.indigo
+                        ? theme.colorScheme.primary
                         : Colors.grey,
                   ),
                   onPressed: _showFilterDialog,

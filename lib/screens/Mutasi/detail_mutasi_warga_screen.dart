@@ -133,7 +133,7 @@ class _DetailMutasiWargaScreenState extends State<DetailMutasiWargaScreen> {
       case 'perubahan_status':
         return Colors.amber;
       default:
-        return Colors.deepPurple;
+        return const Color(0xFF26547C); // theme primary color
     }
   }
 
@@ -180,6 +180,8 @@ class _DetailMutasiWargaScreenState extends State<DetailMutasiWargaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -187,7 +189,7 @@ class _DetailMutasiWargaScreenState extends State<DetailMutasiWargaScreen> {
           'Detail Mutasi Warga',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: theme.colorScheme.primary,
         foregroundColor: Colors.white,
         actions: canManage
             ? [

@@ -27,6 +27,8 @@ class _MutasiScreenState extends State<MutasiScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -34,7 +36,7 @@ class _MutasiScreenState extends State<MutasiScreen>
           'Mutasi',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: theme.colorScheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         bottom: TabBar(

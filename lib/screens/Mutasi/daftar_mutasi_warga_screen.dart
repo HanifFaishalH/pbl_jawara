@@ -330,7 +330,7 @@ class _DaftarMutasiWargaScreenState extends State<DaftarMutasiWargaScreen> {
       case 'perubahan_status':
         return Colors.amber;
       default:
-        return Colors.deepPurple;
+        return const Color(0xFF26547C); // theme primary color
     }
   }
 
@@ -403,7 +403,7 @@ class _DaftarMutasiWargaScreenState extends State<DaftarMutasiWargaScreen> {
           'Mutasi Warga',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: theme.colorScheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -413,7 +413,7 @@ class _DaftarMutasiWargaScreenState extends State<DaftarMutasiWargaScreen> {
                 await context.push('/tambah-mutasi-warga');
                 _refresh();
               },
-              backgroundColor: Colors.deepPurple,
+              backgroundColor: theme.colorScheme.tertiary,
               icon: const Icon(Icons.add),
               label: const Text('Tambah Mutasi'),
             )
@@ -454,7 +454,7 @@ class _DaftarMutasiWargaScreenState extends State<DaftarMutasiWargaScreen> {
                   icon: Icon(
                     Icons.filter_list,
                     color: _selectedStatus != 'semua' || _selectedJenis != 'semua'
-                        ? Colors.deepPurple
+                        ? theme.colorScheme.primary
                         : Colors.grey,
                   ),
                   onPressed: _showFilterDialog,
@@ -496,7 +496,7 @@ class _DaftarMutasiWargaScreenState extends State<DaftarMutasiWargaScreen> {
                                   icon: const Icon(Icons.add),
                                   label: const Text('Tambah Mutasi Pertama'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.deepPurple,
+                                    backgroundColor: theme.colorScheme.tertiary,
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 24, vertical: 12),

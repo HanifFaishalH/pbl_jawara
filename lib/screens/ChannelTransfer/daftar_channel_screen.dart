@@ -138,7 +138,7 @@ class _DaftarChannelScreenState extends State<DaftarChannelScreen> {
       ),
       floatingActionButton: canManage
           ? FloatingActionButton.extended(
-              backgroundColor: colorScheme.primary,
+              backgroundColor: colorScheme.tertiary,
               icon: const Icon(Icons.add_link),
               label: const Text("Tambah Channel"),
               onPressed: () async {

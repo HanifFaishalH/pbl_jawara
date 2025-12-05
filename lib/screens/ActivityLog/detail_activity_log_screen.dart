@@ -92,7 +92,8 @@ class _DetailActivityLogScreenState extends State<DetailActivityLogScreen> {
     }
   }
 
-  Widget _buildInfoCard(String label, String value, {IconData? icon}) {
+  Widget _buildInfoCard(BuildContext context, String label, String value, {IconData? icon}) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -103,7 +104,7 @@ class _DetailActivityLogScreenState extends State<DetailActivityLogScreen> {
       child: Row(
         children: [
           if (icon != null) ...[
-            Icon(icon, color: Colors.indigo, size: 24),
+            Icon(icon, color: theme.colorScheme.primary, size: 24),
             const SizedBox(width: 12),
           ],
           Expanded(
@@ -207,7 +208,7 @@ class _DetailActivityLogScreenState extends State<DetailActivityLogScreen> {
           'Detail Log Activity',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.indigo,
+        backgroundColor: theme.colorScheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -316,18 +317,21 @@ class _DetailActivityLogScreenState extends State<DetailActivityLogScreen> {
                       ),
                       const SizedBox(height: 12),
                       _buildInfoCard(
+                        context,
                         'User',
                         '${_log!['user']?['user_nama_depan'] ?? 'System'} ${_log!['user']?['user_nama_belakang'] ?? ''}',
                         icon: Icons.person,
                       ),
                       const SizedBox(height: 8),
                       _buildInfoCard(
+                        context,
                         'Email',
                         _log!['user']?['email'] ?? '-',
                         icon: Icons.email,
                       ),
                       const SizedBox(height: 8),
                       _buildInfoCard(
+                        context,
                         'Waktu',
                         DateFormat('dd MMMM yyyy, HH:mm:ss')
                             .format(DateTime.parse(_log!['created_at'])),
@@ -335,6 +339,7 @@ class _DetailActivityLogScreenState extends State<DetailActivityLogScreen> {
                       ),
                       const SizedBox(height: 8),
                       _buildInfoCard(
+                        context,
                         'IP Address',
                         _log!['log_ip_address'] ?? '-',
                         icon: Icons.computer,

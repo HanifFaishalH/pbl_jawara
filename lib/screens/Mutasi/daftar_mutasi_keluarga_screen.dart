@@ -196,7 +196,7 @@ class _DaftarMutasiKeluargaScreenState
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
+                backgroundColor: Theme.of(context).colorScheme.tertiary,
                 foregroundColor: Colors.white,
               ),
               child: const Text('Terapkan'),
@@ -332,7 +332,7 @@ class _DaftarMutasiKeluargaScreenState
       case 'pindah_rt_rw':
         return Colors.amber;
       default:
-        return Colors.deepPurple;
+        return const Color(0xFF26547C); // theme primary color
     }
   }
 
@@ -403,7 +403,7 @@ class _DaftarMutasiKeluargaScreenState
           'Mutasi Keluarga',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: theme.colorScheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -413,7 +413,7 @@ class _DaftarMutasiKeluargaScreenState
                 await context.push('/tambah-mutasi-keluarga');
                 _refresh();
               },
-              backgroundColor: Colors.deepPurple,
+              backgroundColor: theme.colorScheme.tertiary,
               icon: const Icon(Icons.add),
               label: const Text('Tambah Mutasi'),
             )
@@ -454,7 +454,7 @@ class _DaftarMutasiKeluargaScreenState
                   icon: Icon(
                     Icons.filter_list,
                     color: _selectedStatus != 'semua' || _selectedJenis != 'semua'
-                        ? Colors.deepPurple
+                        ? theme.colorScheme.primary
                         : Colors.grey,
                   ),
                   onPressed: _showFilterDialog,
@@ -496,7 +496,7 @@ class _DaftarMutasiKeluargaScreenState
                                   icon: const Icon(Icons.add),
                                   label: const Text('Tambah Mutasi Pertama'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.deepPurple,
+                                    backgroundColor: theme.colorScheme.tertiary,
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 24, vertical: 12),

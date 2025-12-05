@@ -182,7 +182,7 @@ class _DetailMutasiKeluargaScreenState
           'Detail Mutasi Keluarga',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.amber,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         actions: canManage
             ? [

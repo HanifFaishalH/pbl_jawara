@@ -170,7 +170,7 @@ class _FormMutasiKeluargaScreenState extends State<FormMutasiKeluargaScreen> {
           isEdit ? 'Edit Mutasi Keluarga' : 'Tambah Mutasi Keluarga',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.amber,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
       ),
       body: _loading || _loadingKeluarga
@@ -318,7 +318,7 @@ class _FormMutasiKeluargaScreenState extends State<FormMutasiKeluargaScreen> {
                       child: ElevatedButton(
                         onPressed: _loading ? null : _submit,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.amber,
+                          backgroundColor: Theme.of(context).colorScheme.tertiary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(

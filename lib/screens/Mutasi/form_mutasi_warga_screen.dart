@@ -146,6 +146,8 @@ class _FormMutasiWargaScreenState extends State<FormMutasiWargaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -153,7 +155,7 @@ class _FormMutasiWargaScreenState extends State<FormMutasiWargaScreen> {
           isEdit ? 'Edit Mutasi Warga' : 'Tambah Mutasi Warga',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: theme.colorScheme.primary,
         foregroundColor: Colors.white,
       ),
       body: _loading || _loadingWarga
@@ -259,7 +261,7 @@ class _FormMutasiWargaScreenState extends State<FormMutasiWargaScreen> {
                       child: ElevatedButton(
                         onPressed: _loading ? null : _submit,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
+                          backgroundColor: theme.colorScheme.tertiary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
