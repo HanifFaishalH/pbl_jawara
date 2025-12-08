@@ -12,7 +12,6 @@ import 'package:jawaramobile_1/screens/Dashboard/dashboard_selector.dart';
 
 // ====== Screens Lainnya (Import tetap sama) ======
 import 'package:jawaramobile_1/screens/Mutasi/mutasi_detail_page.dart';
-import 'package:jawaramobile_1/screens/Mutasi/mutasi_page.dart';
 import 'package:jawaramobile_1/screens/data_warga_rumah.dart';
 
 // ====== Pemasukan ======
@@ -23,6 +22,13 @@ import 'package:jawaramobile_1/screens/Pemasukan/tagih_iuran_page.dart';
 import 'package:jawaramobile_1/screens/Pemasukan/daftar_tagihan.dart';
 import 'package:jawaramobile_1/screens/Pemasukan/detail_tagihan.dart';
 import 'package:jawaramobile_1/screens/Pemasukan/lain_lain.dart';
+
+// ====== Tagihan Iuran Warga ======
+import 'package:jawaramobile_1/screens/tagihan_saya_screen.dart';
+import 'package:jawaramobile_1/screens/bayar_tagihan_screen.dart';
+import 'package:jawaramobile_1/screens/tarik_iuran_screen.dart';
+import 'package:jawaramobile_1/screens/verifikasi_pembayaran_screen.dart';
+import 'package:jawaramobile_1/screens/daftar_tagihan_admin_screen.dart';
 
 // ====== Pengeluaran ======
 import 'package:jawaramobile_1/screens/pengeluaran/pengeluaran_screen.dart';
@@ -281,6 +287,36 @@ final appRouter = GoRouter(
       path: '/pemasukan-lain',
       name: 'pemasukan-lain',
       builder: (context, state) => const PemasukanLain(),
+    ),
+
+    // ====== Tagihan Iuran Warga ======
+    GoRoute(
+      path: '/tagihan-saya',
+      name: 'tagihan-saya',
+      builder: (context, state) => const TagihanSayaScreen(),
+    ),
+    GoRoute(
+      path: '/bayar-tagihan',
+      name: 'bayar-tagihan',
+      builder: (context, state) {
+        final tagihan = state.extra as Map<String, dynamic>;
+        return BayarTagihanScreen(tagihan: tagihan);
+      },
+    ),
+    GoRoute(
+      path: '/tarik-iuran',
+      name: 'tarik-iuran',
+      builder: (context, state) => const TarikIuranScreen(),
+    ),
+    GoRoute(
+      path: '/verifikasi-pembayaran',
+      name: 'verifikasi-pembayaran',
+      builder: (context, state) => const VerifikasiPembayaranScreen(),
+    ),
+    GoRoute(
+      path: '/daftar-tagihan-admin',
+      name: 'daftar-tagihan-admin',
+      builder: (context, state) => const DaftarTagihanAdminScreen(),
     ),
 
     // ====== Pengeluaran ======

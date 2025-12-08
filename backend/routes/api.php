@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\PesanWargaController;
 use App\Http\Controllers\Api\PenggunaController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\LaporanKeuanganController;
+use App\Http\Controllers\Api\IuranController;
 
 // --- IMPORT PENTING UNTUK PROXY GAMBAR ---
 use Illuminate\Support\Facades\Storage;
@@ -166,6 +167,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/pengeluaran/{id}', [LaporanKeuanganController::class, 'pengeluaranDestroy']);
 
         Route::get('/laporan/ringkasan', [LaporanKeuanganController::class, 'ringkasan']);
+    });
+
+    // === IURAN & TAGIHAN ===
+    // Warga - Lihat tagihan sendiri & bayar
+    Route::get('/tagihan/saya', [IuranController::class, 'tagihanSaya']);
+    Route::post('/tagihan/{id}/bayar', [IuranController::class, 'bayarTagihan']);
+
+    // Admin/Bendahara - Tarik iuran & verifikasi
+    Route::middleware('role:1,5')->group(function () {
+        Route::post('/iuran/tarik', [IuranController::class, 'tarikIuran']);
+        Route::get('/tagihan', [IuranController::class, 'listTagihan']);
+        Route::get('/pembayaran/pending', [IuranController::class, 'listPembayaranPending']);
+        Route::put('/pembayaran/{id}/verifikasi', [IuranController::class, 'verifikasiPembayaran']);
     });
 });
 

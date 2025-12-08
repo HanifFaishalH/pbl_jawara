@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:jawaramobile_1/services/auth_service.dart';
 
 class MenuPemasukan extends StatefulWidget {
   const MenuPemasukan({super.key});
@@ -82,7 +83,7 @@ class _MenuPemasukanItemState extends State<MenuPemasukanItem> {
       ), // Samakan radius dengan container
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 50), // Animasi halus
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
           color: _isHovering
               ? colorScheme
@@ -91,25 +92,29 @@ class _MenuPemasukanItemState extends State<MenuPemasukanItem> {
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              height: 60,
-              width: 60,
+              height: 48,
+              width: 48,
               decoration: BoxDecoration(
                 color: colorScheme.primary,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
-                child: FaIcon(widget.icon, color: Colors.white, size: 28),
+                child: FaIcon(widget.icon, color: Colors.white, size: 24),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               widget.label,
-              textAlign: TextAlign.center, // Agar rapi jika label 2 baris
-              style: textTheme.bodyMedium!.copyWith(
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: textTheme.bodySmall!.copyWith(
                 color: colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
+                fontSize: 11,
               ),
             ),
           ],
@@ -127,28 +132,46 @@ class MenuPemasukanHeader extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    final items = [
-      {
-        'label': 'Kategori Iuran',
-        'icon': FontAwesomeIcons.wallet,
-        'route': '/kategori-iuran',
-      },
-      {
-        'label': 'Tagih Iuran',
-        'icon': FontAwesomeIcons.calendarDays,
-        'route': '/tagih-iuran',
-      },
-      {
-        'label': 'Tagihan',
-        'icon': FontAwesomeIcons.peopleGroup,
-        'route': '/daftar-tagihan',
-      },
-      {
-        'label': 'Lain-lain',
-        'icon': FontAwesomeIcons.book,
-        'route': '/pemasukan-lain',
-      },
-    ];
+    // Get user role from AuthService
+    final userRole = AuthService.currentRoleId ?? 6; // Default to Warga if null
+    
+    // Define menu items based on role
+    final List<Map<String, dynamic>> items = [];
+    
+    // Menu untuk Admin/Bendahara (role 1 atau 5)
+    if (userRole == 1 || userRole == 5) {
+      items.addAll([
+        {
+          'label': 'Kategori Iuran',
+          'icon': FontAwesomeIcons.wallet,
+          'route': '/kategori-iuran',
+        },
+        {
+          'label': 'Tarik Iuran',
+          'icon': FontAwesomeIcons.moneyBillTransfer,
+          'route': '/tarik-iuran',
+        },
+        {
+          'label': 'Daftar Tagihan',
+          'icon': FontAwesomeIcons.listCheck,
+          'route': '/daftar-tagihan-admin',
+        },
+        {
+          'label': 'Verifikasi Pembayaran',
+          'icon': FontAwesomeIcons.circleCheck,
+          'route': '/verifikasi-pembayaran',
+        },
+      ]);
+    } else {
+      // Menu untuk Warga (role 6)
+      items.addAll([
+        {
+          'label': 'Tagihan Saya',
+          'icon': FontAwesomeIcons.fileInvoice,
+          'route': '/tagihan-saya',
+        },
+      ]);
+    }
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -161,22 +184,38 @@ class MenuPemasukanHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Pilih Menu Pemasukan', style: textTheme.titleLarge),
-          const SizedBox(height: 12),
-          Row(
-            // Tambahkan ini agar item tetap rapi di atas
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: items.map((e) {
-              // Ganti blok InkWell lama dengan widget baru ini
-              // Bungkus dengan Expanded agar area tap/hover merata
-              return Expanded(
-                child: MenuPemasukanItem(
-                  icon: e['icon'] as IconData,
-                  label: e['label'] as String,
-                  route: e['route'] as String,
-                ),
+          const SizedBox(height: 16),
+          // Gunakan GridView untuk layout yang lebih baik
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Tentukan jumlah kolom berdasarkan lebar - 2 kolom untuk mobile
+              final crossAxisCount = constraints.maxWidth > 600 ? 2 : 2;
+              
+              return GridView.count(
+                crossAxisCount: crossAxisCount,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.2,
+                children: items.map((e) {
+                  final icon = e['icon'];
+                  final label = e['label'];
+                  final route = e['route'];
+                  
+                  // Null safety check
+                  if (icon == null || label == null || route == null) {
+                    return const SizedBox.shrink();
+                  }
+                  
+                  return MenuPemasukanItem(
+                    icon: icon as IconData,
+                    label: label as String,
+                    route: route as String,
+                  );
+                }).toList(),
               );
-            }).toList(),
+            },
           ),
         ],
       ),
