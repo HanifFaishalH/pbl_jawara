@@ -22,7 +22,7 @@ use App\Http\Controllers\Api\PesanWargaController;
 use App\Http\Controllers\Api\PenggunaController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\LaporanKeuanganController;
-
+use App\Http\Controllers\Api\MLPredictController;
 // --- IMPORT PENTING UNTUK PROXY GAMBAR ---
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
@@ -167,6 +167,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/laporan/ringkasan', [LaporanKeuanganController::class, 'ringkasan']);
     });
+
+    Route::post('/predict-batik', [MLPredictController::class, 'predict']);
 });
 
 // =========================================================================
