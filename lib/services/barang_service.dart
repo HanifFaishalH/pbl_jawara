@@ -7,25 +7,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jawaramobile_1/services/auth_service.dart';
 
 class BarangService {
-  // 🌐 Base URL API (ubah sesuai jaringan kamu)
+  // 🌐 Base URL API Laravel
   static String get baseUrl => "http://127.0.0.1:8000/api";
-
   static String get baseImageUrl => "http://127.0.0.1:8000/storage/";
-  //static String get baseImageUrl => "http://127.0.0.1:8000/api/image-proxy/"; 
 
-  // 🧾 Logger instance (gunakan pretty printer untuk console)
-  static final _logger = Logger(
+  // 🧾 Logger instance
+  static final logger = Logger(
     printer: PrettyPrinter(
-      methodCount: 0, // sembunyikan trace pendek
-      errorMethodCount: 5, // tampilkan stack saat error
-      lineLength: 90, // panjang maksimum baris
+      methodCount: 0,
+      errorMethodCount: 3,
+      lineLength: 90,
       colors: true,
       printEmojis: true,
       dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
     ),
   );
 
-  // 🔑 Ambil token login (dari AuthService atau SharedPreferences)
   Future<String?> _getToken() async {
     if (AuthService.token != null && AuthService.token!.isNotEmpty) {
       return AuthService.token;
@@ -36,40 +33,47 @@ class BarangService {
     return token;
   }
 
-  // 🛰️ Logger untuk Request
-  void _logRequest(String method, Uri url, Map<String, String>? headers, [dynamic body]) {
-    if (!kDebugMode) return;
-    _logger.i('''
-🌐 [REQUEST] $method $url
-📩 Headers : ${jsonEncode(headers)}
-📦 Body    : ${body ?? '-'}
-''');
-  }
+  // ============================================================
+  // 🚀 PREDIKSI KATEGORI (KIRIM GAMBAR KE LARAVEL)
+  // ============================================================
+  Future<String?> predictKategori(String imagePath) async {
+    final url = Uri.parse("${BarangService.baseUrl}/predict-batik");
+    logger.i("📤 [PREDICT] Mengirim gambar ke API ML");
+    logger.i("🖼️ Path gambar lokal: $imagePath");
+    logger.i("🌍 Endpoint: $url");
 
-  // 📦 Logger untuk Response
-  void _logResponse(http.Response res) {
-    if (!kDebugMode) return;
-    final shortBody = res.body.length > 400
-        ? res.body.substring(0, 400) + '... [truncated]'
-        : res.body;
-    final color = (res.statusCode >= 200 && res.statusCode < 300)
-        ? Level.info
-        : Level.warning;
+    try {
+      final file = File(imagePath);
+      if (!await file.exists()) {
+        logger.w("⚠️ File tidak ditemukan di path: $imagePath");
+        throw Exception("File tidak ditemukan");
+      }
 
-    _logger.log(
-      color,
-      '''
-📦 [RESPONSE] ${res.request?.url}
-📊 Status: ${res.statusCode}
-🧾 Body  : $shortBody
-''',
-    );
-  }
+      final request = http.MultipartRequest("POST", url)
+        ..files.add(await http.MultipartFile.fromPath("foto", imagePath));
 
-  // ❌ Logger untuk Error
-  void _logError(Object e, [StackTrace? s]) {
-    if (!kDebugMode) return;
-    _logger.e('API Error: $e', stackTrace: s);
+      logger.i("📦 [REQUEST] File siap dikirim (${await file.length()} bytes)");
+
+      final streamedResponse = await request.send();
+      final resBody = await streamedResponse.stream.bytesToString();
+
+      logger.i("📥 [RESPONSE] Status: ${streamedResponse.statusCode}");
+      logger.i("🧾 Body: ${resBody.length > 400 ? resBody.substring(0, 400) + '...' : resBody}");
+
+      if (streamedResponse.statusCode == 200) {
+        final data = jsonDecode(resBody);
+        final kategori = data["kategori_prediksi"];
+        final akurasi = data["akurasi"] ?? "-";
+        logger.i("✅ [SUCCESS] Prediksi: $kategori | Akurasi: $akurasi");
+        return kategori;
+      } else {
+        logger.w("⚠️ [FAILED] Status: ${streamedResponse.statusCode} | Body: $resBody");
+        throw Exception("Gagal prediksi (${streamedResponse.statusCode})");
+      }
+    } catch (e, s) {
+      logger.e("❌ [ERROR] Terjadi kesalahan saat prediksi", error: e, stackTrace: s);
+      return null;
+    }
   }
 
   // ============================================================
@@ -83,9 +87,9 @@ class BarangService {
     if (token != null) headers['Authorization'] = 'Bearer $token';
 
     try {
-      _logRequest('GET', url, headers);
+      logger.i("🌐 [REQUEST] GET $url");
       final res = await http.get(url, headers: headers);
-      _logResponse(res);
+      logger.i("📥 [RESPONSE] ${res.statusCode}");
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
@@ -94,13 +98,13 @@ class BarangService {
         throw Exception('Gagal memuat barang (${res.statusCode})');
       }
     } catch (e, s) {
-      _logError(e, s);
+      logger.e("❌ [ERROR] fetchBarang gagal", error: e, stackTrace: s);
       throw Exception('Tidak dapat terhubung ke server');
     }
   }
 
   // ============================================================
-  // 🚀 FETCH BARANG MILIK USER
+  // 🚀 FETCH BARANG USER
   // ============================================================
   Future<List<dynamic>> fetchUserBarang() async {
     final url = Uri.parse("$baseUrl/barang/user");
@@ -114,9 +118,9 @@ class BarangService {
     };
 
     try {
-      _logRequest('GET', url, headers);
+      logger.i("🌐 [REQUEST] GET $url");
       final res = await http.get(url, headers: headers);
-      _logResponse(res);
+      logger.i("📥 [RESPONSE] ${res.statusCode}");
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
@@ -125,7 +129,7 @@ class BarangService {
         throw Exception('Gagal memuat barang saya (${res.statusCode})');
       }
     } catch (e, s) {
-      _logError(e, s);
+      logger.e("❌ [ERROR] fetchUserBarang gagal", error: e, stackTrace: s);
       throw Exception('Gagal menghubungkan ke server');
     }
   }

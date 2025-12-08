@@ -1,10 +1,10 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import '../../services/auth_service.dart';
 import '../../services/kategori_service.dart';
+import '../../services/barang_service.dart';
 
 class AddBarangScreen extends StatefulWidget {
   const AddBarangScreen({super.key});
@@ -14,22 +14,19 @@ class AddBarangScreen extends StatefulWidget {
 }
 
 class _AddBarangScreenState extends State<AddBarangScreen> {
-  // State untuk melacak langkah form (0: Ambil Gambar, 1: Isi Form)
   int _currentStep = 0;
-  // Placeholder untuk status gambar
   String? _imagePath;
 
-  final TextEditingController _namaController = TextEditingController();
-  final TextEditingController _hargaController = TextEditingController();
-  final TextEditingController _stokController = TextEditingController();
+  final _namaController = TextEditingController();
+  final _hargaController = TextEditingController();
+  final _stokController = TextEditingController();
 
-  // Data dummy yang akan diisi otomatis
-  String _kategoriOtomatis = "Perabotan"; // Placeholder hasil ML (belum mapping ke kategori_id)
-  String _alamatPengguna = "(memuat alamat...)"; // Akan diisi dari /me
-  int? _kategoriId; // Jika nanti ML memetakan ke ID kategori
+  String _kategoriOtomatis = "-"; // hasil ML
+  String _alamatPengguna = "(memuat alamat...)";
+  int? _kategoriId;
   bool _loadingUpload = false;
-  List<Map<String, dynamic>> _kategoriList = [];
   bool _loadingKategori = false;
+  List<Map<String, dynamic>> _kategoriList = [];
 
   @override
   void initState() {
@@ -42,45 +39,64 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
     try {
       await AuthService.loadSession();
       final data = await AuthService().me();
-      // data['user'] mungkin dikembalikan tergantung implementasi
-      final user = data['user']??data; 
+      final user = data['user'] ?? data;
       final alamat = user['user_alamat'] ?? user['alamat'] ?? 'Alamat belum diisi';
-      setState(() { _alamatPengguna = alamat.toString(); });
+      setState(() => _alamatPengguna = alamat.toString());
     } catch (e) {
-      setState(() {
-        _alamatPengguna = 'Gagal memuat alamat';
-      });
+      setState(() => _alamatPengguna = 'Gagal memuat alamat');
     }
   }
 
   Future<void> _loadKategori() async {
-    setState(() { _loadingKategori = true; });
+    setState(() => _loadingKategori = true);
     try {
       final items = await KategoriService.fetchKategori();
-      setState(() { _kategoriList = items; });
+      setState(() => _kategoriList = items);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gagal memuat kategori: $e'), backgroundColor: Colors.red),
       );
     } finally {
-      if (mounted) setState(() { _loadingKategori = false; });
+      setState(() => _loadingKategori = false);
     }
   }
 
-  // Fungsi placeholder untuk simulasi ambil gambar
+  // 🔹 Ambil foto barang dan kirim ke API prediksi
   Future<void> _takePicture() async {
-    // Buka kamera dan tunggu hasil path
     final path = await context.push<String>('/camera');
     if (!mounted) return;
+
     if (path != null) {
       setState(() {
         _imagePath = path;
         _currentStep = 1;
+        _kategoriOtomatis = "Menganalisis gambar...";
       });
+
+      try {
+        final predictedKategori = await BarangService().predictKategori(path);
+        if (!mounted) return;
+
+        setState(() {
+          _kategoriOtomatis = predictedKategori ?? "Tidak terdeteksi";
+          // Opsional: Mapping nama kategori ke kategori_id di dropdown
+          final match = _kategoriList.firstWhere(
+            (k) => k['kategori_nama']?.toString().toLowerCase() ==
+                   predictedKategori?.toLowerCase(),
+            orElse: () => {},
+          );
+          if (match.isNotEmpty) _kategoriId = match['kategori_id'] as int?;
+        });
+      } catch (e) {
+        setState(() => _kategoriOtomatis = "Gagal memprediksi");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Prediksi gagal: $e')),
+        );
+      }
     }
   }
 
-  // Fungsi untuk mengunggah barang
+  // 🔹 Upload data barang
   Future<void> _uploadBarang() async {
     if (_loadingUpload) return;
     if (_namaController.text.isEmpty ||
@@ -109,11 +125,12 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
         ..fields['barang_nama'] = _namaController.text
         ..fields['barang_harga'] = _hargaController.text
         ..fields['barang_stok'] = _stokController.text
-        ..fields['barang_deskripsi'] = '';
+        ..fields['barang_deskripsi'] = ''
+        ..files.add(await http.MultipartFile.fromPath('foto', _imagePath!));
+
       if (_kategoriId != null) {
         request.fields['kategori_id'] = _kategoriId.toString();
       }
-      request.files.add(await http.MultipartFile.fromPath('foto', _imagePath!));
 
       final streamed = await request.send();
       final responseBody = await streamed.stream.bytesToString();
@@ -135,22 +152,11 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Error: $e"),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
       );
     } finally {
-      if (mounted) setState(() => _loadingUpload = false);
+      setState(() => _loadingUpload = false);
     }
-  }
-
-  @override
-  void dispose() {
-    _namaController.dispose();
-    _hargaController.dispose();
-    _stokController.dispose();
-    super.dispose();
   }
 
   @override
@@ -161,10 +167,7 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: colorScheme.primary,
-        title: Text(
-          "Tambah Barang",
-          style: theme.textTheme.titleLarge?.copyWith(color: Colors.white),
-        ),
+        title: const Text("Tambah Barang", style: TextStyle(color: Colors.white)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -179,185 +182,130 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
                   color: colorScheme.primary, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            // --- Langkah 1: Ambil Gambar ---
             if (_currentStep == 0)
-              Column(
-                children: [
-                  Container(
-                    height: 300,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey.shade400),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.camera_alt_outlined,
-                            size: 80,
-                            color: Colors.grey.shade500,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "Kamera Preview Placeholder",
-                            style: theme.textTheme.bodyLarge?.copyWith(color: Colors.grey[700]),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: _takePicture,
-                    icon: const Icon(Icons.camera_alt, color: Colors.white),
-                    label: const Text("Ambil Foto Barang"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 30, vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            // --- Langkah 2: Isi Form Detail ---
-            if (_currentStep == 1)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Preview gambar jika ada
-                  if (_imagePath != null)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.file(
-                        File(_imagePath!),
-                        height: 180,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  else
-                    Container(
-                      height: 150,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: colorScheme.secondary.withOpacity(0.1),
-                      ),
-                      child: Center(
-                        child: Text(
-                          "Foto Barang Sudah Diambil",
-                          style: theme.textTheme.bodyLarge,
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 20),
-                  // Form Input
-                  TextFormField(
-                    controller: _namaController,
-                    decoration: const InputDecoration(
-                      labelText: "Nama Barang",
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _hargaController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: "Harga (Contoh: 500000)",
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _stokController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: "Stok",
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Dropdown Kategori dari database
-                  InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'Kategori',
-                      border: OutlineInputBorder(),
-                    ),
-                    child: _loadingKategori
-                        ? const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12.0),
-                            child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                          )
-                        : DropdownButtonHideUnderline(
-                            child: DropdownButton<int?> (
-                              isExpanded: true,
-                              value: _kategoriId,
-                              hint: const Text('Pilih kategori'),
-                              items: _kategoriList.map((k) {
-                                return DropdownMenuItem<int?>(
-                                  value: k['kategori_id'] as int?,
-                                  child: Text(k['kategori_nama']?.toString() ?? 'Tidak diketahui'),
-                                );
-                              }).toList(),
-                              onChanged: (val) {
-                                setState(() { _kategoriId = val; });
-                              },
-                            ),
-                          ),
-                  ),
-                  const SizedBox(height: 20),
-                  // // Kategori Otomatis
-                  // Text(
-                  //   "Kategori (Identifikasi ML):",
-                  //   style: theme.textTheme.bodyLarge,
-                  // ),
-                  // Text(
-                  //   _kategoriOtomatis,
-                  //   style: theme.textTheme.titleMedium
-                  //       ?.copyWith(color: Colors.green.shade700),
-                  // ),
-                  // const SizedBox(height: 10),
-                  // Alamat Otomatis
-                  Text(
-                    "Alamat Penjual (Data Pengguna):",
-                    style: theme.textTheme.bodyLarge,
-                  ),
-                  Text(
-                    _alamatPengguna,
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 30),
-                  // Button Upload
-                  ElevatedButton.icon(
-                    onPressed: _loadingUpload ? null : _uploadBarang,
-                    icon: _loadingUpload
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Icon(Icons.cloud_upload, color: Colors.white),
-                    label: Text(_loadingUpload ? "Mengunggah..." : "Upload Barang"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.secondary,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              _buildStepAmbilGambar(theme, colorScheme)
+            else
+              _buildStepIsiForm(theme, colorScheme),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildStepAmbilGambar(ThemeData theme, ColorScheme colorScheme) {
+    return Column(
+      children: [
+        Container(
+          height: 300,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade400),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.camera_alt_outlined, size: 80, color: Colors.grey.shade500),
+                const SizedBox(height: 8),
+                Text("Kamera Preview Placeholder",
+                    style: theme.textTheme.bodyLarge?.copyWith(color: Colors.grey[700])),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton.icon(
+          onPressed: _takePicture,
+          icon: const Icon(Icons.camera_alt, color: Colors.white),
+          label: const Text("Ambil Foto Barang"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: colorScheme.primary,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStepIsiForm(ThemeData theme, ColorScheme colorScheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_imagePath != null)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.file(File(_imagePath!), height: 180, width: double.infinity, fit: BoxFit.cover),
+          ),
+        const SizedBox(height: 20),
+
+        TextFormField(
+          controller: _namaController,
+          decoration: const InputDecoration(labelText: "Nama Barang", border: OutlineInputBorder()),
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _hargaController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: "Harga (Contoh: 500000)", border: OutlineInputBorder()),
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _stokController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: "Stok", border: OutlineInputBorder()),
+        ),
+        const SizedBox(height: 16),
+
+        // 🔹 Tampilkan hasil prediksi ML
+        Text("Kategori (Identifikasi ML):", style: theme.textTheme.bodyLarge),
+        Text(
+          _kategoriOtomatis,
+          style: theme.textTheme.titleMedium?.copyWith(color: Colors.green.shade700),
+        ),
+        const SizedBox(height: 16),
+
+        InputDecorator(
+          decoration: const InputDecoration(labelText: 'Kategori Manual', border: OutlineInputBorder()),
+          child: _loadingKategori
+              ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+              : DropdownButtonHideUnderline(
+                  child: DropdownButton<int?>(
+                    isExpanded: true,
+                    value: _kategoriId,
+                    hint: const Text('Pilih kategori'),
+                    items: _kategoriList.map((k) {
+                      return DropdownMenuItem<int?>(
+                        value: k['kategori_id'] as int?,
+                        child: Text(k['kategori_nama']?.toString() ?? 'Tidak diketahui'),
+                      );
+                    }).toList(),
+                    onChanged: (val) => setState(() => _kategoriId = val),
+                  ),
+                ),
+        ),
+        const SizedBox(height: 20),
+
+        Text("Alamat Penjual:", style: theme.textTheme.bodyLarge),
+        Text(_alamatPengguna, style: theme.textTheme.titleMedium),
+        const SizedBox(height: 30),
+
+        ElevatedButton.icon(
+          onPressed: _loadingUpload ? null : _uploadBarang,
+          icon: _loadingUpload
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Icon(Icons.cloud_upload, color: Colors.white),
+          label: Text(_loadingUpload ? "Mengunggah..." : "Upload Barang"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: colorScheme.secondary,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(double.infinity, 50),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+      ],
     );
   }
 }
