@@ -67,10 +67,13 @@ class BarangController extends Controller
         $data['user_id'] = $request->user()->user_id;
         $data['barang_kode'] = 'BRG-' . now()->format('YmdHis') . '-' . random_int(100, 999);
 
-        if ($request->hasFile('foto')) {
+        if ($request->filled('foto_path') && Storage::disk('public')->exists($request->foto_path)) {
+            $data['barang_foto'] = $request->foto_path;
+        } elseif ($request->hasFile('foto')) {
             $path = $request->file('foto')->store('barang', 'public');
             $data['barang_foto'] = $path;
         }
+
 
         $item = BarangModel::create($data);
         return response()->json(['message' => 'Barang ditambahkan', 'data' => $item], 201);
