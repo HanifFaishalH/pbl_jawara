@@ -11,8 +11,8 @@ app = FastAPI(title="DNN Batik Classifier API", version="1.1")
 # =================================================================================
 # 1. Load model & scaler
 # =================================================================================
-MODEL_PATH = "dnn_model_GLCM + LBP.h5"
-SCALER_PATH = "dnn_scalerr_GLCM+LBP.pkl"
+MODEL_PATH = "dnn_model_GLCM+LBP.h5"
+SCALER_PATH = "dnn_scaler_GLCM+LBP.pkl"
 THRESHOLD_TULIS = 0.50  # ambil dari konfigurasi Flask
 
 classes = ["Batik Cap", "Batik Tulis"]
