@@ -16,12 +16,14 @@ class AddBarangScreen extends StatefulWidget {
 class _AddBarangScreenState extends State<AddBarangScreen> {
   int _currentStep = 0;
   String? _imagePath;
+  String? _serverImageUrl;
+  String? _serverImagePath;
 
   final _namaController = TextEditingController();
   final _hargaController = TextEditingController();
   final _stokController = TextEditingController();
 
-  String _kategoriOtomatis = "-"; // hasil ML
+  String _kategoriOtomatis = "-";
   String _alamatPengguna = "(memuat alamat...)";
   int? _kategoriId;
   bool _loadingUpload = false;
@@ -35,18 +37,25 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
     _loadKategori();
   }
 
+  // ============================================================
+  // 🔹 Load alamat user dari AuthService
+  // ============================================================
   Future<void> _loadUserAddress() async {
     try {
       await AuthService.loadSession();
       final data = await AuthService().me();
       final user = data['user'] ?? data;
-      final alamat = user['user_alamat'] ?? user['alamat'] ?? 'Alamat belum diisi';
+      final alamat =
+          user['user_alamat'] ?? user['alamat'] ?? 'Alamat belum diisi';
       setState(() => _alamatPengguna = alamat.toString());
     } catch (e) {
       setState(() => _alamatPengguna = 'Gagal memuat alamat');
     }
   }
 
+  // ============================================================
+  // 🔹 Ambil daftar kategori dari API
+  // ============================================================
   Future<void> _loadKategori() async {
     setState(() => _loadingKategori = true);
     try {
@@ -54,58 +63,72 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
       setState(() => _kategoriList = items);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal memuat kategori: $e'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('Gagal memuat kategori: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       setState(() => _loadingKategori = false);
     }
   }
 
-  // 🔹 Ambil foto barang dan kirim ke API prediksi
+  // ============================================================
+  // 📸 Ambil foto dan kirim ke API prediksi (Laravel + FastAPI)
+  // ============================================================
   Future<void> _takePicture() async {
     final path = await context.push<String>('/camera');
-    if (!mounted) return;
+    if (!mounted || path == null) return;
 
-    if (path != null) {
+    setState(() {
+      _imagePath = path;
+      _currentStep = 1;
+      _kategoriOtomatis = "Menganalisis gambar...";
+    });
+
+    try {
+      final data = await BarangService().predictKategori(path);
+      if (data == null) throw Exception("Tidak ada hasil dari server");
+
+      final kategori = data["kategori_prediksi"] ?? "Tidak terdeteksi";
+      final imageUrl = data["image_url"];
+      final storagePath = data["path"];
+
       setState(() {
-        _imagePath = path;
-        _currentStep = 1;
-        _kategoriOtomatis = "Menganalisis gambar...";
-      });
+        _kategoriOtomatis = kategori;
+        _serverImageUrl = imageUrl;
+        _serverImagePath = storagePath;
 
-      try {
-        final predictedKategori = await BarangService().predictKategori(path);
-        if (!mounted) return;
-
-        setState(() {
-          _kategoriOtomatis = predictedKategori ?? "Tidak terdeteksi";
-          // Opsional: Mapping nama kategori ke kategori_id di dropdown
-          final match = _kategoriList.firstWhere(
-            (k) => k['kategori_nama']?.toString().toLowerCase() ==
-                   predictedKategori?.toLowerCase(),
-            orElse: () => {},
-          );
-          if (match.isNotEmpty) _kategoriId = match['kategori_id'] as int?;
-        });
-      } catch (e) {
-        setState(() => _kategoriOtomatis = "Gagal memprediksi");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Prediksi gagal: $e')),
+        // 🔹 Cocokkan kategori otomatis dengan dropdown
+        final match = _kategoriList.firstWhere(
+          (k) =>
+              k['kategori_nama']?.toString().toLowerCase() ==
+              kategori.toLowerCase(),
+          orElse: () => {},
         );
-      }
+        if (match.isNotEmpty) _kategoriId = match['kategori_id'] as int?;
+      });
+    } catch (e) {
+      setState(() => _kategoriOtomatis = "Gagal memprediksi");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Prediksi gagal: $e')),
+      );
     }
   }
 
-  // 🔹 Upload data barang
+  // ============================================================
+  // 🚀 Upload data barang ke Laravel
+  // ============================================================
   Future<void> _uploadBarang() async {
     if (_loadingUpload) return;
+
     if (_namaController.text.isEmpty ||
         _hargaController.text.isEmpty ||
         _stokController.text.isEmpty ||
-        _imagePath == null) {
+        _serverImagePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Semua field & foto harus diisi"),
+          content: Text("Isi semua field dan ambil foto dulu"),
           backgroundColor: Colors.red,
         ),
       );
@@ -113,10 +136,11 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
     }
 
     setState(() => _loadingUpload = true);
+
     try {
       await AuthService.loadSession();
       final token = AuthService.token;
-      if (token == null) throw Exception('Token tidak ada, silakan login ulang');
+      if (token == null) throw Exception('Token tidak ada');
 
       final uri = Uri.parse('${AuthService.baseUrl}/barang');
       final request = http.MultipartRequest('POST', uri)
@@ -125,30 +149,27 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
         ..fields['barang_nama'] = _namaController.text
         ..fields['barang_harga'] = _hargaController.text
         ..fields['barang_stok'] = _stokController.text
-        ..fields['barang_deskripsi'] = ''
-        ..files.add(await http.MultipartFile.fromPath('foto', _imagePath!));
+        ..fields['barang_deskripsi'] =
+            'Prediksi kategori: $_kategoriOtomatis'
+        ..fields['foto_path'] = _serverImagePath!; // 🔥 gunakan path server
 
       if (_kategoriId != null) {
         request.fields['kategori_id'] = _kategoriId.toString();
       }
 
       final streamed = await request.send();
-      final responseBody = await streamed.stream.bytesToString();
+      final body = await streamed.stream.bytesToString();
+
       if (streamed.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Barang ${_namaController.text} berhasil diunggah!"),
+            content: Text("Barang berhasil diunggah"),
             backgroundColor: Colors.green,
           ),
         );
         if (mounted) context.pop();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Gagal upload (${streamed.statusCode}): $responseBody"),
-            backgroundColor: Colors.red,
-          ),
-        );
+        throw Exception("Gagal upload: $body");
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -159,6 +180,9 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
     }
   }
 
+  // ============================================================
+  // 🧱 UI: Struktur halaman
+  // ============================================================
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -167,7 +191,10 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: colorScheme.primary,
-        title: const Text("Tambah Barang", style: TextStyle(color: Colors.white)),
+        title: const Text(
+          "Tambah Barang",
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -179,7 +206,9 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
                   ? "Langkah 1: Ambil Gambar Barang"
                   : "Langkah 2: Isi Detail Barang",
               style: theme.textTheme.titleMedium?.copyWith(
-                  color: colorScheme.primary, fontWeight: FontWeight.bold),
+                color: colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
             if (_currentStep == 0)
@@ -192,6 +221,9 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
     );
   }
 
+  // ============================================================
+  // 📸 Step 1: Ambil Gambar
+  // ============================================================
   Widget _buildStepAmbilGambar(ThemeData theme, ColorScheme colorScheme) {
     return Column(
       children: [
@@ -206,10 +238,14 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.camera_alt_outlined, size: 80, color: Colors.grey.shade500),
+                Icon(Icons.camera_alt_outlined,
+                    size: 80, color: Colors.grey.shade500),
                 const SizedBox(height: 8),
-                Text("Kamera Preview Placeholder",
-                    style: theme.textTheme.bodyLarge?.copyWith(color: Colors.grey[700])),
+                Text(
+                  "Kamera Preview Placeholder",
+                  style: theme.textTheme.bodyLarge
+                      ?.copyWith(color: Colors.grey[700]),
+                ),
               ],
             ),
           ),
@@ -222,14 +258,20 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
           style: ElevatedButton.styleFrom(
             backgroundColor: colorScheme.primary,
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         ),
       ],
     );
   }
 
+  // ============================================================
+  // 🧾 Step 2: Isi Form Barang
+  // ============================================================
   Widget _buildStepIsiForm(ThemeData theme, ColorScheme colorScheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,40 +279,66 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
         if (_imagePath != null)
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.file(File(_imagePath!), height: 180, width: double.infinity, fit: BoxFit.cover),
+            child: Image.file(
+              File(_imagePath!),
+              height: 180,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
           ),
         const SizedBox(height: 20),
 
+        // Nama Barang
         TextFormField(
           controller: _namaController,
-          decoration: const InputDecoration(labelText: "Nama Barang", border: OutlineInputBorder()),
+          decoration: const InputDecoration(
+            labelText: "Nama Barang",
+            border: OutlineInputBorder(),
+          ),
         ),
         const SizedBox(height: 16),
+
+        // Harga
         TextFormField(
           controller: _hargaController,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: "Harga (Contoh: 500000)", border: OutlineInputBorder()),
+          decoration: const InputDecoration(
+            labelText: "Harga (Contoh: 500000)",
+            border: OutlineInputBorder(),
+          ),
         ),
         const SizedBox(height: 16),
+
+        // Stok
         TextFormField(
           controller: _stokController,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: "Stok", border: OutlineInputBorder()),
+          decoration: const InputDecoration(
+            labelText: "Stok",
+            border: OutlineInputBorder(),
+          ),
         ),
         const SizedBox(height: 16),
 
-        // 🔹 Tampilkan hasil prediksi ML
+        // 🔹 Hasil prediksi ML
         Text("Kategori (Identifikasi ML):", style: theme.textTheme.bodyLarge),
         Text(
           _kategoriOtomatis,
-          style: theme.textTheme.titleMedium?.copyWith(color: Colors.green.shade700),
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: Colors.green.shade700,
+          ),
         ),
         const SizedBox(height: 16),
 
+        // Dropdown kategori manual
         InputDecorator(
-          decoration: const InputDecoration(labelText: 'Kategori Manual', border: OutlineInputBorder()),
+          decoration: const InputDecoration(
+            labelText: 'Kategori Manual',
+            border: OutlineInputBorder(),
+          ),
           child: _loadingKategori
-              ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+              ? const Center(
+                  child: CircularProgressIndicator(strokeWidth: 2))
               : DropdownButtonHideUnderline(
                   child: DropdownButton<int?>(
                     isExpanded: true,
@@ -279,7 +347,8 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
                     items: _kategoriList.map((k) {
                       return DropdownMenuItem<int?>(
                         value: k['kategori_id'] as int?,
-                        child: Text(k['kategori_nama']?.toString() ?? 'Tidak diketahui'),
+                        child: Text(
+                            k['kategori_nama']?.toString() ?? 'Tidak diketahui'),
                       );
                     }).toList(),
                     onChanged: (val) => setState(() => _kategoriId = val),
@@ -288,21 +357,33 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
         ),
         const SizedBox(height: 20),
 
+        // Alamat Penjual
         Text("Alamat Penjual:", style: theme.textTheme.bodyLarge),
         Text(_alamatPengguna, style: theme.textTheme.titleMedium),
         const SizedBox(height: 30),
 
+        // Tombol Upload Barang
         ElevatedButton.icon(
           onPressed: _loadingUpload ? null : _uploadBarang,
           icon: _loadingUpload
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
               : const Icon(Icons.cloud_upload, color: Colors.white),
-          label: Text(_loadingUpload ? "Mengunggah..." : "Upload Barang"),
+          label:
+              Text(_loadingUpload ? "Mengunggah..." : "Upload Barang"),
           style: ElevatedButton.styleFrom(
             backgroundColor: colorScheme.secondary,
             foregroundColor: Colors.white,
             minimumSize: const Size(double.infinity, 50),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         ),
       ],

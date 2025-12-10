@@ -13,55 +13,49 @@ class MLPredictController extends Controller
     {
         Log::info('📩 [Predict] Request masuk ke /predict-batik');
 
-        // ✅ Pastikan ada file dikirim
         if (!$request->hasFile('foto')) {
             Log::error('❌ Tidak ada file "foto" yang diterima dari Flutter.');
             return response()->json(['error' => 'File foto tidak ditemukan'], 400);
         }
 
         $file = $request->file('foto');
-        Log::info('🖼️ File diterima dari Flutter', [
-            'name' => $file->getClientOriginalName(),
-            'size' => $file->getSize(),
-            'mime' => $file->getMimeType(),
-        ]);
 
         try {
-            // ✅ Kirim file ke FastAPI (pastikan port sesuai)
+            // ✅ Simpan dulu ke storage Laravel
+            $path = $file->store('uploads', 'public');
+            $fullPath = storage_path("app/public/{$path}");
+            $publicUrl = asset("storage/{$path}");
+
+            Log::info("📦 [Saved] Gambar disimpan ke storage: $fullPath");
+
+            // ✅ Kirim file yang sudah tersimpan ke FastAPI
             $fastApiUrl = "http://127.0.0.1:5000/predict";
-
             $response = Http::timeout(30)->attach(
-                'file', file_get_contents($file->getRealPath()), $file->getClientOriginalName()
+                'file', file_get_contents($fullPath), basename($fullPath)
             )->post($fastApiUrl);
-
-            Log::info('📤 [Forwarded] Ke FastAPI', [
-                'status' => $response->status(),
-                'body' => substr($response->body(), 0, 400),
-            ]);
 
             if ($response->successful()) {
                 $data = $response->json();
                 return response()->json([
                     'kategori_prediksi' => $data['kategori_prediksi'] ?? 'Tidak diketahui',
-                    'akurasi' => $data['akurasi'] ?? null
+                    'akurasi' => $data['akurasi'] ?? null,
+                    'image_url' => $publicUrl,
+                    'path' => $path // 🔥 path-nya juga dikirim balik ke Flutter
                 ], 200);
             }
 
-            Log::error('⚠️ [FastAPI Error]', ['response' => $response->body()]);
             return response()->json([
                 'error' => 'Gagal dari model ML',
                 'detail' => $response->body()
             ], 500);
 
         } catch (\Exception $e) {
-            Log::error('💥 [Predict Error]', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            Log::error('💥 [Predict Error]', ['message' => $e->getMessage()]);
             return response()->json([
                 'error' => 'Gagal memproses prediksi',
                 'detail' => $e->getMessage()
             ], 500);
         }
     }
+
 }

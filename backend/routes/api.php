@@ -36,6 +36,8 @@ Route::get('/barang/{id}', [BarangController::class, 'show'])->whereNumber('id')
 // Kategori (untuk dropdown)
 Route::get('/kategori', [KategoriController::class, 'index']);
 
+Route::post('/predict-batik', [MLPredictController::class, 'predict']);
+
 // === PROTECTED ROUTES (BUTUH LOGIN) ===
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
