@@ -162,13 +162,19 @@ class MenuPemasukanHeader extends StatelessWidget {
           'route': '/verifikasi-pembayaran',
         },
       ]);
-    } else {
-      // Menu untuk Warga (role 6)
+    } 
+    // Menu untuk Warga (role 6) dan role lainnya
+    else {
       items.addAll([
         {
           'label': 'Tagihan Saya',
           'icon': FontAwesomeIcons.fileInvoice,
           'route': '/tagihan-saya',
+        },
+        {
+          'label': 'Bayar Tagihan',
+          'icon': FontAwesomeIcons.creditCard,
+          'route': '/bayar-tagihan',
         },
       ]);
     }

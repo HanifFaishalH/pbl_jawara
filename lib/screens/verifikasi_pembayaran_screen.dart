@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../services/iuran_service.dart';
 
 class VerifikasiPembayaranScreen extends StatefulWidget {
@@ -231,6 +232,11 @@ class _VerifikasiPembayaranScreenState extends State<VerifikasiPembayaranScreen>
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => GoRouter.of(context).go('/menu-pemasukan'),
+          tooltip: 'Kembali',
+        ),
         actions: [
           if (_pembayaranList.isNotEmpty)
             Center(

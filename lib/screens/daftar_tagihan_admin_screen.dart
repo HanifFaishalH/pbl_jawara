@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../services/iuran_service.dart';
 
 class DaftarTagihanAdminScreen extends StatefulWidget {
@@ -156,6 +157,11 @@ class _DaftarTagihanAdminScreenState extends State<DaftarTagihanAdminScreen> {
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => GoRouter.of(context).go('/menu-pemasukan'),
+          tooltip: 'Kembali',
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list),

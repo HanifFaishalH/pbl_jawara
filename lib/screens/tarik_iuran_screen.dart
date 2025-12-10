@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../services/iuran_service.dart';
 import '../services/kategori_service.dart';
 
@@ -189,6 +190,7 @@ class _TarikIuranScreenState extends State<TarikIuranScreen> {
   }
   
   Future<void> _submitTarikIuran() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
     });
@@ -213,11 +215,19 @@ class _TarikIuranScreenState extends State<TarikIuranScreen> {
           const SnackBar(
             content: Text('Tagihan berhasil dikirim!'),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
+            duration: Duration(seconds: 2),
           ),
         );
-        Navigator.pop(context, true);
+        // Navigate tanpa delay, SnackBar tetap visible selama 2 detik
+        if (!mounted) return;
+        GoRouter.of(context).go('/menu-pemasukan');
       } else {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Gagal mengirim tagihan'),
@@ -226,6 +236,11 @@ class _TarikIuranScreenState extends State<TarikIuranScreen> {
         );
       }
     } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -233,12 +248,6 @@ class _TarikIuranScreenState extends State<TarikIuranScreen> {
           backgroundColor: Colors.red,
         ),
       );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
     }
   }
   
@@ -275,6 +284,11 @@ class _TarikIuranScreenState extends State<TarikIuranScreen> {
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => GoRouter.of(context).go('/menu-pemasukan'),
+          tooltip: 'Kembali',
+        ),
       ),
       body: SafeArea(
         child: _isLoadingKategori
