@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\PesanBroadcastModel;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\NotifikasiHelper;
 
 class PesanBroadcastController extends Controller
 {
@@ -36,6 +38,16 @@ class PesanBroadcastController extends Controller
             'judul' => $request->judul,
             'isi_pesan' => $request->isi_pesan,
         ]);
+
+        // Kirim notifikasi ke semua user aktif (semua role kecuali yang belum diverifikasi)
+        $userIds = User::where('status', 'Diterima')->pluck('user_id')->toArray();
+        NotifikasiHelper::createBulk(
+            userIds: $userIds,
+            judul: 'Broadcast Baru',
+            pesan: $request->judul,
+            tipe: 'info',
+            link: '/broadcast'
+        );
 
         return response()->json(['status' => 'success', 'data' => $broadcast]);
     }

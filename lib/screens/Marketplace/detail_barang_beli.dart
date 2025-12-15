@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:jawaramobile_1/services/keranjang_service.dart';
+import 'package:jawaramobile_1/services/barang_service.dart';
 
 // Import Widgets Modular
 import '../../widgets/marketplace/detail_image_header.dart';
@@ -20,11 +21,38 @@ class DetailBarangBeli extends StatefulWidget {
 class _DetailBarangBeliState extends State<DetailBarangBeli> {
   bool _isLoadingCart = false;
   final Color jawaraColor = const Color(0xFF26547C);
+  bool _isOwnedByUser = false;
+  bool _checkingOwnership = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfOwnedByUser();
+  }
+
+  Future<void> _checkIfOwnedByUser() async {
+    try {
+      int barangId = int.tryParse(widget.barangData['id'] ?? '0') ?? 0;
+      final isOwner = await BarangService().isBarangOwner(barangId);
+      if (mounted) {
+        setState(() {
+          _isOwnedByUser = isOwner;
+          _checkingOwnership = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _checkingOwnership = false);
+      }
+    }
+  }
 
   Future<void> _addToCart() async {
     setState(() => _isLoadingCart = true);
     int idBarang = int.tryParse(widget.barangData['id'] ?? '0') ?? 0;
-    bool success = await KeranjangService().addToCart(idBarang, 1);
+    final result = await KeranjangService().addToCart(idBarang, 1);
+    final success = result['success'] as bool;
+    final message = result['message'] as String? ?? 'Gagal';
     setState(() => _isLoadingCart = false);
 
     if (!mounted) return;
@@ -33,7 +61,7 @@ class _DetailBarangBeliState extends State<DetailBarangBeli> {
       _showSuccessDialog();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Gagal menambahkan ke keranjang"), backgroundColor: Colors.red),
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
       );
     }
   }

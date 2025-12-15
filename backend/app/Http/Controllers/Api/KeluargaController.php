@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\KeluargaModel;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use App\Services\ActivityLogService;
+use App\Helpers\NotifikasiHelper;
 
 class KeluargaController extends Controller
 {
@@ -52,6 +54,21 @@ class KeluargaController extends Controller
             $keluarga->toArray(),
             $request
         );
+
+        // Kirim notifikasi ke admin lain
+        $adminIds = User::where('role_id', 1)
+            ->where('user_id', '!=', $request->user()->user_id)
+            ->pluck('user_id')
+            ->toArray();
+        if (!empty($adminIds)) {
+            NotifikasiHelper::createBulk(
+                userIds: $adminIds,
+                judul: 'Data Keluarga Baru',
+                pesan: "Data keluarga baru ditambahkan: {$keluarga->keluarga_nama_kepala}",
+                tipe: 'info',
+                link: '/data-warga-rumah'
+            );
+        }
 
         return response()->json(['message' => 'Data keluarga berhasil dibuat', 'data' => $keluarga], 201);
     }

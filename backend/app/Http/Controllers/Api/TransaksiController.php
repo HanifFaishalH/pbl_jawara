@@ -8,6 +8,7 @@ use App\Models\TransaksiDetailModel;
 use App\Models\BarangModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Helpers\NotifikasiHelper;
 
 class TransaksiController extends Controller
 {
@@ -55,6 +56,12 @@ class TransaksiController extends Controller
                 $barangDb = BarangModel::lockForUpdate()->find($item['barang_id']);
                 
                 if (!$barangDb) throw new \Exception("Barang ID {$item['barang_id']} tidak ditemukan.");
+                
+                    // Validasi: Cek apakah barang milik user sendiri
+                    if ($barangDb->user_id === $user->user_id) {
+                        throw new \Exception("Tidak bisa membeli barang '{$barangDb->barang_nama}' karena barang tersebut milik Anda sendiri.");
+                    }
+                
                 if ($barangDb->barang_stok < $item['jumlah']) {
                     throw new \Exception("Stok {$barangDb->barang_nama} habis.");
                 }
@@ -73,6 +80,30 @@ class TransaksiController extends Controller
             }
 
             DB::commit();
+
+            // Kirim notifikasi ke pembeli
+            NotifikasiHelper::create(
+                userId: $user->user_id,
+                judul: 'Pesanan Berhasil',
+                pesan: "Pesanan Anda dengan kode {$transaksi->transaksi_kode} berhasil dibuat.",
+                tipe: 'success',
+                link: '/riwayat-pesanan'
+            );
+
+            // Kirim notifikasi ke penjual
+            foreach ($request->barang as $item) {
+                $barang = BarangModel::find($item['barang_id']);
+                if ($barang && $barang->user_id != $user->user_id) {
+                    NotifikasiHelper::create(
+                        userId: $barang->user_id,
+                        judul: 'Pesanan Masuk',
+                        pesan: "Anda mendapat pesanan baru untuk {$barang->barang_nama}",
+                        tipe: 'info',
+                        link: '/pesanan-masuk'
+                    );
+                }
+            }
+
             return response()->json([
                 'success' => true, 
                 'message' => 'Pesanan berhasil dibuat.',
@@ -146,6 +177,21 @@ class TransaksiController extends Controller
             $transaksi->save();
 
             DB::commit();
+            
+            // Kirim notifikasi ke pembeli
+            $tipeNotif = $request->status === 'selesai' ? 'success' : 'warning';
+            $pesanNotif = $request->status === 'selesai' 
+                ? "Pesanan Anda dengan kode {$transaksi->transaksi_kode} telah selesai."
+                : "Pesanan Anda dengan kode {$transaksi->transaksi_kode} dibatalkan.";
+            
+            NotifikasiHelper::create(
+                userId: $transaksi->user_id,
+                judul: 'Status Pesanan Diperbarui',
+                pesan: $pesanNotif,
+                tipe: $tipeNotif,
+                link: '/riwayat-pesanan'
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Status berhasil diubah menjadi ' . $request->status

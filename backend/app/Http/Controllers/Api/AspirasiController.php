@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AspirasiModel;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\NotifikasiHelper;
 
 class AspirasiController extends Controller
 {
@@ -45,6 +47,16 @@ class AspirasiController extends Controller
             'status' => 'Pending',
         ]);
 
+        // Kirim notifikasi ke admin
+        $adminIds = User::where('role_id', 1)->pluck('user_id')->toArray();
+        NotifikasiHelper::createBulk(
+            userIds: $adminIds,
+            judul: 'Aspirasi Baru',
+            pesan: "{$user->user_nama_depan} mengirim aspirasi: '{$request->judul}'",
+            tipe: 'info',
+            link: '/aspirasi-screen'
+        );
+
         return response()->json(['message' => 'Aspirasi berhasil dikirim', 'data' => $aspirasi], 201);
     }
 
@@ -77,6 +89,16 @@ class AspirasiController extends Controller
             'tanggapan' => $request->tanggapan,
             'feedback_by' => $user->user_id // <-- SIMPAN ID PEJABAT
         ]);
+
+        // Kirim notifikasi ke pengirim aspirasi
+        $tipeNotif = $request->status === 'Diterima' ? 'success' : 'info';
+        NotifikasiHelper::create(
+            userId: $aspirasi->user_id,
+            judul: 'Status Aspirasi Diperbarui',
+            pesan: "Aspirasi Anda '{$aspirasi->judul}' telah {$request->status}",
+            tipe: $tipeNotif,
+            link: '/aspirasi-screen'
+        );
 
         return response()->json(['message' => 'Status aspirasi diperbarui', 'data' => $aspirasi]);
     }

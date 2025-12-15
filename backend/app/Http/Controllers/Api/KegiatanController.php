@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\KegiatanModel;
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Helpers\NotifikasiHelper;
 
 class KegiatanController extends Controller
 {
@@ -62,6 +64,16 @@ class KegiatanController extends Controller
             'kegiatan_foto' => $path
         ]);
 
+        // Kirim notifikasi ke semua user
+        $userIds = User::pluck('user_id')->toArray();
+        NotifikasiHelper::createBulk(
+            userIds: $userIds,
+            judul: 'Kegiatan Baru',
+            pesan: "Kegiatan '{$request->kegiatan_nama}' telah ditambahkan. Lihat detail kegiatan!",
+            tipe: 'info',
+            link: '/kegiatan'
+        );
+
         return response()->json(['message' => 'Kegiatan berhasil dibuat', 'data' => $kegiatan], 201);
     }
 
@@ -88,6 +100,15 @@ class KegiatanController extends Controller
 
         $kegiatan->update($data);
 
+        // Kirim notifikasi ke semua warga
+        NotifikasiHelper::notifyByRole(
+            roleId: 5,
+            judul: 'Kegiatan Diperbarui',
+            pesan: "Kegiatan '{$kegiatan->kegiatan_nama}' telah diperbarui. Cek detail terbaru!",
+            tipe: 'info',
+            link: '/kegiatan'
+        );
+
         return response()->json(['message' => 'Update berhasil', 'data' => $kegiatan]);
     }
 
@@ -105,7 +126,18 @@ class KegiatanController extends Controller
             Storage::disk('public')->delete($kegiatan->kegiatan_foto);
         }
 
+        $namaKegiatan = $kegiatan->kegiatan_nama;
         $kegiatan->delete();
+
+        // Kirim notifikasi ke semua warga
+        NotifikasiHelper::notifyByRole(
+            roleId: 5,
+            judul: 'Kegiatan Dibatalkan',
+            pesan: "Kegiatan '{$namaKegiatan}' telah dibatalkan.",
+            tipe: 'warning',
+            link: '/kegiatan'
+        );
+
         return response()->json(['message' => 'Data berhasil dihapus']);
     }
 }

@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 class DetailBarang extends StatelessWidget {
   // Data Barang diterima melalui constructor
-  final Map<String, String> barangData;
+  final Map<String, dynamic> barangData;
 
   const DetailBarang({super.key, required this.barangData});
 
@@ -58,7 +58,7 @@ class DetailBarang extends StatelessWidget {
           return AlertDialog(
             title: const Text("Hapus Barang"),
             content: Text(
-                "Yakin ingin menghapus barang ${barangData['nama']}?"),
+                "Yakin ingin menghapus barang ${barangData['barang_nama']}?"),
             actions: [
               TextButton(
                 onPressed: () => context.pop(),
@@ -72,7 +72,7 @@ class DetailBarang extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content:
-                          Text("Barang ${barangData['nama']} berhasil dihapus"),
+                          Text("Barang ${barangData['barang_nama']} berhasil dihapus"),
                       backgroundColor: Colors.green,
                     ),
                   );
@@ -117,30 +117,54 @@ class DetailBarang extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Gambar Barang Placeholder
-            Container(
-              height: 250,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
+            // Gambar Barang
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                height: 250,
+                width: double.infinity,
                 color: Colors.grey.shade200,
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.image_search_outlined,
-                      size: 60,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Gambar Barang: ${barangData['nama']}",
-                      style: theme.textTheme.bodyLarge?.copyWith(color: Colors.grey[700]),
-                    ),
-                  ],
-                ),
+                child: barangData['barang_foto'] != null && barangData['barang_foto'].toString().isNotEmpty
+                    ? Image.network(
+                        'http://127.0.0.1:8000/storage/${barangData['barang_foto']}?v=${DateTime.now().millisecondsSinceEpoch}',
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.broken_image, size: 60, color: Colors.grey),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Gagal memuat gambar',
+                                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                              ),
+                            ],
+                          ),
+                        ),
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                  : null,
+                            ),
+                          );
+                        },
+                      )
+                    : Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.image_outlined, size: 60, color: Colors.grey),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tidak ada gambar',
+                              style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: 24),
@@ -158,20 +182,28 @@ class DetailBarang extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
                   children: [
-                    _buildDetailRow(context, "Nama Barang", barangData['nama'] ?? '-'),
+                    _buildDetailRow(context, "Nama Barang", barangData['barang_nama']?.toString() ?? '-'),
                     const Divider(height: 1),
                     _buildDetailRow(
                       context,
                       "Harga",
-                      barangData['harga'] ?? 'Rp 0',
+                      'Rp ${barangData['barang_harga']?.toString() ?? '0'}',
                       valueColor: Colors.green.shade700,
                     ),
                     const Divider(height: 1),
-                    _buildDetailRow(context, "Stok", barangData['stok'] ?? '0'),
+                    _buildDetailRow(context, "Stok", barangData['barang_stok']?.toString() ?? '0'),
                     const Divider(height: 1),
-                    _buildDetailRow(context, "Kategori (ML)", barangData['kategori'] ?? 'Tidak Terdeteksi'),
+                    _buildDetailRow(
+                      context, 
+                      "Kategori (ML)", 
+                      (barangData['kategori'] as Map<String, dynamic>?)?['kategori_nama']?.toString() ?? 'Tidak Terdeteksi'
+                    ),
                     const Divider(height: 1),
-                    _buildDetailRow(context, "Alamat Penjual", barangData['alamat'] ?? 'Tidak Tersedia'),
+                    _buildDetailRow(
+                      context, 
+                      "Alamat Penjual", 
+                      (barangData['user'] as Map<String, dynamic>?)?['user_alamat']?.toString() ?? 'Tidak Tersedia'
+                    ),
                   ],
                 ),
               ),

@@ -32,70 +32,186 @@ class IuranTable extends StatelessWidget {
   }
 
   Widget _buildTableHeader(ThemeData theme, ColorScheme colorScheme) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          "Daftar Kategori Iuran",
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [colorScheme.primary.withOpacity(0.1), Colors.transparent],
         ),
-        ElevatedButton.icon(
-          onPressed: onAddPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            flex: 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Daftar Kategori Iuran",
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "${kategoriIuran.length} kategori terdaftar",
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
             ),
           ),
-          icon: const Icon(Icons.add, color: Colors.white),
-          label: const Text("Tambah", style: TextStyle(color: Colors.white)),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Flexible(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.8)],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: onAddPressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.add_circle_outline, color: Colors.white, size: 18),
+                label: const Text("Tambah", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildDataTable(ThemeData theme, ColorScheme colorScheme) {
     return Expanded(
       child: DataTable2(
-        columnSpacing: 12,
-        horizontalMargin: 12,
+        columnSpacing: 16,
+        horizontalMargin: 16,
         minWidth: 300,
+        headingRowHeight: 56,
+        dataRowHeight: 64,
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(color: colorScheme.primary.withOpacity(0.1), width: 2),
+          ),
+        ),
         headingRowColor: MaterialStateProperty.all(
-          theme.colorScheme.primary.withOpacity(0.1),
+          colorScheme.primary.withOpacity(0.15),
         ),
         headingTextStyle: TextStyle(
           fontWeight: FontWeight.bold,
-          color: theme.colorScheme.secondary,
+          fontSize: 14,
+          color: colorScheme.primary,
+          letterSpacing: 0.5,
         ),
         columns: const [
-          DataColumn2(label: Text('No'), size: ColumnSize.S),
-          DataColumn2(label: Text('Nama'), size: ColumnSize.L),
-          // DataColumn2(label: Text('Jenis')),
+          DataColumn2(label: Text('NO'), size: ColumnSize.S),
+          DataColumn2(label: Text('NAMA KATEGORI'), size: ColumnSize.L),
           DataColumn2(
-            label: Text('Nominal'),
+            label: Text('NOMINAL'),
             numeric: true,
             size: ColumnSize.L,
           ),
-          // DataColumn2(
-          //   label: Center(child: Text('Aksi')),
-          //   size: ColumnSize.L,
-          // ),
         ],
         rows: kategoriIuran.map((item) {
           return DataRow2(
             onTap: () => onViewPressed(item),
+            color: MaterialStateProperty.resolveWith<Color?>(
+              (Set<MaterialState> states) {
+                if (states.contains(MaterialState.hovered)) {
+                  return colorScheme.primary.withOpacity(0.05);
+                }
+                return null;
+              },
+            ),
             cells: [
-              DataCell(Text(item['no']!)),
-              DataCell(Text(item['nama']!)),
-              // DataCell(Text(item['jenis']!)),
               DataCell(
-                Text(
-                  item['nominal']!,
-                  style: TextStyle(
-                    color: Colors.green[700],
-                    fontWeight: FontWeight.bold,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    item['no']!,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ),
+              DataCell(
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.monetization_on,
+                        size: 20,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        item['nama']!,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              DataCell(
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.green[400]!, Colors.green[600]!],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.green.withOpacity(0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    item['nominal']!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               ),

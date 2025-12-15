@@ -2,8 +2,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
+import 'package:jawaramobile_1/services/notifikasi_service.dart';
 
-class DashboardHeader extends StatelessWidget {
+class DashboardHeader extends StatefulWidget {
   final String? title;
   final String? subtitle; // ✅ Tambahkan ini
 
@@ -12,6 +14,27 @@ class DashboardHeader extends StatelessWidget {
     this.title,
     this.subtitle, // ✅ Tambahkan juga di konstruktor
   });
+
+  @override
+  State<DashboardHeader> createState() => _DashboardHeaderState();
+}
+
+class _DashboardHeaderState extends State<DashboardHeader> {
+  final _notifikasiService = NotifikasiService();
+  int _unreadCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnreadCount();
+  }
+
+  Future<void> _loadUnreadCount() async {
+    final count = await _notifikasiService.getUnreadCount();
+    if (mounted) {
+      setState(() => _unreadCount = count);
+    }
+  }
 
   Future<Map<String, String>> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -56,78 +79,168 @@ class DashboardHeader extends StatelessWidget {
 
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
           decoration: BoxDecoration(
-            color: color.surface,
+            gradient: LinearGradient(
+              colors: [
+                color.primary,
+                color.primary.withOpacity(0.8),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: color.shadow.withOpacity(0.08),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
+                color: color.primary.withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
               ),
             ],
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          child: Stack(
             children: [
-              // 🧍‍♂️ Avatar
-              CircleAvatar(
-                radius: 26,
-                backgroundColor: color.primaryContainer,
-                child: Icon(
-                  FontAwesomeIcons.user,
-                  color: color.onPrimaryContainer,
-                  size: 22,
+              // Pattern decoration
+              Positioned(
+                right: -20,
+                top: -20,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.1),
+                  ),
                 ),
               ),
-              const SizedBox(width: 14),
-
-              // 🧾 Nama, role, dan subtitle
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              Positioned(
+                right: 40,
+                bottom: -30,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.08),
+                  ),
+                ),
+              ),
+              // Content
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      "Halo, $userName",
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: color.primary,
-                        fontWeight: FontWeight.bold,
+                    // 🧍‍♂️ Avatar
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white.withOpacity(0.3), width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
-                    ),
-                    Text(
-                      title ?? userRole,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: color.onSurfaceVariant,
-                      ),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle!,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: color.onSurfaceVariant.withOpacity(0.8),
+                      child: CircleAvatar(
+                        radius: 28,
+                        backgroundColor: Colors.white,
+                        child: Icon(
+                          FontAwesomeIcons.user,
+                          color: color.primary,
+                          size: 24,
                         ),
                       ),
-                    ],
+                    ),
+                    const SizedBox(width: 14),
+
+                    // 🧾 Nama, role, dan subtitle
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Halo, $userName 👋",
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            widget.title ?? userRole,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: Colors.white.withOpacity(0.9),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          if (widget.subtitle != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              widget.subtitle!,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: Colors.white.withOpacity(0.8),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    // 🔔 Notifikasi
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        icon: Stack(
+                          children: [
+                            const Icon(
+                              FontAwesomeIcons.bell,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                            if (_unreadCount > 0)
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white, width: 1.5),
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 18,
+                                    minHeight: 18,
+                                  ),
+                                  child: Text(
+                                    _unreadCount > 99 ? '99+' : '$_unreadCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        onPressed: () {
+                          context.push('/notifikasi').then((_) {
+                            // Reload count setelah kembali dari halaman notifikasi
+                            _loadUnreadCount();
+                          });
+                        },
+                      ),
+                    ),
                   ],
                 ),
-              ),
-
-              // 🔔 Notifikasi
-              IconButton(
-                icon: Icon(
-                  FontAwesomeIcons.bell,
-                  color: color.primary,
-                  size: 22,
-                ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Notifikasi sedang dikembangkan'),
-                    ),
-                  );
-                },
               ),
             ],
           ),

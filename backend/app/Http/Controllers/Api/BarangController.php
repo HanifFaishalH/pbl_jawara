@@ -51,6 +51,20 @@ class BarangController extends Controller
         return response()->json($item);
     }
 
+        // GET /api/barang/{id}/is-owner (check apakah user adalah pemilik barang)
+        public function isOwner(Request $request, $id)
+        {
+            $user = $request->user();
+            $barang = BarangModel::find($id);
+        
+            if (!$barang) {
+                return response()->json(['message' => 'Barang tidak ditemukan'], 404);
+            }
+        
+            $isOwner = $barang->user_id === $user->user_id;
+            return response()->json(['is_owner' => $isOwner]);
+        }
+
     // POST /api/barang (auth)
     public function store(Request $request)
     {

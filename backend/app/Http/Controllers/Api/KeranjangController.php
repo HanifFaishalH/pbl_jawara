@@ -54,6 +54,16 @@ class KeranjangController extends Controller
         ]);
 
         $user = $request->user();
+        
+            // Cek apakah barang milik user sendiri
+            $barang = \App\Models\BarangModel::find($request->barang_id);
+            if ($barang && $barang->user_id === $user->user_id) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Tidak bisa menambahkan barang milik sendiri ke keranjang'
+                ], 403);
+            }
+        
         $existingItem = KeranjangModel::where('user_id', $user->user_id)
             ->where('barang_id', $request->barang_id)
             ->first();

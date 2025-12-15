@@ -360,47 +360,56 @@ class _TabelRumahState extends State<TabelRumah> {
                                     const SizedBox(height: 8),
                                     Row(
                                       children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: isMilikSendiri
-                                                ? Colors.green.shade100
-                                                : Colors.orange.shade100,
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                          child: Text(
-                                            _formatStatusKepemilikan(status),
-                                            style: TextStyle(
+                                        Flexible(
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
                                               color: isMilikSendiri
-                                                  ? Colors.green.shade800
-                                                  : Colors.orange.shade800,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 12,
+                                                  ? Colors.green.shade100
+                                                  : Colors.orange.shade100,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              _formatStatusKepemilikan(status),
+                                              style: TextStyle(
+                                                color: isMilikSendiri
+                                                    ? Colors.green.shade800
+                                                    : Colors.orange.shade800,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 12,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
                                         ),
-                                        const SizedBox(width: 12),
+                                        const SizedBox(width: 8),
                                         Icon(Icons.people,
                                             size: 16, color: Colors.grey[600]),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '${r["rumah_jumlah_penghuni"] ?? 0} penghuni',
-                                          style:
-                                              theme.textTheme.bodySmall?.copyWith(
-                                            color: Colors.grey[600],
+                                        const SizedBox(width: 2),
+                                        Flexible(
+                                          child: Text(
+                                            '${r["rumah_jumlah_penghuni"] ?? 0}',
+                                            style:
+                                                theme.textTheme.bodySmall?.copyWith(
+                                              color: Colors.grey[600],
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
-                                        const SizedBox(width: 12),
+                                        const SizedBox(width: 8),
                                         Icon(Icons.square_foot,
                                             size: 16, color: Colors.grey[600]),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '${r["rumah_luas_tanah"] ?? '-'} m²',
-                                          style:
-                                              theme.textTheme.bodySmall?.copyWith(
-                                            color: Colors.grey[600],
+                                        const SizedBox(width: 2),
+                                        Flexible(
+                                          child: Text(
+                                            '${r["rumah_luas_tanah"] ?? '-'} m²',
+                                            style:
+                                                theme.textTheme.bodySmall?.copyWith(
+                                              color: Colors.grey[600],
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                       ],

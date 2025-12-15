@@ -103,11 +103,12 @@ class _KategoriIuranState extends State<KategoriIuran> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = Theme.of(context).colorScheme;
+    final primary = colorScheme.primary;
+    final surface = colorScheme.surface;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: colorScheme.primary,
+        backgroundColor: primary,
         elevation: 0,
         title: Text(
           "Kategori Iuran",
@@ -119,29 +120,41 @@ class _KategoriIuranState extends State<KategoriIuran> {
         ),
       ),
       body: Container(
-        margin: const EdgeInsets.all(16),
-        height: double.infinity,
-        width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.95),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              primary.withOpacity(0.05),
+              surface,
+            ],
+          ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: IuranTable(
-            kategoriIuran: _kategoriIuran,
-            onAddPressed: _showAddIuranDialog,
-            onDeletePressed: _deleteIuran,
-            onViewPressed: (item) {
-              context.push('/detail-kategori', extra: item);
-            },
+        child: Container(
+          margin: const EdgeInsets.all(20),
+          height: double.infinity,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: IuranTable(
+              kategoriIuran: _kategoriIuran,
+              onAddPressed: _showAddIuranDialog,
+              onDeletePressed: _deleteIuran,
+              onViewPressed: (item) {
+                context.push('/detail-kategori', extra: item);
+              },
+            ),
           ),
         ),
       ),

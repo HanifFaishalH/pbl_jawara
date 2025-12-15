@@ -123,4 +123,32 @@ class BarangService {
       throw Exception('Gagal menghubungkan ke server');
     }
   }
+
+  // 🔍 Cek apakah barang milik user yang login
+  Future<bool> isBarangOwner(int barangId) async {
+    try {
+      await AuthService.loadSession();
+      final token = await _getToken();
+      if (token == null || token.isEmpty) return false;
+      
+      final url = Uri.parse('$baseUrl/barang/$barangId/is-owner');
+      final headers = {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+      
+      logger.i("🌐 [REQUEST] GET ${url.toString()}");
+      final res = await http.get(url, headers: headers);
+      logger.i("📥 [RESPONSE] ${res.statusCode}");
+      
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return data['is_owner'] ?? false;
+      }
+      return false;
+    } catch (e, s) {
+      logger.e("❌ [ERROR] isBarangOwner gagal", error: e, stackTrace: s);
+      return false;
+    }
+  }
 }

@@ -84,36 +84,44 @@ class _DaftarChannelScreenState extends State<DaftarChannelScreen> {
 
   Widget _typeChip(BuildContext context, String t) {
     final cs = Theme.of(context).colorScheme;
-    // warna mengikuti theme
-    Color bg;
-    Color fg;
+    IconData icon;
+    
     switch (t) {
       case 'bank':
-        bg = cs.primary.withOpacity(.12);
-        fg = cs.primary;
+        icon = Icons.account_balance;
         break;
       case 'ewallet':
-        bg = cs.secondary.withOpacity(.35);
-        fg = cs.onSecondary;
+        icon = Icons.account_balance_wallet;
         break;
       case 'qris':
-        bg = Colors.white;
-        fg = cs.primary;
+        icon = Icons.qr_code_2;
         break;
       default:
-        bg = cs.surfaceVariant;
-        fg = cs.onSurfaceVariant;
+        icon = Icons.payment;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
+        color: cs.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cs.primary.withOpacity(0.2)),
       ),
-      child: Text(
-        t,
-        style: TextStyle(fontWeight: FontWeight.w600, color: fg),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: cs.primary),
+          const SizedBox(width: 4),
+          Text(
+            t.toUpperCase(),
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: cs.primary,
+              fontSize: 11,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -124,7 +132,7 @@ class _DaftarChannelScreenState extends State<DaftarChannelScreen> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         backgroundColor: colorScheme.primary,
         elevation: 0,
@@ -132,6 +140,7 @@ class _DaftarChannelScreenState extends State<DaftarChannelScreen> {
           "Channel Transfer",
           style: theme.textTheme.titleLarge?.copyWith(
             color: colorScheme.onPrimary,
+            fontWeight: FontWeight.bold,
           ),
         ),
         iconTheme: IconThemeData(color: colorScheme.onPrimary),
@@ -139,6 +148,7 @@ class _DaftarChannelScreenState extends State<DaftarChannelScreen> {
       floatingActionButton: canManage
           ? FloatingActionButton.extended(
               backgroundColor: colorScheme.tertiary,
+              elevation: 4,
               icon: const Icon(Icons.add_link),
               label: const Text("Tambah Channel"),
               onPressed: () async {
@@ -157,110 +167,168 @@ class _DaftarChannelScreenState extends State<DaftarChannelScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.account_balance_wallet,
-                            size: 80, color: Colors.grey[400]),
-                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.account_balance_wallet_outlined,
+                              size: 64, color: Colors.grey[400]),
+                        ),
+                        const SizedBox(height: 24),
                         Text(
                           'Belum ada channel transfer',
                           style: theme.textTheme.titleMedium
-                              ?.copyWith(color: Colors.grey[600]),
+                              ?.copyWith(color: Colors.grey[600], fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Tambahkan channel untuk menerima pembayaran',
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: Colors.grey[500]),
                         ),
                       ],
                     ),
                   )
-                : Container(
-                    margin: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 8,
-                          offset: Offset(0, 4),
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _rows.length,
+                    itemBuilder: (context, index) {
+                      final r = _rows[index];
+                      final tipe = r['channel_tipe'] ?? '';
+                      
+                      return Card(
+                        elevation: 2,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: DataTable2(
-                        columnSpacing: 12,
-                        horizontalMargin: 12,
-                        headingRowColor: MaterialStateProperty.all(
-                          theme.colorScheme.primary.withOpacity(0.1),
-                        ),
-                        headingTextStyle: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.secondary,
-                        ),
-                        columns: const [
-                          DataColumn2(label: Text('Nama Channel')),
-                          DataColumn2(label: Text('Tipe')),
-                          DataColumn2(label: Text('Aksi'), fixedWidth: 100),
-                        ],
-                        rows: _rows.map((r) {
-                          return DataRow2(
-                            onTap: () async {
-                              await context.push('/detail-channel/${r['channel_id']}');
-                              _refresh();
-                            },
-                            cells: [
-                              DataCell(
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      r['channel_nama'] ?? '',
-                                      style: theme.textTheme.bodyLarge?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: theme.colorScheme.onSurface,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                        child: InkWell(
+                          onTap: () async {
+                            await context.push('/detail-channel/${r["channel_id"]}');
+                            _refresh();
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                // Icon Channel
+                                Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        colorScheme.primary,
+                                        colorScheme.primary.withOpacity(0.7),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
                                     ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      "A/N ${r['channel_pemilik'] ?? ''}",
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.onSurface
-                                            .withOpacity(.7),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: colorScheme.primary.withOpacity(0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    tipe == 'bank'
+                                        ? Icons.account_balance
+                                        : tipe == 'ewallet'
+                                            ? Icons.account_balance_wallet
+                                            : Icons.qr_code_2,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
                                 ),
-                              ),
-                              DataCell(_typeChip(context, r['channel_tipe'] ?? '')),
-                              DataCell(
-                                canManage
-                                    ? Row(
-                                        mainAxisSize: MainAxisSize.min,
+                                const SizedBox(width: 16),
+                                // Info Channel
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        r['channel_nama'] ?? '',
+                                        style: theme.textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
                                         children: [
-                                          IconButton(
-                                            icon: const Icon(Icons.edit, size: 20),
-                                            onPressed: () async {
-                                              await context.push(
-                                                  '/edit-channel/${r['channel_id']}');
-                                              _refresh();
-                                            },
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(Icons.delete,
-                                                size: 20, color: Colors.red),
-                                            onPressed: () =>
-                                                _deleteChannel(r['channel_id']),
+                                          Icon(Icons.person_outline,
+                                              size: 14, color: Colors.grey[600]),
+                                          const SizedBox(width: 4),
+                                          Flexible(
+                                            child: Text(
+                                              r['channel_pemilik'] ?? '',
+                                              style: theme.textTheme.bodySmall?.copyWith(
+                                                color: Colors.grey[600],
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
                                           ),
                                         ],
-                                      )
-                                    : const SizedBox(),
-                              ),
-                            ],
-                          );
-                        }).toList(),
-                      ),
-                    ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      _typeChip(context, tipe),
+                                    ],
+                                  ),
+                                ),
+                                // Action Buttons
+                                if (canManage)
+                                  PopupMenuButton<String>(
+                                    icon: Icon(Icons.more_vert, color: Colors.grey[600]),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    onSelected: (value) async {
+                                      if (value == 'edit') {
+                                        await context.push('/edit-channel/${r["channel_id"]}');
+                                        _refresh();
+                                      } else if (value == 'delete') {
+                                        _deleteChannel(r['channel_id']);
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: 'edit',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.edit_outlined, size: 20),
+                                            SizedBox(width: 12),
+                                            Text('Edit'),
+                                          ],
+                                        ),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.delete_outline,
+                                                size: 20, color: Colors.red),
+                                            SizedBox(width: 12),
+                                            Text('Hapus',
+                                                style: TextStyle(color: Colors.red)),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
       ),
     );

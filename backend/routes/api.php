@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\PenggunaController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\LaporanKeuanganController;
 use App\Http\Controllers\Api\MLPredictController;
+use App\Http\Controllers\Api\NotifikasiController;
 // --- IMPORT PENTING UNTUK PROXY GAMBAR ---
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
@@ -32,6 +33,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::get('/barang', [BarangController::class, 'index']);
 Route::get('/barang/{id}', [BarangController::class, 'show'])->whereNumber('id');
+    Route::get('/barang/{id}/is-owner', [BarangController::class, 'isOwner'])->middleware('auth:sanctum')->whereNumber('id');
 // Kategori (untuk dropdown)
 Route::get('/kategori', [KategoriController::class, 'index']);
 
@@ -127,6 +129,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/activity-logs/stats', [ActivityLogController::class, 'stats']);
     Route::get('/activity-logs', [ActivityLogController::class, 'index']);
     Route::get('/activity-logs/{id}', [ActivityLogController::class, 'show']);
+
+    // Notifikasi
+    Route::get('/notifikasi', [NotifikasiController::class, 'index']);
+    Route::get('/notifikasi/unread-count', [NotifikasiController::class, 'unreadCount']);
+    Route::post('/notifikasi/{id}/mark-as-read', [NotifikasiController::class, 'markAsRead']);
+    Route::post('/notifikasi/mark-all-as-read', [NotifikasiController::class, 'markAllAsRead']);
+    Route::delete('/notifikasi/{id}', [NotifikasiController::class, 'delete']);
 
     // Broadcast
     Route::get('/pesan-broadcast', [PesanBroadcastController::class, 'index']);

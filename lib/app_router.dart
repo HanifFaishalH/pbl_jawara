@@ -48,6 +48,9 @@ import 'package:jawaramobile_1/screens/Kegiatan/detail_kegiatan_screen.dart';
 // ====== Broadcast ======
 import 'package:jawaramobile_1/screens/Broadcast/tambah_broadcast.dart';
 import 'package:jawaramobile_1/screens/Broadcast/detail_broadcast.dart';
+
+// ====== Notifikasi ======
+import 'package:jawaramobile_1/screens/Notifikasi/notifikasi_screen.dart';
 import 'package:jawaramobile_1/screens/Broadcast/edit_broadcast.dart';
 
 // ====== LogActivity ======
@@ -165,6 +168,13 @@ final appRouter = GoRouter(
         backgroundColor: Colors.black.withOpacity(0.5),
         body: const Center(),
       ),
+    ),
+
+    // ====== Notifikasi ======
+    GoRoute(
+      path: '/notifikasi',
+      name: 'notifikasi',
+      builder: (context, state) => const NotifikasiScreen(),
     ),
 
     // ====== Data Warga ======
@@ -651,7 +661,7 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/detail-barang-jual',
       builder: (context, state) {
-        final item = state.extra as Map<String, String>;
+        final item = state.extra as Map<String, dynamic>;
         return DetailBarang(barangData: item);
       },
     ),

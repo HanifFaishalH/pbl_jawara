@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\usersModel;
 use Illuminate\Support\Facades\Hash;
+use App\Helpers\NotifikasiHelper;
 
 class AuthController extends Controller
 {
@@ -73,6 +74,23 @@ class AuthController extends Controller
     ]);
 
     $token = $user->createToken('auth_token')->plainTextToken;
+
+    // Kirim notifikasi ke semua admin
+    $adminIds = usersModel::where('role_id', 1)
+        ->where('status', 'Diterima')
+        ->pluck('user_id')
+        ->toArray();
+    
+    if (!empty($adminIds)) {
+        $roleName = $user->role->role_nama ?? 'User';
+        NotifikasiHelper::createBulk(
+            userIds: $adminIds,
+            judul: 'Pendaftaran User Baru',
+            pesan: "{$user->user_nama_depan} mendaftar sebagai {$roleName}. Harap verifikasi akun.",
+            tipe: 'info',
+            link: '/pengguna'
+        );
+    }
 
     return response()->json([
         'message' => 'Registrasi berhasil',

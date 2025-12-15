@@ -558,6 +558,8 @@ class _DaftarMutasiKeluargaScreenState
                                                   ?.copyWith(
                                                 fontWeight: FontWeight.bold,
                                               ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
@@ -566,6 +568,8 @@ class _DaftarMutasiKeluargaScreenState
                                                   ?.copyWith(
                                                 color: Colors.grey[600],
                                               ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                             const SizedBox(height: 8),
                                             Row(
@@ -574,15 +578,18 @@ class _DaftarMutasiKeluargaScreenState
                                                     size: 16,
                                                     color: Colors.grey[600]),
                                                 const SizedBox(width: 4),
-                                                Text(
-                                                  DateFormat('dd MMM yyyy')
-                                                      .format(DateTime.parse(
-                                                          tanggal)),
-                                                  style: theme.textTheme.bodySmall
-                                                      ?.copyWith(
-                                                          color: Colors.grey[600]),
+                                                Flexible(
+                                                  child: Text(
+                                                    DateFormat('dd MMM yyyy')
+                                                        .format(DateTime.parse(
+                                                            tanggal)),
+                                                    style: theme.textTheme.bodySmall
+                                                        ?.copyWith(
+                                                            color: Colors.grey[600]),
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
                                                 ),
-                                                const SizedBox(width: 16),
+                                                const SizedBox(width: 8),
                                                 _statusChip(status),
                                               ],
                                             ),

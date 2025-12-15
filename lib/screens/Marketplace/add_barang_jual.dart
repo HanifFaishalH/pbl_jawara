@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import '../../services/auth_service.dart';
 import '../../services/kategori_service.dart';
 import '../../services/barang_service.dart';
@@ -44,9 +45,8 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
     try {
       await AuthService.loadSession();
       final data = await AuthService().me();
-      final user = data['user'] ?? data;
-      final alamat =
-          user['user_alamat'] ?? user['alamat'] ?? 'Alamat belum diisi';
+      final user = data['user'] ?? {};
+      final alamat = user['user_alamat'] ?? 'Alamat belum diisi';
       setState(() => _alamatPengguna = alamat.toString());
     } catch (e) {
       setState(() => _alamatPengguna = 'Gagal memuat alamat');
@@ -117,7 +117,58 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
   }
 
   // ============================================================
-  // 🚀 Upload data barang ke Laravel
+  // �️ Ambil gambar dari galeri HP
+  // ============================================================
+  Future<void> _pickImageFromGallery() async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      
+      if (pickedFile == null) return;
+
+      setState(() {
+        _imagePath = pickedFile.path;
+        _currentStep = 1;
+        _kategoriOtomatis = "Menganalisis gambar...";
+      });
+
+      try {
+        final data = await BarangService().predictKategori(pickedFile.path);
+        if (data == null) throw Exception("Tidak ada hasil dari server");
+
+        final kategori = data["kategori_prediksi"] ?? "Tidak terdeteksi";
+        final imageUrl = data["image_url"];
+        final storagePath = data["path"];
+
+        setState(() {
+          _kategoriOtomatis = kategori;
+          _serverImageUrl = imageUrl;
+          _serverImagePath = storagePath;
+
+          // 🔹 Cocokkan kategori otomatis dengan dropdown
+          final match = _kategoriList.firstWhere(
+            (k) =>
+                k['kategori_nama']?.toString().toLowerCase() ==
+                kategori.toLowerCase(),
+            orElse: () => {},
+          );
+          if (match.isNotEmpty) _kategoriId = match['kategori_id'] as int?;
+        });
+      } catch (e) {
+        setState(() => _kategoriOtomatis = "Gagal memprediksi");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Prediksi gagal: $e')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal membuka galeri: $e')),
+      );
+    }
+  }
+
+  // ============================================================
+  // �🚀 Upload data barang ke Laravel
   // ============================================================
   Future<void> _uploadBarang() async {
     if (_loadingUpload) return;
@@ -251,19 +302,40 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
           ),
         ),
         const SizedBox(height: 24),
-        ElevatedButton.icon(
-          onPressed: _takePicture,
-          icon: const Icon(Icons.camera_alt, color: Colors.white),
-          label: const Text("Ambil Foto Barang"),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: Colors.white,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _takePicture,
+                icon: const Icon(Icons.camera_alt, color: Colors.white),
+                label: const Text("Ambil Foto"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
             ),
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _pickImageFromGallery,
+                icon: const Icon(Icons.image_outlined, color: Colors.white),
+                label: const Text("Dari Galeri"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -327,33 +399,6 @@ class _AddBarangScreenState extends State<AddBarangScreen> {
           style: theme.textTheme.titleMedium?.copyWith(
             color: Colors.green.shade700,
           ),
-        ),
-        const SizedBox(height: 16),
-
-        // Dropdown kategori manual
-        InputDecorator(
-          decoration: const InputDecoration(
-            labelText: 'Kategori Manual',
-            border: OutlineInputBorder(),
-          ),
-          child: _loadingKategori
-              ? const Center(
-                  child: CircularProgressIndicator(strokeWidth: 2))
-              : DropdownButtonHideUnderline(
-                  child: DropdownButton<int?>(
-                    isExpanded: true,
-                    value: _kategoriId,
-                    hint: const Text('Pilih kategori'),
-                    items: _kategoriList.map((k) {
-                      return DropdownMenuItem<int?>(
-                        value: k['kategori_id'] as int?,
-                        child: Text(
-                            k['kategori_nama']?.toString() ?? 'Tidak diketahui'),
-                      );
-                    }).toList(),
-                    onChanged: (val) => setState(() => _kategoriId = val),
-                  ),
-                ),
         ),
         const SizedBox(height: 20),
 

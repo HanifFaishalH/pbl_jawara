@@ -88,10 +88,13 @@ class _TagihIuranPageState extends State<TagihIuranPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final primary = colorScheme.primary;
+    final surface = colorScheme.surface;
+
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: primary,
         elevation: 0,
         title: Text(
           "Tagih Iuran",
@@ -105,47 +108,59 @@ class _TagihIuranPageState extends State<TagihIuranPage> {
         ),
       ),
       body: Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.95),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              primary.withOpacity(0.05),
+              surface,
+            ],
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const TagihIuranHeader(),
-            const SizedBox(height: 24),
-            JenisIuranSection(
-              availableIuran: _availableIuran,
-              selectedIuran: _selectedIuran,
-              selectedIuranData: _selectedIuranData,
-              onIuranChanged: (value) {
-                setState(() {
-                  _selectedIuran = value;
-                });
-              },
-              onIuranCleared: () {
-                setState(() {
-                  _selectedIuran = null;
-                });
-              },
-            ),
-            const SizedBox(height: 24),
-            TanggalSection(
-              selectedDate: _selectedDate,
-              onDateSelected: () => _selectDate(context),
-            ),
-            const SizedBox(height: 32),
-            TagihIuranActions(onReset: _resetForm, onTagih: _tagihIuran),
-          ],
+        child: Container(
+          margin: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const TagihIuranHeader(),
+              const SizedBox(height: 24),
+              JenisIuranSection(
+                availableIuran: _availableIuran,
+                selectedIuran: _selectedIuran,
+                selectedIuranData: _selectedIuranData,
+                onIuranChanged: (value) {
+                  setState(() {
+                    _selectedIuran = value;
+                  });
+                },
+                onIuranCleared: () {
+                  setState(() {
+                    _selectedIuran = null;
+                  });
+                },
+              ),
+              const SizedBox(height: 24),
+              TanggalSection(
+                selectedDate: _selectedDate,
+                onDateSelected: () => _selectDate(context),
+              ),
+              const SizedBox(height: 32),
+              TagihIuranActions(onReset: _resetForm, onTagih: _tagihIuran),
+            ],
+          ),
         ),
       ),
     );

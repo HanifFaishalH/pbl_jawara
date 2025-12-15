@@ -31,7 +31,7 @@ class KeranjangService {
   // ------------------------------------------------------------------------
   // 1. TAMBAH KE KERANJANG (POST)
   // ------------------------------------------------------------------------
-  Future<bool> addToCart(int barangId, int jumlah) async {
+  Future<Map<String, dynamic>> addToCart(int barangId, int jumlah) async {
     try {
       String? token = await _getToken();
       
@@ -42,7 +42,7 @@ class KeranjangService {
 
       if (token == null) {
         print("❌ Gagal: Token tidak ditemukan (Null)");
-        return false;
+        return {'success': false, 'message': 'Token tidak ditemukan'};
       }
 
       final response = await http.post(
@@ -61,10 +61,16 @@ class KeranjangService {
       print("Response Status: ${response.statusCode}");
       print("Response Body: ${response.body}");
 
-      return response.statusCode == 200 || response.statusCode == 201;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'message': data['message'] ?? 'Sukses', 'data': data['data']};
+      } else {
+        final data = jsonDecode(response.body);
+        return {'success': false, 'message': data['message'] ?? 'Gagal menambah ke keranjang'};
+      }
     } catch (e) {
       print("❌ Error add cart: $e");
-      return false;
+      return {'success': false, 'message': e.toString()};
     }
   }
 

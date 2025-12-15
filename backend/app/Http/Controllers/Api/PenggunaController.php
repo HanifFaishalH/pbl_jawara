@@ -7,6 +7,7 @@ use App\Models\usersModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Helpers\NotifikasiHelper;
 
 class PenggunaController extends Controller
 {
@@ -70,6 +71,24 @@ class PenggunaController extends Controller
                 'user_alamat'          => $request->user_alamat,
                 'foto'                 => null, 
             ]);
+
+            // Kirim notifikasi ke admin lain
+            $adminIds = usersModel::where('role_id', 1)
+                ->where('user_id', '!=', $request->user()->user_id)
+                ->where('status', 'Diterima')
+                ->pluck('user_id')
+                ->toArray();
+            
+            if (!empty($adminIds)) {
+                $roleName = $user->role->role_nama ?? 'User';
+                NotifikasiHelper::createBulk(
+                    userIds: $adminIds,
+                    judul: 'User Baru Ditambahkan',
+                    pesan: "Admin menambahkan user baru: {$user->user_nama_depan} sebagai {$roleName}",
+                    tipe: 'info',
+                    link: '/pengguna'
+                );
+            }
 
             return response()->json([
                 'success' => true,
@@ -156,8 +175,45 @@ class PenggunaController extends Controller
         }
 
         try {
+            $oldStatus = $user->status;
             $user->status = $request->status;
             $user->save();
+
+            // Kirim notifikasi ke user yang statusnya diupdate
+            if ($oldStatus !== $request->status) {
+                $roleName = $user->role->role_nama ?? 'User';
+                $tipeNotif = $request->status === 'Diterima' ? 'success' : ($request->status === 'Ditolak' ? 'error' : 'info');
+                $pesanNotif = $request->status === 'Diterima' 
+                    ? "Akun Anda sebagai {$roleName} telah disetujui. Anda sekarang dapat login ke aplikasi."
+                    : ($request->status === 'Ditolak' 
+                        ? "Mohon maaf, pendaftaran Anda sebagai {$roleName} ditolak."
+                        : "Status akun Anda diubah menjadi {$request->status}.");
+                
+                NotifikasiHelper::create(
+                    userId: $user->user_id,
+                    judul: 'Status Akun Diperbarui',
+                    pesan: $pesanNotif,
+                    tipe: $tipeNotif,
+                    link: null
+                );
+
+                // Kirim notifikasi ke admin lain (kecuali yang melakukan update)
+                $adminIds = usersModel::where('role_id', 1)
+                    ->where('user_id', '!=', $request->user()->user_id)
+                    ->where('status', 'Diterima')
+                    ->pluck('user_id')
+                    ->toArray();
+                
+                if (!empty($adminIds)) {
+                    NotifikasiHelper::createBulk(
+                        userIds: $adminIds,
+                        judul: 'Status User Diperbarui',
+                        pesan: "Status akun {$user->user_nama_depan} ({$roleName}) diubah menjadi {$request->status}",
+                        tipe: 'info',
+                        link: '/pengguna'
+                    );
+                }
+            }
 
             return response()->json([
                 'success' => true,

@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\WargaModel;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use App\Services\ActivityLogService;
+use App\Helpers\NotifikasiHelper;
 
 class WargaController extends Controller
 {
@@ -61,6 +63,21 @@ class WargaController extends Controller
             $warga->toArray(),
             $request
         );
+        
+        // Kirim notifikasi ke admin lain
+        $adminIds = User::where('role_id', 1)
+            ->where('user_id', '!=', $request->user()->user_id)
+            ->pluck('user_id')
+            ->toArray();
+        if (!empty($adminIds)) {
+            NotifikasiHelper::createBulk(
+                userIds: $adminIds,
+                judul: 'Data Warga Baru',
+                pesan: "Data warga baru ditambahkan: {$warga->warga_nama} (NIK: {$warga->warga_nik})",
+                tipe: 'info',
+                link: '/data-warga-rumah'
+            );
+        }
         
         return response()->json(['message' => 'Data warga berhasil dibuat', 'data' => $warga], 201);
     }

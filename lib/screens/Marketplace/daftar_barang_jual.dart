@@ -115,7 +115,12 @@ class _DaftarBarangState extends State<DaftarBarang> {
                 final String nama = item['barang_nama'] ?? 'Tanpa Nama';
                 final String harga = item['barang_harga']?.toString() ?? '0';
                 final String stok = item['barang_stok']?.toString() ?? '0';
-                final String fotoUrl = item['barang_foto']?.toString() ?? '';
+                final String fotoPath = item['barang_foto']?.toString() ?? '';
+                
+                // 🔥 Konstruksi full URL gambar
+                final String fotoUrl = fotoPath.isNotEmpty
+                    ? 'http://127.0.0.1:8000/storage/$fotoPath'
+                    : '';
 
                 return Card(
                   elevation: 3,
@@ -124,9 +129,14 @@ class _DaftarBarangState extends State<DaftarBarang> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   clipBehavior: Clip.antiAlias,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                  child: InkWell(
+                    onTap: () {
+                      // Navigate ke detail barang
+                      context.push('/detail-barang-jual', extra: item);
+                    },
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                       // Gambar
                       Expanded(
                         child: Container(
@@ -134,7 +144,7 @@ class _DaftarBarangState extends State<DaftarBarang> {
                           color: colorScheme.surfaceVariant,
                           child: fotoUrl.isNotEmpty
                               ? Image.network(
-                                  fotoUrl,
+                                  '$fotoUrl?v=${DateTime.now().millisecondsSinceEpoch}',
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) =>
                                       const Icon(Icons.broken_image, size: 40, color: Colors.grey),
@@ -190,6 +200,7 @@ class _DaftarBarangState extends State<DaftarBarang> {
                         ),
                       ),
                     ],
+                    ),
                   ),
                 );
               },
