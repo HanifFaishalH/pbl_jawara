@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\PesanWargaModel;
+use App\Models\usersModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -65,4 +66,17 @@ class PesanWargaController extends Controller
         return response()->json(['status' => 'success', 'data' => $pesan]);
     }
 
+    public function listForChat() {
+        $userId = Auth::id();
+
+        $users = usersModel::where('user_id', '!=', $userId)
+        ->select('user_id', 'user_nama_depan')
+        ->orderBy('user_nama_depan', 'asc')
+        ->get();
+
+        return response()->json([
+            'status' => 'success', 
+            'data' => $users
+        ]);
+    }
 }

@@ -56,26 +56,34 @@ class _PesanWargaScreenState extends State<PesanWargaScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: colors.primary,
-        title: const Text('Pesan Warga', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Pesan Warga',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _hasError
-              ? _buildErrorView()
-              : _pesanList.isEmpty
-                  ? _buildEmptyView()
-                  : RefreshIndicator(
-                      onRefresh: _loadPesan,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(12),
-                        itemCount: _pesanList.length,
-                        itemBuilder: (context, index) {
-                          final pesan = _pesanList[index];
-                          return PesanTile(pesan: pesan);
-                        },
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _hasError
+                ? _buildErrorView()
+                : _pesanList.isEmpty
+                    ? _buildEmptyView()
+                    : RefreshIndicator(
+                        onRefresh: _loadPesan,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(12),
+                          itemCount: _pesanList.length,
+                          itemBuilder: (context, index) {
+                            final pesan = _pesanList[index];
+                            return PesanTile(pesan: pesan);
+                          },
+                        ),
                       ),
-                    ),
-      bottomNavigationBar: PesanInput(onSend: _loadPesan),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false, // biar AppBar tidak terdorong
+        child: PesanInput(onSend: _loadPesan),
+      ),
     );
   }
 

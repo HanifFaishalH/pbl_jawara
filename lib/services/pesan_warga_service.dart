@@ -8,55 +8,91 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class PesanWargaService {
   static const String baseUrl = AuthService.baseUrl;
-  final logger = Logger();
+  final Logger logger = Logger();
 
-  /// Ambil semua chat antara user login dengan penerimaId
-  Future<List<Map<String, dynamic>>> getChatWith(int penerimaId) async {
+  /// =============================
+  /// LIST USER UNTUK CHAT
+  /// =============================
+  Future<List<Map<String, dynamic>>> getUserList() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
-    if (token == null) throw Exception('Belum login');
 
-    final url = Uri.parse("$baseUrl/pesan-warga/chat/$penerimaId");
-    logger.i("📨 Fetching chat with user ID: $penerimaId");
+    final url = Uri.parse('$baseUrl/pengguna/chat-list');
+    logger.i("👥 GET User Chat List → $url");
 
     try {
-      final response = await http
-          .get(
-            url,
-            headers: {
-              'Authorization': 'Bearer $token',
-              'Accept': 'application/json'
-            },
-          )
-          .timeout(const Duration(seconds: 10));
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 10));
 
-      logger.i("📡 Status code: ${response.statusCode}");
+      logger.i("📡 Status: ${response.statusCode}");
+      logger.d("📦 Body: ${response.body}");
 
       if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
-        final List data = decoded['data'] ?? [];
-        logger.i("💬 ${data.length} messages loaded");
+        final body = jsonDecode(response.body);
+        final List data = body['data'] ?? [];
+        logger.i("✅ User loaded: ${data.length}");
         return List<Map<String, dynamic>>.from(data);
       } else {
-        logger.e("❌ Gagal memuat chat (${response.statusCode})");
-        throw Exception('Gagal memuat chat');
+        logger.e("❌ Gagal load user: ${response.body}");
+        throw Exception('Gagal memuat daftar pengguna');
       }
     } on TimeoutException {
-      throw Exception('Timeout — server tidak merespons.');
-    } catch (e) {
-      logger.e("⛔ Error getChatWith: $e");
+      logger.e("⏱ Timeout saat load user chat");
+      throw Exception('Timeout server');
+    } catch (e, s) {
+      logger.e("🔥 Error getUserList", error: e, stackTrace: s);
       rethrow;
     }
   }
 
-  /// Kirim pesan ke user lain
+  /// =============================
+  /// GET CHAT DENGAN USER
+  /// =============================
+  Future<List<Map<String, dynamic>>> getChatWith(int penerimaId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
+    final url = Uri.parse("$baseUrl/pesan-warga/chat/$penerimaId");
+    logger.i("💬 GET Chat → $url");
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      logger.i("📡 Status: ${response.statusCode}");
+      logger.d("📦 Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return List<Map<String, dynamic>>.from(body['data'] ?? []);
+      } else {
+        throw Exception('Gagal memuat chat');
+      }
+    } catch (e, s) {
+      logger.e("🔥 Error getChatWith", error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
+  /// =============================
+  /// KIRIM PESAN
+  /// =============================
   Future<bool> kirimPesan(String isiPesan, int penerimaId) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
-    if (token == null) throw Exception('Belum login');
 
     final url = Uri.parse("$baseUrl/pesan-warga");
-    logger.i("💌 Mengirim pesan ke user ID: $penerimaId");
+    logger.i("📤 Kirim pesan ke $penerimaId");
 
     try {
       final response = await http.post(
@@ -71,31 +107,23 @@ class PesanWargaService {
         },
       );
 
-      logger.d("📡 Response: ${response.statusCode} ${response.body}");
+      logger.i("📡 Status: ${response.statusCode}");
+      logger.d("📦 Body: ${response.body}");
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        logger.i("✅ Pesan berhasil dikirim");
-        return true;
-      } else {
-        logger.w("⚠️ Gagal mengirim pesan: ${response.body}");
-        return false;
-      }
+      return response.statusCode == 200 || response.statusCode == 201;
     } catch (e, s) {
-      logger.e("❌ Error kirimPesan: $e", stackTrace: s);
+      logger.e("🔥 Error kirimPesan", error: e, stackTrace: s);
       return false;
     }
   }
 
   Future<List<PesanWarga>> getPesanWarga() async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('auth_token');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
 
-  if (token == null) throw Exception('Belum login');
+    final url = Uri.parse("$baseUrl/pesan-warga");
+    logger.i("📨 GET Semua Pesan Warga → $url");
 
-  final url = Uri.parse("$baseUrl/pesan-warga");
-  logger.i("📨 Mengambil daftar pesan warga dari $url");
-
-  try {
     final response = await http.get(
       url,
       headers: {
@@ -104,21 +132,14 @@ class PesanWargaService {
       },
     );
 
-    logger.d("Status Code: ${response.statusCode}");
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
-      final List data = body['data'] ?? [];
-      logger.i("✅ ${data.length} pesan warga berhasil diambil");
-
-      // konversi ke model
-      return data.map((e) => PesanWarga.fromJson(e)).toList();
+      return (body['data'] as List)
+          .map((e) => PesanWarga.fromJson(e))
+          .toList();
     } else {
-      throw Exception('Gagal memuat pesan warga (${response.statusCode})');
+      throw Exception('Gagal memuat pesan warga');
     }
-  } catch (e, s) {
-    logger.e("❌ Error getPesanWarga: $e", stackTrace: s);
-    rethrow;
   }
-}
 
 }

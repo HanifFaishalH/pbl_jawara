@@ -144,6 +144,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/pesan-broadcast/{id}', [PesanBroadcastController::class, 'destroy']);
 
     // === Pesan Warga ===
+    Route::get('/pengguna/chat-list', [PesanWargaController::class, 'listForChat']);
+    Route::get('/pesan-warga/chat/{id}', [PesanWargaController::class, 'getChat']);
     Route::get('/pesan-warga', [PesanWargaController::class, 'index']);
     Route::post('/pesan-warga', [PesanWargaController::class, 'store']);
     Route::get('/pesan-warga/{id}', [PesanWargaController::class, 'show']);
@@ -157,6 +159,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/pengguna/{id}', [PenggunaController::class, 'update']); 
     Route::delete('/pengguna/{id}', [PenggunaController::class, 'destroy']); 
     Route::post('/pengguna/{id}/status', [PenggunaController::class, 'updateStatus']);
+    
 
     // Log Activity
     // Route::get('/log-activity', [LogActivityController::class, 'index']);

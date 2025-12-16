@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jawaramobile_1/screens/Broadcast/broadcast_screen.dart';
 import 'package:jawaramobile_1/screens/PesanWarga/chat_pesan_warga_screen.dart';
+import 'package:jawaramobile_1/screens/PesanWarga/daftar_chat_warga.dart';
 import 'package:jawaramobile_1/screens/PesanWarga/pesan_warga_screen.dart';
 import 'package:jawaramobile_1/services/auth_service.dart'; // 1. IMPORT AUTH SERVICE
 
@@ -12,7 +13,6 @@ import 'package:jawaramobile_1/screens/Dashboard/dashboard_selector.dart';
 
 // ====== Screens Lainnya (Import tetap sama) ======
 import 'package:jawaramobile_1/screens/Mutasi/mutasi_detail_page.dart';
-import 'package:jawaramobile_1/screens/Mutasi/mutasi_page.dart';
 import 'package:jawaramobile_1/screens/data_warga_rumah.dart';
 
 // ====== Pemasukan ======
@@ -713,7 +713,7 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/pesan-warga',
       name: 'pesan-warga',
-      builder: (context, state) => const PesanWargaScreen(),
+      builder: (context, state) => const DaftarPenggunaChatScreen(),
     ),
 
     GoRoute(
