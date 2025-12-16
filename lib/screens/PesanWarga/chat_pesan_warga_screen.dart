@@ -20,6 +20,7 @@ class _ChatPesanWargaScreenState extends State<ChatPesanWargaScreen> {
   final PesanWargaService _service = PesanWargaService();
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _pesanController = TextEditingController();
+
   List<Map<String, dynamic>> _pesanList = [];
   bool _isLoading = true;
 
@@ -30,7 +31,6 @@ class _ChatPesanWargaScreenState extends State<ChatPesanWargaScreen> {
   }
 
   Future<void> _loadPesan() async {
-    setState(() => _isLoading = true);
     try {
       final data = await _service.getChatWith(widget.penerimaId);
       setState(() {
@@ -47,9 +47,11 @@ class _ChatPesanWargaScreenState extends State<ChatPesanWargaScreen> {
   }
 
   void _scrollToBottom() {
-    Future.delayed(const Duration(milliseconds: 100), () {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        _scrollController.jumpTo(
+          _scrollController.position.maxScrollExtent,
+        );
       }
     });
   }
@@ -61,18 +63,12 @@ class _ChatPesanWargaScreenState extends State<ChatPesanWargaScreen> {
     final success = await _service.kirimPesan(isi, widget.penerimaId);
     if (success) {
       _pesanController.clear();
-      _loadPesan(); // reload list
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Gagal mengirim pesan")),
-      );
+      _loadPesan();
     }
   }
 
-
   Widget _buildChatBubble(Map<String, dynamic> pesan) {
-    final currentUserId = AuthService.userId;
-    final isMe = pesan['pengirim_id'] == currentUserId;
+    final bool isMe = pesan['pengirim_id'] == AuthService.userId;
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -84,35 +80,14 @@ class _ChatPesanWargaScreenState extends State<ChatPesanWargaScreen> {
         ),
         decoration: BoxDecoration(
           color: isMe ? Colors.blueAccent : Colors.grey.shade200,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft:
-                isMe ? const Radius.circular(16) : const Radius.circular(0),
-            bottomRight:
-                isMe ? const Radius.circular(0) : const Radius.circular(16),
-          ),
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: Column(
-          crossAxisAlignment:
-              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          children: [
-            Text(
-              pesan['isi_pesan'] ?? '',
-              style: TextStyle(
-                color: isMe ? Colors.white : Colors.black87,
-                fontSize: 15,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              pesan['waktu'] ?? '',
-              style: TextStyle(
-                fontSize: 11,
-                color: isMe ? Colors.white70 : Colors.black54,
-              ),
-            ),
-          ],
+        child: Text(
+          pesan['isi_pesan'] ?? '',
+          style: TextStyle(
+            color: isMe ? Colors.white : Colors.black87,
+            fontSize: 15,
+          ),
         ),
       ),
     );
@@ -120,54 +95,68 @@ class _ChatPesanWargaScreenState extends State<ChatPesanWargaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
+    final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true, // 🔑 WAJIB
       appBar: AppBar(
-        backgroundColor: color.primary,
-        title: Text(widget.penerimaNama,
-            style: const TextStyle(color: Colors.white)),
+        backgroundColor: colors.primary,
+        title: Text(
+          widget.penerimaNama,
+          style: const TextStyle(color: Colors.white),
+        ),
       ),
       body: Column(
         children: [
+          // ================= LIST CHAT =================
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : RefreshIndicator(
-                    onRefresh: _loadPesan,
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.all(8),
-                      itemCount: _pesanList.length,
-                      itemBuilder: (context, index) =>
-                          _buildChatBubble(_pesanList[index]),
-                    ),
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(8),
+                    itemCount: _pesanList.length,
+                    itemBuilder: (context, index) =>
+                        _buildChatBubble(_pesanList[index]),
                   ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              border: Border(top: BorderSide(color: Colors.grey.shade300)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _pesanController,
-                    decoration: const InputDecoration(
-                      hintText: "Tulis pesan...",
-                      border: InputBorder.none,
+
+          // ================= INPUT (KUNCI UTAMA) =================
+          SafeArea(
+            top: false, // ❗ hanya lindungi bagian bawah
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                border: Border(
+                  top: BorderSide(color: Colors.grey.shade300),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _pesanController,
+                      decoration: const InputDecoration(
+                        hintText: "Tulis pesan...",
+                        border: InputBorder.none,
+                      ),
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _kirimPesan(),
                     ),
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _kirimPesan(),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send_rounded, color: Colors.blueAccent),
-                  onPressed: _kirimPesan,
-                ),
-              ],
+                  IconButton(
+                    icon: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.blueAccent,
+                    ),
+                    onPressed: _kirimPesan,
+                  ),
+                ],
+              ),
             ),
           ),
         ],

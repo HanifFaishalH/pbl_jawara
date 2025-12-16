@@ -17,7 +17,6 @@ class _PesanInputState extends State<PesanInput> {
   Future<void> _sendMessage() async {
     if (_controller.text.trim().isEmpty) return;
 
-    // Untuk uji coba, kirim ke penerima_id = 2
     await _service.kirimPesan(_controller.text.trim(), 2);
     _controller.clear();
     widget.onSend();
@@ -25,35 +24,34 @@ class _PesanInputState extends State<PesanInput> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
+    return SafeArea(
+      top: false,
+
+      maintainBottomViewPadding: true,
+
+      child: Material(
+        elevation: 12,
         color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              decoration: const InputDecoration(
-                hintText: 'Ketik pesan...',
-                border: InputBorder.none,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  decoration: const InputDecoration(
+                    hintText: 'Tulis pesan...',
+                    border: InputBorder.none,
+                  ),
+                ),
               ),
-            ),
+              IconButton(
+                icon: const Icon(Icons.send_rounded),
+                onPressed: _sendMessage,
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.send),
-            color: Theme.of(context).colorScheme.primary,
-            onPressed: _sendMessage,
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -22,7 +22,11 @@ class PesanTile extends StatelessWidget {
         ),
         child: Text(
           pesan.isiPesan,
-          style: TextStyle(color: isMe ? colors.onPrimaryContainer : colors.onSurfaceVariant),
+          style: TextStyle(
+            color: isMe
+                ? colors.onPrimaryContainer
+                : colors.onSurfaceVariant,
+          ),
         ),
       ),
     );
