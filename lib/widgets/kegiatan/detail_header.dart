@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../services/auth_service.dart'; // 
 
 class DetailHeader extends StatelessWidget {
   final String? fotoPath;
@@ -8,19 +9,25 @@ class DetailHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Setup URL Proxy
-    //const String baseImageUrl = "http://localhost:8000/api/image-proxy/";
-    const String baseImageUrl = "http://127.0.0.1:8000/storage/";
+    // 1. Ambil Base URL otomatis dari AuthService (sama kayak BarangService)
+    // Logika: Ambil AuthService.baseUrl (misal .../api) lalu ganti '/api' jadi '/storage/'
+    final String baseImageUrl = AuthService.baseUrl.replaceAll('/api', '/storage/');
     
-    
+    // 2. Cek apakah fotoPath kosong, URL internet, atau path lokal server
     String finalUrl = "";
     if (fotoPath != null && fotoPath!.isNotEmpty) {
-      finalUrl = fotoPath!.startsWith('http') 
-          ? fotoPath! 
-          : "$baseImageUrl${fotoPath!.startsWith('/') ? fotoPath!.substring(1) : fotoPath!}";
+      if (fotoPath!.startsWith('http')) {
+        finalUrl = fotoPath!; // Jika sudah http (misal dari Google)
+      } else {
+        // Jika path dari server (misal "kegiatan/foto1.jpg")
+        // Hapus slash di depan jika ada, biar rapi
+        String cleanPath = fotoPath!.startsWith('/') ? fotoPath!.substring(1) : fotoPath!;
+        finalUrl = "$baseImageUrl$cleanPath";
+      }
     }
 
     return SliverAppBar(
+      // ... (Kode UI SliverAppBar ke bawah tetap sama persis) ...
       expandedHeight: 280.0,
       floating: false,
       pinned: true,
@@ -29,16 +36,21 @@ class DetailHeader extends StatelessWidget {
         background: Stack(
           fit: StackFit.expand,
           children: [
-            finalUrl.isEmpty
-              ? Container(color: Colors.grey[300], child: const Icon(Icons.image, size: 50, color: Colors.grey))
-              : Image.network(
+             // Logika tampilan gambar
+             finalUrl.isNotEmpty
+              ? Image.network(
                   finalUrl,
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(
                     color: Colors.grey[300],
                     child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
                   ),
+                )
+              : Container(
+                  color: Colors.grey[300], 
+                  child: const Icon(Icons.image, size: 50, color: Colors.grey)
                 ),
+            // Gradient Overlay (Pemanis)
             const DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
