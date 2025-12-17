@@ -21,26 +21,31 @@ class MLPredictController extends Controller
         $file = $request->file('foto');
 
         try {
-            // ✅ Simpan dulu ke storage Laravel
+            // Simpan ke storage
             $path = $file->store('uploads', 'public');
             $fullPath = storage_path("app/public/{$path}");
             $publicUrl = asset("storage/{$path}");
 
-            Log::info("📦 [Saved] Gambar disimpan ke storage: $fullPath");
+            Log::info("📦 [Saved] Gambar disimpan: $fullPath");
 
-            // ✅ Kirim file yang sudah tersimpan ke FastAPI
-            $fastApiUrl = "http://127.0.0.1:5000/predict";
-            $response = Http::timeout(30)->attach(
-                'file', file_get_contents($fullPath), basename($fullPath)
+            // Kirim ke Hugging Face Space
+            $fastApiUrl = "https://hfaishalh-deteksi-batik-dnn.hf.space/predict";
+
+            $response = Http::timeout(60)->attach(
+                'file',
+                file_get_contents($fullPath),
+                basename($fullPath)
             )->post($fastApiUrl);
 
             if ($response->successful()) {
                 $data = $response->json();
+
                 return response()->json([
                     'kategori_prediksi' => $data['kategori_prediksi'] ?? 'Tidak diketahui',
-                    'akurasi' => $data['akurasi'] ?? null,
+                    'confidence' => $data['confidence'] ?? null,
+                    'probabilities' => $data['probabilities'] ?? null,
                     'image_url' => $publicUrl,
-                    'path' => $path // 🔥 path-nya juga dikirim balik ke Flutter
+                    'path' => $path
                 ], 200);
             }
 
@@ -57,5 +62,4 @@ class MLPredictController extends Controller
             ], 500);
         }
     }
-
 }
