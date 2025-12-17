@@ -37,7 +37,7 @@ class BarangService {
   // ============================================================
   Future<Map<String, dynamic>?> predictKategori(String imagePath) async {
     final url = Uri.parse("${BarangService.baseUrl}/predict-batik");
-    logger.i("📤 [PREDICT] Upload foto ke Laravel untuk deteksi...");
+    logger.i("📤 [PREDICT] Upload foto ke Laravel...");
 
     try {
       final file = File(imagePath);
@@ -46,15 +46,28 @@ class BarangService {
       final request = http.MultipartRequest("POST", url)
         ..files.add(await http.MultipartFile.fromPath("foto", imagePath));
 
+      // Kirim request
       final streamedResponse = await request.send();
       final resBody = await streamedResponse.stream.bytesToString();
 
-      logger.i("📥 [RESPONSE] Status: ${streamedResponse.statusCode}");
-
       if (streamedResponse.statusCode == 200) {
         final data = jsonDecode(resBody);
+        
+        // 🛠️ FIX LOGIC: Pastikan URL valid untuk Image.network
+        String finalImageUrl = data['image_url'] ?? '';
+
+        // Jika backend mengirim path relatif (contoh: "uploads/batik1.jpg")
+        // Kita gabungkan dengan baseImageUrl
+        if (finalImageUrl.isNotEmpty && !finalImageUrl.startsWith('http')) {
+             finalImageUrl = "$baseImageUrl$finalImageUrl";
+             // Update data map agar UI tinggal pakai
+             data['image_url'] = finalImageUrl;
+        }
+
         logger.i("✅ [SUCCESS] Prediksi: ${data['kategori_prediksi']}");
-        return data; // 🔥 kembalikan full data (kategori, akurasi, image_url, path)
+        logger.i("🔗 [IMAGE URL] $finalImageUrl");
+        
+        return data; 
       } else {
         throw Exception("Gagal prediksi (${streamedResponse.statusCode})");
       }
