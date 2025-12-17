@@ -13,6 +13,11 @@ class MLPredictController extends Controller
     {
         Log::info('📩 [Predict] Request masuk ke /predict-batik');
 
+        $request->validate([
+            'foto' => 'required|image|mimes:jpg,jpeg,png|max:10240',
+        ]);
+
+
         if (!$request->hasFile('foto')) {
             Log::error('❌ Tidak ada file "foto" yang diterima dari Flutter.');
             return response()->json(['error' => 'File foto tidak ditemukan'], 400);
@@ -61,5 +66,13 @@ class MLPredictController extends Controller
                 'detail' => $e->getMessage()
             ], 500);
         }
+
+        // ✅ TAMBAHKAN INI
+        Log::info('📸 [File Info]', [
+            'original_name' => $file->getClientOriginalName(),
+            'mime' => $file->getMimeType(),
+            'extension' => $file->getClientOriginalExtension(),
+            'size_kb' => round($file->getSize() / 1024, 2),
+        ]);
     }
 }

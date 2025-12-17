@@ -7,8 +7,8 @@ import 'package:jawaramobile_1/services/auth_service.dart';
 
 class BarangService {
   // 🌐 Base URL API Laravel
-  static String get baseUrl => "http://127.0.0.1:8000/api";
-  static String get baseImageUrl => "http://127.0.0.1:8000/storage/";
+  static String baseUrl = AuthService.baseUrl;
+  static String baseImageUrl = '${AuthService.baseUrl}/storage/';
 
   // 🧾 Logger instance
   static final logger = Logger(

@@ -14,7 +14,8 @@ class AuthService {
   // Gunakan IP Laptop (misal 192.168.1.x) jika menggunakan HP fisik
 
   // static const String baseUrl = "http://10.0.2.2:8000/api";
-  static const String baseUrl = "http://127.0.0.1:8000/api";
+  static const String baseUrl = "http://202.10.34.66/api";
+  // static const String baseUrl = "http://127.0.0.1:8000/api";
 
   // 🧠 Variabel global sesi (disimpan di memori statis agar mudah diakses)
   static String? token;
