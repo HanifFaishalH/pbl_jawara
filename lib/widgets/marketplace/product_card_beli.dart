@@ -31,13 +31,17 @@ class ProductCard extends StatelessWidget {
     // 2. Parsing Foto
     String rawFoto = item['barang_foto']?.toString() ?? "";
     String finalFotoUrl = "";
+
     if (rawFoto.isNotEmpty) {
-      if (!rawFoto.startsWith('http')) {
-        finalFotoUrl = "${BarangService.baseImageUrl}$rawFoto";
-      } else {
+      if (rawFoto.startsWith('http')) {
         finalFotoUrl = rawFoto;
+      } else {
+        // 🔥 HAPUS /api DARI BASE URL
+        final baseHost = BarangService.baseUrl.replaceAll('/api', '');
+        finalFotoUrl = "$baseHost/storage/$rawFoto";
       }
     }
+
 
     // 3. Parsing Nested Object: USER (Penjual)
     String namaPenjual = 'Penjual Jawara';

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:jawaramobile_1/services/auth_service.dart';
 import 'package:jawaramobile_1/services/keranjang_service.dart';
 import 'package:jawaramobile_1/services/barang_service.dart';
 
@@ -97,8 +98,10 @@ class _KeranjangPageState extends State<KeranjangPage> {
       int id = int.tryParse(item['keranjang_id'].toString()) ?? 0;
       if (_selectedItemIds.contains(id)) {
         String rawFoto = item['barang_foto']?.toString() ?? '';
+        final bastHost = AuthService.baseUrl.replaceAll('/api', '');
         String fullFotoUrl = rawFoto.isNotEmpty 
-            ? (rawFoto.startsWith('http') ? rawFoto : "${BarangService.baseImageUrl}$rawFoto") 
+            ? (rawFoto.startsWith('http') ? rawFoto 
+            : "$bastHost/storage/$rawFoto") 
             : '';
 
         selectedItems.add({

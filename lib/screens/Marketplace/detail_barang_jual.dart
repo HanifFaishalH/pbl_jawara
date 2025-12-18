@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:jawaramobile_1/services/auth_service.dart';
 
 class DetailBarang extends StatelessWidget {
   // Data Barang diterima melalui constructor
@@ -126,7 +127,7 @@ class DetailBarang extends StatelessWidget {
                 color: Colors.grey.shade200,
                 child: barangData['barang_foto'] != null && barangData['barang_foto'].toString().isNotEmpty
                     ? Image.network(
-                        'http://127.0.0.1:8000/storage/${barangData['barang_foto']}?v=${DateTime.now().millisecondsSinceEpoch}',
+                        '${AuthService.baseUrl.replaceAll("/api", "")}/storage/${barangData['barang_foto']}?v=${DateTime.now().millisecondsSinceEpoch}',
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Center(
                           child: Column(

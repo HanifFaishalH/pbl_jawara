@@ -80,11 +80,7 @@ class KeranjangService {
   Future<List<dynamic>> getKeranjang() async {
     try {
       String? token = await _getToken();
-      
-      if (token == null) {
-        print("❌ Gagal Get Keranjang: Token Null");
-        return [];
-      }
+      if (token == null) return [];
 
       final response = await http.get(
         Uri.parse(baseUrl),
@@ -96,17 +92,35 @@ class KeranjangService {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
-        // Pastikan format responsenya sesuai: { "data": [...] }
-        return jsonResponse['data'] ?? []; 
+        final List<dynamic> data = jsonResponse['data'] ?? [];
+
+        // 🔥 FIX URL GAMBAR DI SINI
+        final String baseHost = AuthService.baseUrl.replaceAll('/api', '');
+
+        for (var item in data) {
+          if (item['barang'] != null &&
+              item['barang']['barang_foto'] != null &&
+              item['barang']['barang_foto'].toString().isNotEmpty) {
+            
+            final rawFoto = item['barang']['barang_foto'];
+
+            if (!rawFoto.startsWith('http')) {
+              item['barang']['barang_foto'] =
+                  "$baseHost/storage/$rawFoto";
+            }
+          }
+        }
+
+        return data;
       }
-      
-      print("⚠️ Gagal load keranjang: ${response.statusCode}");
+
       return [];
     } catch (e) {
       print("❌ Error get cart: $e");
       return [];
     }
   }
+
 
   // ------------------------------------------------------------------------
   // 3. UPDATE JUMLAH ITEM (PUT)

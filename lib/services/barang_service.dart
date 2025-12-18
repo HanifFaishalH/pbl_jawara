@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,38 +35,23 @@ class BarangService {
   // 🚀 PREDIKSI KATEGORI (KIRIM GAMBAR KE LARAVEL)
   // ============================================================
   Future<Map<String, dynamic>?> predictKategori(String imagePath) async {
-    final url = Uri.parse("${BarangService.baseUrl}/predict-batik");
+    final url = Uri.parse("${baseUrl}/predict-batik");
     logger.i("📤 [PREDICT] Upload foto ke Laravel...");
 
     try {
-      final file = File(imagePath);
-      if (!await file.exists()) throw Exception("File tidak ditemukan: $imagePath");
-
       final request = http.MultipartRequest("POST", url)
         ..files.add(await http.MultipartFile.fromPath("foto", imagePath));
 
-      // Kirim request
       final streamedResponse = await request.send();
       final resBody = await streamedResponse.stream.bytesToString();
 
       if (streamedResponse.statusCode == 200) {
         final data = jsonDecode(resBody);
-        
-        // 🛠️ FIX LOGIC: Pastikan URL valid untuk Image.network
-        String finalImageUrl = data['image_url'] ?? '';
-
-        // Jika backend mengirim path relatif (contoh: "uploads/batik1.jpg")
-        // Kita gabungkan dengan baseImageUrl
-        if (finalImageUrl.isNotEmpty && !finalImageUrl.startsWith('http')) {
-             finalImageUrl = "$baseImageUrl$finalImageUrl";
-             // Update data map agar UI tinggal pakai
-             data['image_url'] = finalImageUrl;
-        }
 
         logger.i("✅ [SUCCESS] Prediksi: ${data['kategori_prediksi']}");
-        logger.i("🔗 [IMAGE URL] $finalImageUrl");
-        
-        return data; 
+        logger.i("🖼 IMAGE URL: ${data['image_url']}");
+
+        return data; // ⬅️ JANGAN DIUBAH
       } else {
         throw Exception("Gagal prediksi (${streamedResponse.statusCode})");
       }
@@ -76,6 +60,7 @@ class BarangService {
       return null;
     }
   }
+
 
 
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:jawaramobile_1/services/auth_service.dart';
 import 'package:jawaramobile_1/services/barang_service.dart';
 
 class DaftarBarang extends StatefulWidget {
@@ -119,8 +120,9 @@ class _DaftarBarangState extends State<DaftarBarang> {
                 
                 // 🔥 Konstruksi full URL gambar
                 final String fotoUrl = fotoPath.isNotEmpty
-                    ? 'http://127.0.0.1:8000/storage/$fotoPath'
-                    : '';
+                  ? '${AuthService.baseUrl.replaceAll("/api", "")}/storage/$fotoPath'
+                  : '';
+
 
                 return Card(
                   elevation: 3,

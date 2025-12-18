@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:jawaramobile_1/services/auth_service.dart';
 import 'package:jawaramobile_1/services/barang_service.dart';
 
 class CartItemCard extends StatelessWidget {
@@ -31,11 +32,12 @@ class CartItemCard extends StatelessWidget {
     final String hargaRaw = item['barang_harga']?.toString() ?? '0';
     final int qty = int.tryParse(item['jumlah'].toString()) ?? 1;
     
-    String rawFoto = item['barang_foto']?.toString() ?? '';
-    String fotoUrl = '';
-    if (rawFoto.isNotEmpty) {
-      fotoUrl = rawFoto.startsWith('http') ? rawFoto : "${BarangService.baseImageUrl}$rawFoto";
-    }
+    final rawFoto = item['barang_foto'];
+    final baseHost = AuthService.baseUrl.replaceAll('/api', '');
+    final fotoUrl = rawFoto.startsWith('http')
+        ? rawFoto
+        : '$baseHost/storage/$rawFoto';
+
 
     return Container(
       decoration: BoxDecoration(

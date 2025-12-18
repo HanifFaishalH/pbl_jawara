@@ -32,6 +32,8 @@ class BarangCard extends StatelessWidget {
                 height: 80,
                 width: 80,
                 fit: BoxFit.cover,
+                errorBuilder: (_,_,_) => 
+                  const Icon(Icons.image, size: 80),
               ),
             ),
             const SizedBox(width: 12),
